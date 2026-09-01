@@ -1,0 +1,735 @@
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    overflow: hidden;
+
+    font-family:
+        "Noto Sans Khmer",
+        "Khmer OS",
+        "Khmer OS System",
+        Arial,
+        sans-serif;
+
+    background:
+        radial-gradient(
+            circle at 20% 20%,
+            rgba(255, 255, 255, 0.45),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 80% 80%,
+            rgba(255, 255, 255, 0.3),
+            transparent 30%
+        ),
+        linear-gradient(
+            135deg,
+            #ff9a9e,
+            #fad0c4,
+            #fbc2eb
+        );
+
+    color: #5a1830;
+
+    touch-action: none;
+    overscroll-behavior: none;
+
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+
+/* =========================
+   SCREEN
+========================= */
+
+.screen {
+    position: fixed;
+
+    inset: 0;
+
+    width: 100vw;
+    height: 100dvh;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    padding: 20px;
+
+    overflow: hidden;
+
+    transition:
+        opacity 0.45s ease,
+        transform 0.45s ease;
+}
+
+.hidden {
+    opacity: 0;
+
+    visibility: hidden;
+
+    pointer-events: none;
+
+    transform: scale(0.94);
+}
+
+
+/* =========================
+   MAIN LOVE CARD
+========================= */
+
+.love-card,
+.final-card {
+    position: relative;
+
+    z-index: 5;
+
+    width: min(92vw, 500px);
+
+    padding: 35px 25px;
+
+    text-align: center;
+
+    border-radius: 32px;
+
+    border: 1px solid rgba(255, 255, 255, 0.65);
+
+    background:
+        rgba(255, 255, 255, 0.3);
+
+    box-shadow:
+        0 20px 50px rgba(137, 36, 77, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.65);
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+
+    animation: cardAppear 0.7s ease both;
+}
+
+
+/* =========================
+   SMALL HEART
+========================= */
+
+.small-heart {
+    font-size: 45px;
+
+    line-height: 1;
+
+    margin-bottom: 18px;
+
+    animation:
+        heartBeat 1.4s ease-in-out infinite;
+}
+
+
+/* =========================
+   QUESTION
+========================= */
+
+h1 {
+    margin: 0 auto;
+
+    max-width: 430px;
+
+    font-size:
+        clamp(23px, 6vw, 34px);
+
+    line-height: 1.6;
+
+    font-weight: 700;
+
+    text-shadow:
+        0 2px 8px rgba(255, 255, 255, 0.6);
+}
+
+
+/* =========================
+   MESSAGE
+========================= */
+
+.message {
+    min-height: 45px;
+
+    margin-top: 12px;
+
+    font-size:
+        clamp(17px, 4.5vw, 22px);
+
+    line-height: 1.5;
+
+    font-weight: 600;
+
+    color: #8c2450;
+
+    opacity: 0;
+
+    transform: translateY(5px);
+
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+}
+
+.message.show {
+    opacity: 1;
+
+    transform: translateY(0);
+}
+
+
+/* =========================
+   BUTTON AREA
+========================= */
+
+.button-area {
+    position: relative;
+
+    width: 100%;
+
+    min-height: 115px;
+
+    margin-top: 20px;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    gap: 14px;
+}
+
+
+/* =========================
+   BUTTONS
+========================= */
+
+.choice-button {
+    position: relative;
+
+    min-width: 105px;
+
+    min-height: 52px;
+
+    padding: 12px 25px;
+
+    border: none;
+
+    border-radius: 999px;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 18px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    touch-action: manipulation;
+
+    -webkit-user-select: none;
+    user-select: none;
+
+    box-shadow:
+        0 8px 20px rgba(112, 27, 62, 0.18);
+
+    transition:
+        width 0.25s ease,
+        height 0.25s ease,
+        min-width 0.25s ease,
+        min-height 0.25s ease,
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+
+/* Tap animation */
+
+.choice-button:active {
+    transform: scale(0.94);
+}
+
+
+/* =========================
+   NO BUTTON
+========================= */
+
+.no-button {
+    z-index: 20;
+
+    background:
+        rgba(255, 255, 255, 0.92);
+
+    color: #d72b5b;
+}
+
+
+/* =========================
+   YES BUTTON
+========================= */
+
+.yes-button {
+    z-index: 10;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ff477e,
+            #ff1f56
+        );
+
+    color: white;
+}
+
+
+/* =========================
+   BACKGROUND HEARTS
+========================= */
+
+.background-hearts {
+    position: fixed;
+
+    inset: 0;
+
+    width: 100%;
+
+    height: 100%;
+
+    overflow: hidden;
+
+    pointer-events: none;
+
+    z-index: 1;
+}
+
+.background-hearts span {
+    position: absolute;
+
+    bottom: -80px;
+
+    font-size: 30px;
+
+    opacity: 0.25;
+
+    animation:
+        floatHeart linear infinite;
+}
+
+
+/* Individual heart positions */
+
+.background-hearts span:nth-child(1) {
+    left: 5%;
+
+    animation-duration: 9s;
+
+    animation-delay: 0s;
+}
+
+.background-hearts span:nth-child(2) {
+    left: 18%;
+
+    animation-duration: 12s;
+
+    animation-delay: 2s;
+}
+
+.background-hearts span:nth-child(3) {
+    left: 32%;
+
+    animation-duration: 10s;
+
+    animation-delay: 4s;
+}
+
+.background-hearts span:nth-child(4) {
+    left: 47%;
+
+    animation-duration: 14s;
+
+    animation-delay: 1s;
+}
+
+.background-hearts span:nth-child(5) {
+    left: 61%;
+
+    animation-duration: 11s;
+
+    animation-delay: 3s;
+}
+
+.background-hearts span:nth-child(6) {
+    left: 74%;
+
+    animation-duration: 13s;
+
+    animation-delay: 5s;
+}
+
+.background-hearts span:nth-child(7) {
+    left: 86%;
+
+    animation-duration: 9s;
+
+    animation-delay: 2s;
+}
+
+.background-hearts span:nth-child(8) {
+    left: 94%;
+
+    animation-duration: 15s;
+
+    animation-delay: 6s;
+}
+
+
+/* =========================
+   FINAL SCREEN
+========================= */
+
+.final-screen {
+    z-index: 50;
+
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(255, 255, 255, 0.25),
+            transparent 45%
+        ),
+        linear-gradient(
+            135deg,
+            #ff758c,
+            #ff7eb3,
+            #fbc2eb
+        );
+}
+
+
+/* =========================
+   FINAL CARD
+========================= */
+
+.final-card {
+    overflow: hidden;
+
+    animation:
+        finalCardAppear 0.8s ease both;
+}
+
+
+/* =========================
+   BIG HEART
+========================= */
+
+.big-heart {
+    font-size:
+        clamp(100px, 30vw, 170px);
+
+    line-height: 1;
+
+    margin-bottom: 20px;
+
+    filter:
+        drop-shadow(
+            0 15px 25px
+            rgba(173, 20, 70, 0.3)
+        );
+
+    animation:
+        bigHeartBeat 1.2s ease-in-out infinite;
+}
+
+
+/* =========================
+   FINAL TEXT
+========================= */
+
+.final-card h2 {
+    margin: 0;
+
+    color: white;
+
+    font-family: Arial, sans-serif;
+
+    font-size:
+        clamp(30px, 8vw, 48px);
+
+    font-weight: 800;
+
+    text-shadow:
+        0 4px 15px
+        rgba(130, 20, 60, 0.25);
+}
+
+
+/* =========================
+   FINAL FLOATING HEARTS
+========================= */
+
+.final-hearts {
+    position: absolute;
+
+    inset: 0;
+
+    pointer-events: none;
+}
+
+.final-hearts span {
+    position: absolute;
+
+    font-size: 28px;
+
+    animation:
+        finalFloat 3s ease-in-out infinite;
+}
+
+
+/* Heart positions */
+
+.final-hearts span:nth-child(1) {
+    top: 10%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.final-hearts span:nth-child(2) {
+    top: 20%;
+    right: 10%;
+    animation-delay: 0.5s;
+}
+
+.final-hearts span:nth-child(3) {
+    bottom: 15%;
+    left: 12%;
+    animation-delay: 1s;
+}
+
+.final-hearts span:nth-child(4) {
+    bottom: 12%;
+    right: 12%;
+    animation-delay: 1.5s;
+}
+
+.final-hearts span:nth-child(5) {
+    top: 45%;
+    left: 4%;
+    animation-delay: 2s;
+}
+
+.final-hearts span:nth-child(6) {
+    top: 45%;
+    right: 4%;
+    animation-delay: 2.5s;
+}
+
+
+/* =========================
+   ANIMATIONS
+========================= */
+
+@keyframes cardAppear {
+
+    from {
+        opacity: 0;
+
+        transform:
+            scale(0.85)
+            translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            scale(1)
+            translateY(0);
+    }
+}
+
+
+@keyframes finalCardAppear {
+
+    from {
+        opacity: 0;
+
+        transform:
+            scale(0.7);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            scale(1);
+    }
+}
+
+
+@keyframes heartBeat {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    15% {
+        transform: scale(1.18);
+    }
+
+    30% {
+        transform: scale(1);
+    }
+
+    45% {
+        transform: scale(1.12);
+    }
+
+    60% {
+        transform: scale(1);
+    }
+}
+
+
+@keyframes bigHeartBeat {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.15);
+    }
+}
+
+
+@keyframes floatHeart {
+
+    0% {
+        transform:
+            translateY(0)
+            rotate(0deg);
+
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 0.25;
+    }
+
+    50% {
+        opacity: 0.35;
+    }
+
+    100% {
+        transform:
+            translateY(-115vh)
+            rotate(360deg);
+
+        opacity: 0;
+    }
+}
+
+
+@keyframes finalFloat {
+
+    0%,
+    100% {
+        transform:
+            translateY(0)
+            scale(1);
+    }
+
+    50% {
+        transform:
+            translateY(-18px)
+            scale(1.15);
+    }
+}
+
+
+/* =========================
+   SMALL PHONES
+========================= */
+
+@media (max-width: 380px) {
+
+    .love-card,
+    .final-card {
+        padding: 27px 17px;
+
+        border-radius: 26px;
+    }
+
+    h1 {
+        font-size: 22px;
+    }
+
+    .choice-button {
+        min-width: 92px;
+
+        padding:
+            11px 19px;
+
+        font-size: 17px;
+    }
+
+    .button-area {
+        gap: 9px;
+    }
+}
+
+
+/* =========================
+   LANDSCAPE PHONE
+========================= */
+
+@media
+(orientation: landscape)
+and (max-height: 500px) {
+
+    .love-card {
+        padding:
+            16px 25px;
+    }
+
+    .small-heart {
+        font-size: 30px;
+
+        margin-bottom: 5px;
+    }
+
+    h1 {
+        font-size: 21px;
+
+        line-height: 1.3;
+    }
+
+    .message {
+        min-height: 30px;
+
+        margin-top: 5px;
+
+        font-size: 16px;
+    }
+
+    .button-area {
+        min-height: 70px;
+
+        margin-top: 5px;
+    }
+}
