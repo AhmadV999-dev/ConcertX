@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
+
+    <title>Love ❤️</title>
+
+    <!-- Connect CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Background floating hearts -->
+    <div class="background-hearts" aria-hidden="true">
+        <span>♥</span>
+        <span>♡</span>
+        <span>♥</span>
+        <span>♡</span>
+        <span>♥</span>
+        <span>♡</span>
+        <span>♥</span>
+        <span>♡</span>
+    </div>
+
+
+    <!-- Main GUI -->
+    <main id="mainScreen" class="screen">
+
+        <section class="love-card">
+
+            <div class="small-heart">♥</div>
+
+            <h1 id="question">
+                តើអ្នកអាចធ្វើសង្សារខ្ញុំបានទេ
+            </h1>
+
+            <!-- Khmer message appears here -->
+            <div
+                id="message"
+                class="message"
+                aria-live="polite"
+            ></div>
+
+            <!-- Buttons -->
+            <div id="buttonArea" class="button-area">
+
+                <button
+                    id="noButton"
+                    class="choice-button no-button"
+                    type="button"
+                >
+                    No
+                </button>
+
+                <button
+                    id="yesButton"
+                    class="choice-button yes-button"
+                    type="button"
+                >
+                    Yes
+                </button>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- Final GUI -->
+    <main
+        id="finalScreen"
+        class="screen final-screen hidden"
+    >
+
+        <section class="final-card">
+
+            <!-- Big animated heart -->
+            <div
+                class="big-heart"
+                aria-hidden="true"
+            >
+                ❤️
+            </div>
+
+            <h2>
+                I love you too♥️
+            </h2>
+
+            <!-- Floating hearts -->
+            <div
+                class="final-hearts"
+                aria-hidden="true"
+            >
+                <span>❤️</span>
+                <span>💗</span>
+                <span>💕</span>
+                <span>💖</span>
+                <span>❤️</span>
+                <span>💞</span>
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- Connect JavaScript -->
+    <script src="script.js"></script>
+
+</body>
+              </html>
