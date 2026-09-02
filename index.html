@@ -1,499 +1,3423 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>ConvertX</title>
-<link rel="stylesheet" href="style.css">
-</head>
+/* =========================================================
+   CONVERTX
+   Full local/demo converter system
+   No Firebase
+   No real Google login
+   No passwords
+   ========================================================= */
 
-<body>
+"use strict";
 
-<div id="loginScreen" class="login-screen">
-  <div class="login-card">
+/* =========================================================
+   CONFIG
+   ========================================================= */
 
-    <div class="google-logo">G</div>
+const CONFIG = {
+  ADMIN_EMAIL: "ffbbchfg@gmail.com",
 
-    <h1>Sign in</h1>
-    <p>Continue to ConvertX</p>
+  STORAGE: {
+    USERS: "convertx_users_v3",
+    CODES: "convertx_codes_v3",
+    CURRENT_USER: "convertx_current_user_v3",
+    SETTINGS: "convertx_settings_v3"
+  },
 
-    <input
-      id="gmailInput"
-      type="email"
-      placeholder="Enter Gmail address"
-      autocomplete="off"
-    >
+  COSTS: {
+    image: 5,
+    "video-audio": 10,
+    "audio-video": 10
+  },
 
-    <button id="continueBtn" class="google-btn">
-      <b>G</b> Continue with Google
-    </button>
+  LIMITS: {
+    maxImageMB: 50,
+    maxVideoMB: 500,
+    maxAudioMB: 200
+  },
 
-    <small>Demo login · No real Google account</small>
+  VERSION: "3.0.0"
+};
 
-  </div>
-</div>
 
+/* =========================================================
+   STATE
+   ========================================================= */
 
-<div id="app" class="hidden">
+const state = {
+  converterType: "image",
+  selectedFile: null,
 
-  <nav class="navbar">
+  outputBlob: null,
+  outputName: "",
 
-    <div class="brand">
-      ConvertX
-    </div>
+  converting: false,
 
-    <div class="user-area">
+  currentObjectURL: null,
+  outputObjectURL: null,
 
-      <div id="avatar" class="avatar">
-        U
-      </div>
+  videoElement: null,
+  audioElement: null,
 
-      <div class="user-details">
-        <b id="profileName">User</b>
-        <small id="profileEmail">user@gmail.com</small>
-      </div>
+  mediaRecorder: null,
+  mediaStreams: [],
 
-      <div id="tokenDisplay" class="tokens">
-        0 Tokens
-      </div>
+  progressTimer: null
+};
 
-      <button id="logoutBtn" class="logout">
-        Logout
-      </button>
 
-    </div>
+/* =========================================================
+   SHORTCUTS
+   ========================================================= */
 
-  </nav>
+const $ = id => document.getElementById(id);
 
+function all(selector) {
+  return [...document.querySelectorAll(selector)];
+}
 
-  <main>
 
-    <section class="hero">
-      <h1>Convert your files</h1>
-      <p>Fast and simple browser-based file conversion</p>
-    </section>
+/* =========================================================
+   STORAGE
+   ========================================================= */
 
+function readJSON(key, fallback) {
+  try {
+    const value = localStorage.getItem(key);
 
-    <section class="panel">
+    if (!value) {
+      return fallback;
+    }
 
-      <h2>Choose converter</h2>
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
 
-      <div class="formats">
 
-        <button class="format active" data-type="image">
-          <span>🖼️</span>
-          <b>Photo Converter</b>
-          <small>JPG ↔ PNG · 5 Tokens</small>
-        </button>
+function writeJSON(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
 
-        <button class="format" data-type="video-audio">
-          <span>🎥</span>
-          <b>Video → Voice</b>
-          <small>10 Tokens</small>
-        </button>
 
-        <button class="format" data-type="audio-video">
-          <span>🎵</span>
-          <b>Voice → Video</b>
-          <small>10 Tokens</small>
-        </button>
+function getUsers() {
+  return readJSON(CONFIG.STORAGE.USERS, {});
+}
 
-      </div>
 
+function saveUsers(users) {
+  writeJSON(CONFIG.STORAGE.USERS, users);
+}
 
-      <div id="uploadBox" class="upload-box">
 
-        <input id="fileInput" type="file" hidden>
+function getCodes() {
+  return readJSON(CONFIG.STORAGE.CODES, {});
+}
 
-        <div class="plus">+</div>
 
-        <h3>Upload file here</h3>
+function saveCodes(codes) {
+  writeJSON(CONFIG.STORAGE.CODES, codes);
+}
 
-        <p>Click or drag a file</p>
 
-      </div>
+function getSettings() {
+  return readJSON(CONFIG.STORAGE.SETTINGS, {
+    version: CONFIG.VERSION,
+    created: Date.now()
+  });
+}
 
 
-      <div id="fileInfo" class="file-info hidden">
+function getCurrentEmail() {
+  return localStorage.getItem(CONFIG.STORAGE.CURRENT_USER);
+}
 
-        <b id="fileName"></b>
 
-        <span id="fileSize"></span>
+function setCurrentEmail(email) {
+  localStorage.setItem(
+    CONFIG.STORAGE.CURRENT_USER,
+    email
+  );
+}
 
-        <button id="removeFile">×</button>
 
-      </div>
+function clearCurrentEmail() {
+  localStorage.removeItem(
+    CONFIG.STORAGE.CURRENT_USER
+  );
+}
 
 
-      <div id="previewBox" class="preview hidden">
+/* =========================================================
+   USER SYSTEM
+   ========================================================= */
 
-        <img id="imagePreview">
+function normalizeEmail(email) {
+  return String(email || "")
+    .trim()
+    .toLowerCase();
+}
 
-        <video id="videoPreview" controls></video>
 
-        <audio id="audioPreview" controls></audio>
+function isGmail(email) {
+  return /^[a-zA-Z0-9._%+-]+@gmail\.com$/i.test(email);
+}
 
-      </div>
 
+function getUser(email = getCurrentEmail()) {
+  if (!email) {
+    return null;
+  }
 
-      <button id="convertBtn" class="convert">
-        Convert
-      </button>
+  const users = getUsers();
 
+  return users[normalizeEmail(email)] || null;
+}
 
-      <div id="progressBox" class="hidden">
 
-        <div class="progress">
-          <div id="progressFill"></div>
-        </div>
+function isAdmin(user) {
+  if (!user) {
+    return false;
+  }
 
-        <p id="progressText">
-          Converting...
-        </p>
+  return (
+    user.admin === true ||
+    normalizeEmail(user.email) ===
+      normalizeEmail(CONFIG.ADMIN_EMAIL)
+  );
+}
 
-      </div>
 
+function createUser(email) {
+  email = normalizeEmail(email);
 
-      <div id="resultBox" class="result hidden">
+  const users = getUsers();
 
-        <h3>Conversion complete ✓</h3>
+  if (users[email]) {
+    return users[email];
+  }
 
-        <p id="resultName"></p>
+  const isAdminAccount =
+    email === normalizeEmail(CONFIG.ADMIN_EMAIL);
 
-        <a id="downloadBtn">
-          Download
-        </a>
+  const name =
+    email
+      .split("@")[0]
+      .replace(/[._-]+/g, " ")
+      .trim() || "User";
 
-      </div>
+  const user = {
+    id: cryptoRandomID(),
 
-    </section>
+    email,
 
+    name,
 
-    <section class="panel redeem-panel">
+    tokens: isAdminAccount ? 0 : 100,
 
-      <h2>Redeem Tokens</h2>
+    admin: isAdminAccount,
 
-      <p>Enter a token code</p>
+    createdAt: Date.now(),
 
-      <div class="redeem-row">
+    lastLogin: Date.now(),
 
-        <input
-          id="redeemInput"
-          placeholder="Enter token code"
-          autocomplete="off"
-        >
+    permissions: {
+      converter: true,
+      redeem: true,
+      adminPanel: isAdminAccount
+    },
 
-        <button id="redeemBtn">
-          Redeem
-        </button>
+    usage: {
+      image: 0,
+      "video-audio": 0,
+      "audio-video": 0
+    }
+  };
 
-      </div>
+  users[email] = user;
 
-      <div id="redeemMessage"></div>
+  saveUsers(users);
 
-    </section>
+  return user;
+}
 
 
-    <section id="adminPanel" class="panel admin hidden">
+function login(email) {
+  email = normalizeEmail(email);
 
-      <div class="admin-header">
+  if (!email) {
+    showMessage(
+      "Login",
+      "Enter your Gmail address first.",
+      "error"
+    );
 
-        <div>
-          <h2>Admin Panel</h2>
-          <p>Manage ConvertX demo accounts</p>
-        </div>
+    return false;
+  }
 
-        <span>ADMIN</span>
+  if (!isGmail(email)) {
+    showMessage(
+      "Invalid Gmail",
+      "Use a Gmail address ending with @gmail.com.",
+      "error"
+    );
 
-      </div>
+    return false;
+  }
 
+  let user = getUser(email);
 
-      <div class="admin-card">
+  if (!user) {
+    user = createUser(email);
 
-        <h3>Create Token Code</h3>
+    showMessage(
+      "Welcome",
+      "Your new account received 100 tokens.",
+      "success"
+    );
+  } else {
+    const users = getUsers();
 
-        <input
-          id="codeInput"
-          placeholder="Code: e.g. FREE100"
-        >
+    users[email].lastLogin = Date.now();
 
-        <input
-          id="tokenInput"
-          type="number"
-          min="1"
-          placeholder="Token: e.g. 100"
-        >
+    saveUsers(users);
+  }
 
-        <input
-          id="expireInput"
-          type="datetime-local"
-        >
+  setCurrentEmail(email);
 
-        <button id="createCodeBtn">
-          Create Token Code
-        </button>
+  renderUser();
 
-        <p id="codeMessage"></p>
+  showApp();
 
-      </div>
+  return true;
+}
 
 
-      <div class="admin-card">
+function logout() {
+  cleanupMedia();
 
-        <div class="admin-title">
-          <h3>Token Codes</h3>
+  clearCurrentEmail();
 
-          <button id="refreshCodesBtn">
-            Refresh
-          </button>
-        </div>
+  state.selectedFile = null;
+  state.outputBlob = null;
+  state.outputName = "";
 
-        <div id="codeList"></div>
+  showLogin();
+}
 
-      </div>
 
+/* =========================================================
+   PAGE VISIBILITY
+   ========================================================= */
 
-      <div class="admin-card">
+function showLogin() {
+  const loginPage = $("loginPage");
+  const app = $("app");
 
-        <div class="admin-title">
-          <h3>Users</h3>
+  if (loginPage) {
+    loginPage.style.display = "flex";
+  }
 
-          <button id="refreshUsersBtn">
-            Refresh
-          </button>
-        </div>
+  if (app) {
+    app.style.display = "none";
+  }
+}
 
-        <div id="userList"></div>
 
-      </div>
+function showApp() {
+  const user = getUser();
 
-    </section>
+  if (!user) {
+    showLogin();
+    return;
+  }
 
-  </main>
+  const loginPage = $("loginPage");
+  const app = $("app");
 
+  if (loginPage) {
+    loginPage.style.display = "none";
+  }
 
-  <footer>
-    ConvertX • Demo File Converter
-  </footer>
+  if (app) {
+    app.style.display = "block";
+  }
 
-</div>
+  renderUser();
 
+  applyPermissions();
 
-<script src="script.js"></script>
+  if (isAdmin(user)) {
+    showAdminPanel();
+  } else {
+    hideAdminPanel();
+  }
 
-</body>
-  </html>          <span>🪙</span>
-          <b id="tokenCount">0</b>
-          <span>Tokens</span>
-        </div>
+  updateConverterUI();
+}
 
-        <div class="user-box">
-          <img id="userPhoto" src="" alt="">
-          <div>
-            <strong id="userName">User</strong>
-            <small id="userEmail"></small>
-          </div>
-        </div>
 
-        <button id="logoutBtn" class="small-btn">Logout</button>
-      </div>
-    </nav>
+/* =========================================================
+   USER UI
+   ========================================================= */
 
-    <main class="container">
+function renderUser() {
+  const user = getUser();
 
-      <header class="hero">
-        <div>
-          <div class="badge">FILE CONVERTER</div>
-          <h1>Convert your files<br><span>without the mess.</span></h1>
-          <p>Simple browser-based conversions with token costs.</p>
-        </div>
+  if (!user) {
+    return;
+  }
 
-        <button id="redeemOpen" class="outline-btn">
-          Redeem Code
-        </button>
-      </header>
+  const admin = isAdmin(user);
 
-      <!-- CONVERTER -->
-      <section class="panel">
+  const tokenText =
+    admin
+      ? "∞ Tokens"
+      : `${Math.max(0, Number(user.tokens || 0))} Tokens`;
 
-        <div class="panel-head">
-          <div>
-            <h2>Converter</h2>
-            <p>Select a conversion and upload your file.</p>
-          </div>
+  all(
+    "#tokenCount, .token-count, [data-token-count]"
+  ).forEach(element => {
+    element.textContent = tokenText;
+  });
 
-          <div class="cost" id="conversionCost">−5 Tokens</div>
-        </div>
+  all(
+    "#userEmail, .user-email, [data-user-email]"
+  ).forEach(element => {
+    element.textContent = user.email;
+  });
 
-        <div class="formats">
+  all(
+    "#userName, .user-name, [data-user-name]"
+  ).forEach(element => {
+    element.textContent = user.name;
+  });
 
-          <button class="format active" data-type="image">
-            <div class="format-icon">🖼️</div>
-            <div>
-              <b>Photo Converter</b>
-              <small>JPG ↔ PNG</small>
-            </div>
-            <strong>−5</strong>
-          </button>
+  const initial =
+    user.name
+      .trim()
+      .charAt(0)
+      .toUpperCase() || "U";
 
-          <button class="format" data-type="video-audio">
-            <div class="format-icon">🎥</div>
-            <div>
-              <b>Video → Voice</b>
-              <small>Video → WebM audio</small>
-            </div>
-            <strong>−10</strong>
-          </button>
+  all(
+    "#avatar, .avatar, [data-avatar]"
+  ).forEach(element => {
+    element.textContent = initial;
+  });
 
-          <button class="format" data-type="audio-video">
-            <div class="format-icon">🔊</div>
-            <div>
-              <b>Voice → Video</b>
-              <small>Audio → dark video</small>
-            </div>
-            <strong>−10</strong>
-          </button>
+  all(
+    "#accountEmail, [data-account-email]"
+  ).forEach(element => {
+    element.textContent = user.email;
+  });
 
-        </div>
+  all(
+    "#accountTokens, [data-account-tokens]"
+  ).forEach(element => {
+    element.textContent = tokenText;
+  });
+}
 
-        <div id="dropZone" class="drop-zone">
-          <div class="upload-icon">＋</div>
-          <h3>Upload file here</h3>
-          <p>Drag & drop or choose a file</p>
 
-          <input id="fileInput" type="file" hidden>
+/* =========================================================
+   PERMISSIONS
+   ========================================================= */
 
-          <button id="chooseBtn" class="primary-btn">
-            Choose File
-          </button>
-        </div>
+function applyPermissions() {
+  const user = getUser();
 
-        <div id="fileInfo" class="file-info hidden">
-          <div class="file-symbol">FILE</div>
+  if (!user) {
+    return;
+  }
 
-          <div class="file-details">
-            <b id="fileName">file</b>
-            <span id="fileSize">0 KB</span>
-          </div>
+  const converterAllowed =
+    !user.permissions ||
+    user.permissions.converter !== false;
 
-          <button id="removeFile" class="remove-btn">×</button>
-        </div>
+  const redeemAllowed =
+    !user.permissions ||
+    user.permissions.redeem !== false;
 
-        <div id="previewBox" class="preview hidden"></div>
+  const converterSection =
+    $("converterSection") ||
+    document.querySelector(".converter");
 
-        <button id="convertBtn" class="convert-btn" disabled>
-          Convert
-        </button>
+  if (converterSection) {
+    converterSection.style.display =
+      converterAllowed ? "" : "none";
+  }
 
-        <div id="progressBox" class="progress-box hidden">
-          <div class="progress-top">
-            <span id="progressText">Converting...</span>
-            <span id="progressPercent">0%</span>
-          </div>
+  const redeemSection =
+    $("redeemSection") ||
+    document.querySelector(".redeem-section");
 
-          <div class="progress">
-            <div id="progressBar"></div>
-          </div>
-        </div>
+  if (redeemSection) {
+    redeemSection.style.display =
+      redeemAllowed ? "" : "none";
+  }
+}
 
-        <div id="resultBox" class="result hidden">
-          <div>
-            <b>Conversion complete</b>
-            <span id="resultName"></span>
-          </div>
 
-          <a id="downloadBtn" class="download-btn" download>
-            Download
-          </a>
-        </div>
+/* =========================================================
+   CONVERTER TYPE
+   ========================================================= */
 
-        <p id="convertError" class="error"></p>
+function setConverterType(type) {
+  if (!CONFIG.COSTS[type]) {
+    return;
+  }
 
-      </section>
+  const user = getUser();
 
-      <!-- REDEEM -->
-      <section id="redeemPanel" class="panel redeem-panel hidden">
-        <div class="panel-head">
-          <div>
-            <h2>Redeem Token Code</h2>
-            <p>Enter a code given to you by the admin.</p>
-          </div>
-        </div>
+  if (
+    user &&
+    user.permissions &&
+    user.permissions.converter === false
+  ) {
+    showMessage(
+      "Disabled",
+      "Converter access is disabled for this account.",
+      "error"
+    );
 
-        <div class="redeem-row">
-          <input id="redeemInput" class="text-input" placeholder="Enter code">
-          <button id="redeemBtn" class="primary-btn">Redeem</button>
-        </div>
+    return;
+  }
 
-        <p id="redeemMessage" class="message"></p>
-      </section>
+  cancelConversion();
 
-      <!-- ADMIN -->
-      <section id="adminPanel" class="panel admin-panel hidden">
+  state.converterType = type;
 
-        <div class="admin-title">
-          <div>
-            <div class="admin-badge">ADMIN</div>
-            <h2>Admin Control Center</h2>
-            <p>Manage users, permissions and token codes.</p>
-          </div>
-        </div>
+  state.selectedFile = null;
+  state.outputBlob = null;
+  state.outputName = "";
 
-        <!-- CREATE CODE -->
-        <div class="admin-card">
-          <h3>Create Token Code</h3>
+  all("[data-type]").forEach(button => {
+    button.classList.toggle(
+      "active",
+      button.dataset.type === type
+    );
+  });
 
-          <div class="admin-grid">
+  updateConverterUI();
 
-            <label>
-              <span>Code</span>
-              <input id="codeInput" class="text-input" placeholder="VIP100">
-            </label>
+  clearFileUI();
+}
 
-            <label>
-              <span>Token</span>
-              <input id="codeTokens" class="text-input"
-                     type="number" min="1" value="100">
-            </label>
 
-            <label>
-              <span>Expire</span>
-              <input id="codeExpire" class="text-input" type="datetime-local">
-            </label>
+function updateConverterUI() {
+  const type = state.converterType;
 
-          </div>
+  const info = {
+    image: {
+      title: "Upload JPG or PNG",
+      description: "Convert JPG to PNG or PNG to JPG",
+      accept: ".jpg,.jpeg,.png",
+      cost: "5 tokens"
+    },
 
-          <button id="createCodeBtn" class="primary-btn">
-            Create Code
-          </button>
+    "video-audio": {
+      title: "Upload a video",
+      description: "Extract the audio from your video",
+      accept: "video/*",
+      cost: "10 tokens"
+    },
 
-          <p id="adminCodeMessage" class="message"></p>
-        </div>
+    "audio-video": {
+      title: "Upload audio",
+      description: "Create a dark video using your audio",
+      accept: "audio/*",
+      cost: "10 tokens"
+    }
+  };
 
-        <!-- USERS -->
-        <div class="admin-card">
-          <div class="admin-card-head">
-            <div>
-              <h3>User Management</h3>
-              <p>Customize permissions for each account.</p>
-            </div>
+  const data = info[type];
 
-            <button id="refreshUsers" class="small-btn">
-              Refresh
+  const title = $("uploadTitle");
+
+  if (title) {
+    title.textContent = data.title;
+  }
+
+  const description = $("uploadText");
+
+  if (description) {
+    description.textContent =
+      `${data.description} · ${data.cost}`;
+  }
+
+  const input = $("fileInput");
+
+  if (input) {
+    input.accept = data.accept;
+  }
+
+  all("[data-cost]").forEach(element => {
+    element.textContent = data.cost;
+  });
+}
+
+
+/* =========================================================
+   FILE VALIDATION
+   ========================================================= */
+
+function getMaxSize(type) {
+  if (type === "image") {
+    return CONFIG.LIMITS.maxImageMB * 1024 * 1024;
+  }
+
+  if (type === "video-audio") {
+    return CONFIG.LIMITS.maxVideoMB * 1024 * 1024;
+  }
+
+  return CONFIG.LIMITS.maxAudioMB * 1024 * 1024;
+}
+
+
+function isSupportedFile(file) {
+  if (!file) {
+    return false;
+  }
+
+  if (file.size > getMaxSize(state.converterType)) {
+    return false;
+  }
+
+  if (state.converterType === "image") {
+    return [
+      "image/jpeg",
+      "image/png"
+    ].includes(file.type);
+  }
+
+  if (state.converterType === "video-audio") {
+    return file.type.startsWith("video/");
+  }
+
+  if (state.converterType === "audio-video") {
+    return file.type.startsWith("audio/");
+  }
+
+  return false;
+}
+
+
+function handleFile(file) {
+  if (!file) {
+    return;
+  }
+
+  if (!isSupportedFile(file)) {
+    const maxMB =
+      getMaxSize(state.converterType) /
+      1024 /
+      1024;
+
+    showMessage(
+      "Unsupported file",
+      `This file isn't supported or is larger than ${maxMB} MB.`,
+      "error"
+    );
+
+    return;
+  }
+
+  cleanupPreview();
+
+  state.selectedFile = file;
+  state.outputBlob = null;
+  state.outputName = "";
+
+  renderFile(file);
+}
+
+
+/* =========================================================
+   FILE UI
+   ========================================================= */
+
+function renderFile(file) {
+  const info = $("fileInfo");
+  const name = $("fileName");
+  const size = $("fileSize");
+  const preview = $("preview");
+
+  if (info) {
+    info.style.display = "block";
+  }
+
+  if (name) {
+    name.textContent = file.name;
+  }
+
+  if (size) {
+    size.textContent =
+      `${formatBytes(file.size)} · ${file.type || "Unknown type"}`;
+  }
+
+  if (!preview) {
+    return;
+  }
+
+  cleanupPreview();
+
+  const url = URL.createObjectURL(file);
+
+  state.currentObjectURL = url;
+
+  preview.innerHTML = "";
+
+  if (file.type.startsWith("image/")) {
+    const img = document.createElement("img");
+
+    img.src = url;
+    img.alt = "Image preview";
+
+    preview.appendChild(img);
+  }
+
+  if (file.type.startsWith("video/")) {
+    const video = document.createElement("video");
+
+    video.src = url;
+    video.controls = true;
+    video.playsInline = true;
+    video.preload = "metadata";
+
+    preview.appendChild(video);
+  }
+
+  if (file.type.startsWith("audio/")) {
+    const audio = document.createElement("audio");
+
+    audio.src = url;
+    audio.controls = true;
+    audio.preload = "metadata";
+
+    preview.appendChild(audio);
+  }
+}
+
+
+function clearFileUI() {
+  cleanupPreview();
+
+  const info = $("fileInfo");
+  const preview = $("preview");
+  const result = $("result");
+
+  if (info) {
+    info.style.display = "none";
+  }
+
+  if (preview) {
+    preview.innerHTML = "";
+  }
+
+  if (result) {
+    result.style.display = "none";
+  }
+
+  const input = $("fileInput");
+
+  if (input) {
+    input.value = "";
+  }
+
+  const download = $("downloadButton");
+
+  if (download) {
+    download.removeAttribute("href");
+  }
+}
+
+
+function cleanupPreview() {
+  if (state.currentObjectURL) {
+    URL.revokeObjectURL(
+      state.currentObjectURL
+    );
+
+    state.currentObjectURL = null;
+  }
+}
+
+
+/* =========================================================
+   FORMAT HELPERS
+   ========================================================= */
+
+function formatBytes(bytes) {
+  if (!Number.isFinite(bytes) || bytes <= 0) {
+    return "0 B";
+  }
+
+  const units = [
+    "B",
+    "KB",
+    "MB",
+    "GB"
+  ];
+
+  const index =
+    Math.min(
+      Math.floor(
+        Math.log(bytes) /
+        Math.log(1024)
+      ),
+      units.length - 1
+    );
+
+  return (
+    bytes /
+    Math.pow(1024, index)
+  ).toFixed(index === 0 ? 0 : 2) +
+  " " +
+  units[index];
+}
+
+
+function getBaseName(filename) {
+  return filename
+    .replace(/\.[^/.]+$/, "")
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_");
+}
+
+
+function extensionForImage(file) {
+  if (
+    file.type === "image/jpeg" ||
+    file.type === "image/jpg"
+  ) {
+    return "jpg";
+  }
+
+  return "png";
+}
+
+
+/* =========================================================
+   TOKEN SYSTEM
+   ========================================================= */
+
+function canUseConverter() {
+  const user = getUser();
+
+  if (!user) {
+    showMessage(
+      "Login required",
+      "Login before converting files.",
+      "error"
+    );
+
+    return false;
+  }
+
+  if (
+    user.permissions &&
+    user.permissions.converter === false
+  ) {
+    showMessage(
+      "Access denied",
+      "Converter permission is disabled.",
+      "error"
+    );
+
+    return false;
+  }
+
+  if (isAdmin(user)) {
+    return true;
+  }
+
+  const cost =
+    CONFIG.COSTS[state.converterType];
+
+  const tokens =
+    Number(user.tokens || 0);
+
+  if (tokens < cost) {
+    showMessage(
+      "Not enough tokens",
+      `This conversion costs ${cost} tokens. You have ${tokens}.`,
+      "error"
+    );
+
+    return false;
+  }
+
+  return true;
+}
+
+
+function spendTokens(amount) {
+  const user = getUser();
+
+  if (!user || isAdmin(user)) {
+    return;
+  }
+
+  const users = getUsers();
+
+  const email = normalizeEmail(
+    user.email
+  );
+
+  if (!users[email]) {
+    return;
+  }
+
+  users[email].tokens =
+    Math.max(
+      0,
+      Number(users[email].tokens || 0) -
+      Number(amount || 0)
+    );
+
+  if (!users[email].usage) {
+    users[email].usage = {};
+  }
+
+  users[email].usage[
+    state.converterType
+  ] =
+    Number(
+      users[email].usage[
+        state.converterType
+      ] || 0
+    ) + 1;
+
+  saveUsers(users);
+
+  renderUser();
+}
+
+
+/* =========================================================
+   CONVERT BUTTON
+   ========================================================= */
+
+async function convertFile() {
+  if (state.converting) {
+    return;
+  }
+
+  if (!state.selectedFile) {
+    showMessage(
+      "No file",
+      "Upload a file first.",
+      "error"
+    );
+
+    return;
+  }
+
+  if (!canUseConverter()) {
+    return;
+  }
+
+  state.converting = true;
+
+  setConvertButton(true);
+
+  showProgress(5);
+
+  try {
+    if (state.converterType === "image") {
+      await convertImage();
+    }
+
+    else if (
+      state.converterType ===
+      "video-audio"
+    ) {
+      await convertVideoToAudio();
+    }
+
+    else if (
+      state.converterType ===
+      "audio-video"
+    ) {
+      await convertAudioToVideo();
+    }
+
+  } catch (error) {
+    console.error(
+      "ConvertX conversion error:",
+      error
+    );
+
+    showMessage(
+      "Conversion failed",
+      error.message ||
+        "Something went wrong during conversion.",
+      "error"
+    );
+
+    cleanupMedia();
+
+  } finally {
+    state.converting = false;
+
+    setConvertButton(false);
+
+    stopProgress();
+  }
+}
+
+
+/* =========================================================
+   IMAGE CONVERSION
+   ========================================================= */
+
+function convertImage() {
+  return new Promise(
+    (resolve, reject) => {
+
+      const file =
+        state.selectedFile;
+
+      const image =
+        new Image();
+
+      const url =
+        URL.createObjectURL(file);
+
+      image.onload = () => {
+
+        try {
+
+          showProgress(30);
+
+          const canvas =
+            document.createElement(
+              "canvas"
+            );
+
+          canvas.width =
+            image.naturalWidth;
+
+          canvas.height =
+            image.naturalHeight;
+
+          const ctx =
+            canvas.getContext(
+              "2d",
+              {
+                alpha: true
+              }
+            );
+
+          if (!ctx) {
+            throw new Error(
+              "Canvas is not supported."
+            );
+          }
+
+          const outputPNG =
+            extensionForImage(file) ===
+            "jpg";
+
+          if (outputPNG === false) {
+            ctx.fillStyle = "#ffffff";
+
+            ctx.fillRect(
+              0,
+              0,
+              canvas.width,
+              canvas.height
+            );
+          }
+
+          ctx.drawImage(
+            image,
+            0,
+            0
+          );
+
+          showProgress(65);
+
+          const mime =
+            outputPNG
+              ? "image/png"
+              : "image/jpeg";
+
+          canvas.toBlob(
+            blob => {
+
+              URL.revokeObjectURL(
+                url
+              );
+
+              if (!blob) {
+                reject(
+                  new Error(
+                    "Browser could not create the image."
+                  )
+                );
+
+                return;
+              }
+
+              state.outputBlob =
+                blob;
+
+              const base =
+                getBaseName(
+                  file.name
+                );
+
+              state.outputName =
+                outputPNG
+                  ? `${base}.png`
+                  : `${base}.jpg`;
+
+              spendTokens(
+                CONFIG.COSTS.image
+              );
+
+              showProgress(100);
+
+              showResult();
+
+              resolve();
+
+            },
+            mime,
+            0.94
+          );
+
+        } catch (error) {
+          URL.revokeObjectURL(
+            url
+          );
+
+          reject(error);
+        }
+      };
+
+      image.onerror = () => {
+        URL.revokeObjectURL(
+          url
+        );
+
+        reject(
+          new Error(
+            "Could not read this image."
+          )
+        );
+      };
+
+      image.src = url;
+    }
+  );
+}
+
+
+/* =========================================================
+   VIDEO → AUDIO
+   ========================================================= */
+
+async function convertVideoToAudio() {
+  const file =
+    state.selectedFile;
+
+  showProgress(10);
+
+  if (!window.MediaRecorder) {
+    throw new Error(
+      "Your browser does not support MediaRecorder."
+    );
+  }
+
+  const video =
+    document.createElement(
+      "video"
+    );
+
+  state.videoElement =
+    video;
+
+  const url =
+    URL.createObjectURL(file);
+
+  state.currentObjectURL =
+    url;
+
+  video.src = url;
+  video.preload = "auto";
+  video.playsInline = true;
+  video.muted = false;
+
+  await waitForMetadata(
+    video
+  );
+
+  showProgress(20);
+
+  if (!video.duration ||
+      !Number.isFinite(video.duration)) {
+    throw new Error(
+      "Could not read video duration."
+    );
+  }
+
+  let sourceStream;
+
+  if (
+    typeof video.captureStream ===
+    "function"
+  ) {
+    sourceStream =
+      video.captureStream();
+  }
+
+  else if (
+    typeof video.mozCaptureStream ===
+    "function"
+  ) {
+    sourceStream =
+      video.mozCaptureStream();
+  }
+
+  else {
+    throw new Error(
+      "This browser cannot capture video audio."
+    );
+  }
+
+  const audioTracks =
+    sourceStream.getAudioTracks();
+
+  if (!audioTracks.length) {
+    throw new Error(
+      "This video does not contain an audio track."
+    );
+  }
+
+  const audioStream =
+    new MediaStream(
+      audioTracks
+    );
+
+  state.mediaStreams.push(
+    sourceStream,
+    audioStream
+  );
+
+  const mime =
+    chooseMime([
+      "audio/webm;codecs=opus",
+      "audio/webm",
+      "audio/ogg;codecs=opus"
+    ]);
+
+  const recorder =
+    mime
+      ? new MediaRecorder(
+          audioStream,
+          {
+            mimeType: mime
+          }
+        )
+      : new MediaRecorder(
+          audioStream
+        );
+
+  state.mediaRecorder =
+    recorder;
+
+  const chunks = [];
+
+  recorder.ondataavailable =
+    event => {
+      if (
+        event.data &&
+        event.data.size > 0
+      ) {
+        chunks.push(
+          event.data
+        );
+      }
+    };
+
+  const finished =
+    new Promise(
+      (resolve, reject) => {
+
+        recorder.onerror =
+          event => {
+            reject(
+              new Error(
+                event.error?.message ||
+                "Audio recording failed."
+              )
+            );
+          };
+
+        recorder.onstop =
+          () => {
+
+            try {
+
+              const blob =
+                new Blob(
+                  chunks,
+                  {
+                    type:
+                      recorder.mimeType ||
+                      "audio/webm"
+                  }
+                );
+
+              if (!blob.size) {
+                reject(
+                  new Error(
+                    "No audio was produced."
+                  )
+                );
+
+                return;
+              }
+
+              state.outputBlob =
+                blob;
+
+              state.outputName =
+                `${getBaseName(
+                  file.name
+                )}.webm`;
+
+              resolve();
+
+            } catch (error) {
+              reject(error);
+            }
+          };
+      }
+    );
+
+  video.onended =
+    () => {
+
+      if (
+        recorder.state !==
+        "inactive"
+      ) {
+        recorder.stop();
+      }
+    };
+
+  recorder.start(250);
+
+  try {
+    await video.play();
+  } catch {
+    throw new Error(
+      "The browser blocked video playback."
+    );
+  }
+
+  await trackProgress(
+    video,
+    25,
+    90
+  );
+
+  await finished;
+
+  showProgress(95);
+
+  spendTokens(
+    CONFIG.COSTS["video-audio"]
+  );
+
+  showResult();
+}
+
+
+/* =========================================================
+   AUDIO → VIDEO
+   ========================================================= */
+
+async function convertAudioToVideo() {
+  const file =
+    state.selectedFile;
+
+  if (!window.MediaRecorder) {
+    throw new Error(
+      "Your browser does not support MediaRecorder."
+    );
+  }
+
+  const AudioContext =
+    window.AudioContext ||
+    window.webkitAudioContext;
+
+  if (!AudioContext) {
+    throw new Error(
+      "Web Audio is not supported."
+    );
+  }
+
+  showProgress(10);
+
+  const audio =
+    document.createElement(
+      "audio"
+    );
+
+  state.audioElement =
+    audio;
+
+  const url =
+    URL.createObjectURL(file);
+
+  state.currentObjectURL =
+    url;
+
+  audio.src = url;
+  audio.preload = "auto";
+
+  await waitForMetadata(
+    audio
+  );
+
+  if (
+    !Number.isFinite(
+      audio.duration
+    ) ||
+    audio.duration <= 0
+  ) {
+    throw new Error(
+      "Could not read audio duration."
+    );
+  }
+
+  showProgress(20);
+
+  const canvas =
+    document.createElement(
+      "canvas"
+    );
+
+  canvas.width = 1280;
+  canvas.height = 720;
+
+  const ctx =
+    canvas.getContext(
+      "2d"
+    );
+
+  if (!ctx) {
+    throw new Error(
+      "Canvas is not supported."
+    );
+  }
+
+  /*
+    Dark video background.
+    A small center mark is drawn so
+    the output is not just transparent.
+  */
+
+  function drawFrame() {
+    ctx.fillStyle = "#080808";
+
+    ctx.fillRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    ctx.fillStyle = "#151515";
+
+    ctx.beginPath();
+
+    ctx.arc(
+      canvas.width / 2,
+      canvas.height / 2,
+      75,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+
+    ctx.fillStyle = "#ffffff";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      canvas.width / 2 - 20,
+      canvas.height / 2 - 30
+    );
+
+    ctx.lineTo(
+      canvas.width / 2 + 35,
+      canvas.height / 2
+    );
+
+    ctx.lineTo(
+      canvas.width / 2 - 20,
+      canvas.height / 2 + 30
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+  }
+
+  drawFrame();
+
+  const videoStream =
+    canvas.captureStream(
+      30
+    );
+
+  const audioContext =
+    new AudioContext();
+
+  const source =
+    audioContext.createMediaElementSource(
+      audio
+    );
+
+  const destination =
+    audioContext.createMediaStreamDestination();
+
+  source.connect(
+    destination
+  );
+
+  const combined =
+    new MediaStream();
+
+  videoStream
+    .getVideoTracks()
+    .forEach(track => {
+      combined.addTrack(
+        track
+      );
+    });
+
+  destination.stream
+    .getAudioTracks()
+    .forEach(track => {
+      combined.addTrack(
+        track
+      );
+    });
+
+  state.mediaStreams.push(
+    videoStream,
+    destination.stream,
+    combined
+  );
+
+  const mime =
+    chooseMime([
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp8,opus",
+      "video/webm"
+    ]);
+
+  const recorder =
+    mime
+      ? new MediaRecorder(
+          combined,
+          {
+            mimeType: mime
+          }
+        )
+      : new MediaRecorder(
+          combined
+        );
+
+  state.mediaRecorder =
+    recorder;
+
+  const chunks = [];
+
+  recorder.ondataavailable =
+    event => {
+      if (
+        event.data &&
+        event.data.size > 0
+      ) {
+        chunks.push(
+          event.data
+        );
+      }
+    };
+
+  const finished =
+    new Promise(
+      (resolve, reject) => {
+
+        recorder.onerror =
+          event => {
+            reject(
+              new Error(
+                event.error?.message ||
+                "Video recording failed."
+              )
+            );
+          };
+
+        recorder.onstop =
+          () => {
+
+            try {
+
+              const blob =
+                new Blob(
+                  chunks,
+                  {
+                    type:
+                      recorder.mimeType ||
+                      "video/webm"
+                  }
+                );
+
+              if (!blob.size) {
+                reject(
+                  new Error(
+                    "No video was produced."
+                  )
+                );
+
+                return;
+              }
+
+              state.outputBlob =
+                blob;
+
+              state.outputName =
+                `${getBaseName(
+                  file.name
+                )}.webm`;
+
+              resolve();
+
+            } catch (error) {
+              reject(error);
+            }
+          };
+      }
+    );
+
+  audio.onended =
+    () => {
+
+      if (
+        recorder.state !==
+        "inactive"
+      ) {
+        recorder.stop();
+      }
+    };
+
+  recorder.start(250);
+
+  await audioContext.resume();
+
+  try {
+    await audio.play();
+  } catch {
+    throw new Error(
+      "The browser blocked audio playback."
+    );
+  }
+
+  const duration =
+    audio.duration;
+
+  while (
+    !audio.ended &&
+    recorder.state !==
+      "inactive"
+  ) {
+
+    drawFrame();
+
+    const ratio =
+      Math.min(
+        1,
+        audio.currentTime /
+          duration
+      );
+
+    showProgress(
+      25 +
+      ratio * 65
+    );
+
+    await sleep(100);
+  }
+
+  await finished;
+
+  try {
+    await audioContext.close();
+  } catch {}
+
+  showProgress(95);
+
+  spendTokens(
+    CONFIG.COSTS["audio-video"]
+  );
+
+  showResult();
+}
+
+
+/* =========================================================
+   MEDIA HELPERS
+   ========================================================= */
+
+function chooseMime(types) {
+  if (
+    !window.MediaRecorder ||
+    !MediaRecorder.isTypeSupported
+  ) {
+    return "";
+  }
+
+  for (const type of types) {
+    try {
+      if (
+        MediaRecorder.isTypeSupported(
+          type
+        )
+      ) {
+        return type;
+      }
+    } catch {}
+  }
+
+  return "";
+}
+
+
+function waitForMetadata(media) {
+  return new Promise(
+    (resolve, reject) => {
+
+      if (
+        media.readyState >= 1
+      ) {
+        resolve();
+        return;
+      }
+
+      const timeout =
+        setTimeout(() => {
+          reject(
+            new Error(
+              "Media file took too long to load."
+            )
+          );
+        }, 20000);
+
+      media.onloadedmetadata =
+        () => {
+          clearTimeout(timeout);
+          resolve();
+        };
+
+      media.onerror =
+        () => {
+          clearTimeout(timeout);
+
+          reject(
+            new Error(
+              "Could not load the media file."
+            )
+          );
+        };
+    }
+  );
+}
+
+
+async function trackProgress(
+  media,
+  start,
+  end
+) {
+  const duration =
+    media.duration;
+
+  while (
+    !media.ended &&
+    state.mediaRecorder &&
+    state.mediaRecorder.state !==
+      "inactive"
+  ) {
+
+    const ratio =
+      duration > 0
+        ? media.currentTime /
+          duration
+        : 0;
+
+    showProgress(
+      start +
+      ratio *
+        (end - start)
+    );
+
+    await sleep(100);
+  }
+}
+
+
+function cleanupMedia() {
+  try {
+    if (
+      state.mediaRecorder &&
+      state.mediaRecorder.state !==
+        "inactive"
+    ) {
+      state.mediaRecorder.stop();
+    }
+  } catch {}
+
+  state.mediaRecorder =
+    null;
+
+  state.mediaStreams.forEach(
+    stream => {
+
+      try {
+        stream
+          .getTracks()
+          .forEach(track => {
+            try {
+              track.stop();
+            } catch {}
+          });
+      } catch {}
+    }
+  );
+
+  state.mediaStreams = [];
+
+  if (state.videoElement) {
+    try {
+      state.videoElement.pause();
+      state.videoElement.src = "";
+    } catch {}
+  }
+
+  if (state.audioElement) {
+    try {
+      state.audioElement.pause();
+      state.audioElement.src = "";
+    } catch {}
+  }
+
+  state.videoElement =
+    null;
+
+  state.audioElement =
+    null;
+}
+
+
+function cancelConversion() {
+  cleanupMedia();
+
+  state.converting =
+    false;
+
+  stopProgress();
+
+  setConvertButton(
+    false
+  );
+}
+
+
+/* =========================================================
+   RESULT
+   ========================================================= */
+
+function showResult() {
+  const result =
+    $("result");
+
+  const download =
+    $("downloadButton");
+
+  if (!state.outputBlob) {
+    return;
+  }
+
+  if (state.outputObjectURL) {
+    URL.revokeObjectURL(
+      state.outputObjectURL
+    );
+  }
+
+  state.outputObjectURL =
+    URL.createObjectURL(
+      state.outputBlob
+    );
+
+  if (result) {
+    result.style.display =
+      "block";
+  }
+
+  if (download) {
+    download.href =
+      state.outputObjectURL;
+
+    download.download =
+      state.outputName;
+
+    download.textContent =
+      `Download ${state.outputName}`;
+  }
+
+  showMessage(
+    "Done",
+    "Your file is ready to download.",
+    "success"
+  );
+}
+
+
+/* =========================================================
+   BUTTON / PROGRESS
+   ========================================================= */
+
+function setConvertButton(
+  busy
+) {
+  const button =
+    $("convertButton");
+
+  if (!button) {
+    return;
+  }
+
+  button.disabled =
+    busy;
+
+  button.textContent =
+    busy
+      ? "Converting..."
+      : "Convert";
+}
+
+
+function showProgress(
+  value
+) {
+  const progress =
+    $("progress");
+
+  if (!progress) {
+    return;
+  }
+
+  progress.style.display =
+    "block";
+
+  const number =
+    Math.round(
+      Math.max(
+        0,
+        Math.min(
+          100,
+          value
+        )
+      )
+    );
+
+  progress.textContent =
+    `Converting... ${number}%`;
+}
+
+
+function stopProgress() {
+  const progress =
+    $("progress");
+
+  if (progress) {
+    progress.style.display =
+      "none";
+  }
+
+  if (state.progressTimer) {
+    clearInterval(
+      state.progressTimer
+    );
+
+    state.progressTimer =
+      null;
+  }
+}
+
+
+/* =========================================================
+   REDEEM CODES
+   ========================================================= */
+
+function redeemCode(rawCode) {
+  const user =
+    getUser();
+
+  if (!user) {
+    showMessage(
+      "Login required",
+      "Login first.",
+      "error"
+    );
+
+    return false;
+  }
+
+  if (
+    user.permissions &&
+    user.permissions.redeem === false
+  ) {
+    showMessage(
+      "Disabled",
+      "Redeem access is disabled.",
+      "error"
+    );
+
+    return false;
+  }
+
+  const code =
+    String(rawCode || "")
+      .trim()
+      .toUpperCase();
+
+  if (!code) {
+    showMessage(
+      "Empty code",
+      "Enter a token code.",
+      "error"
+    );
+
+    return false;
+  }
+
+  const codes =
+    getCodes();
+
+  const item =
+    codes[code];
+
+  if (!item) {
+    showMessage(
+      "Invalid code",
+      "That token code does not exist.",
+      "error"
+    );
+
+    return false;
+  }
+
+  if (item.used) {
+    showMessage(
+      "Already used",
+      "This code has already been redeemed.",
+      "error"
+    );
+
+    return false;
+  }
+
+  if (
+    item.expire &&
+    Date.now() >
+      Number(item.expire)
+  ) {
+
+    showMessage(
+      "Expired",
+      "This token code has expired.",
+      "error"
+    );
+
+    return false;
+  }
+
+  const users =
+    getUsers();
+
+  const email =
+    normalizeEmail(
+      user.email
+    );
+
+  if (!users[email]) {
+    return false;
+  }
+
+  const amount =
+    Math.max(
+      0,
+      Number(item.tokens || 0)
+    );
+
+  users[email].tokens =
+    Number(
+      users[email].tokens || 0
+    ) + amount;
+
+  item.used =
+    true;
+
+  item.usedBy =
+    email;
+
+  item.usedAt =
+    Date.now();
+
+  saveUsers(users);
+  saveCodes(codes);
+
+  renderUser();
+
+  const input =
+    $("redeemInput");
+
+  if (input) {
+    input.value = "";
+  }
+
+  showMessage(
+    "Redeemed",
+    `${amount} tokens were added to your account.`,
+    "success"
+  );
+
+  if (isAdmin(user)) {
+    renderAdminCodes();
+  }
+
+  return true;
+}
+
+
+/* =========================================================
+   ADMIN
+   ========================================================= */
+
+function showAdminPanel() {
+  const user =
+    getUser();
+
+  if (!isAdmin(user)) {
+    hideAdminPanel();
+    return;
+  }
+
+  const panel =
+    $("adminPanel");
+
+  if (panel) {
+    panel.style.display =
+      "block";
+  }
+
+  renderAdminCodes();
+  renderAdminUsers();
+}
+
+
+function hideAdminPanel() {
+  const panel =
+    $("adminPanel");
+
+  if (panel) {
+    panel.style.display =
+      "none";
+  }
+}
+
+
+/* =========================================================
+   ADMIN CREATE CODE
+   ========================================================= */
+
+function createTokenCode(
+  rawCode,
+  rawTokens,
+  rawExpire
+) {
+  const admin =
+    getUser();
+
+  if (!isAdmin(admin)) {
+    showMessage(
+      "Admin only",
+      "You don't have permission to do that.",
+      "error"
+    );
+
+    return false;
+  }
+
+  const code =
+    String(rawCode || "")
+      .trim()
+      .toUpperCase();
+
+  const tokens =
+    Number(rawTokens);
+
+  if (!code) {
+    showMessage(
+      "Missing code",
+      "Enter a token code.",
+      "error"
+    );
+
+    return false;
+  }
+
+  if (!/^[A-Z0-9_-]{3,40}$/.test(code)) {
+    showMessage(
+      "Invalid code",
+      "Use 3 to 40 letters, numbers, _ or -.",
+      "error"
+    );
+
+    return false;
+  }
+
+  if (
+    !Number.isFinite(tokens) ||
+    tokens <= 0
+  ) {
+    showMessage(
+      "Invalid tokens",
+      "Token amount must be greater than 0.",
+      "error"
+    );
+
+    return false;
+  }
+
+  const codes =
+    getCodes();
+
+  if (codes[code]) {
+    showMessage(
+      "Code exists",
+      "That code already exists.",
+      "error"
+    );
+
+    return false;
+  }
+
+  let expire =
+    null;
+
+  if (rawExpire) {
+    const date =
+      new Date(
+        rawExpire
+      );
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      showMessage(
+        "Invalid date",
+        "Expiration date is invalid.",
+        "error"
+      );
+
+      return false;
+    }
+
+    expire =
+      date.getTime();
+  }
+
+  codes[code] = {
+    code,
+
+    tokens,
+
+    expire,
+
+    used: false,
+
+    usedBy: null,
+
+    usedAt: null,
+
+    createdBy:
+      admin.email,
+
+    createdAt:
+      Date.now()
+  };
+
+  saveCodes(codes);
+
+  renderAdminCodes();
+
+  clearAdminCodeInputs();
+
+  showMessage(
+    "Code created",
+    `${code} gives ${tokens} tokens.`,
+    "success"
+  );
+
+  return true;
+}
+
+
+function clearAdminCodeInputs() {
+  const code =
+    $("codeInput");
+
+  const token =
+    $("tokenInput");
+
+  const expire =
+    $("expireInput");
+
+  if (code) {
+    code.value = "";
+  }
+
+  if (token) {
+    token.value = "";
+  }
+
+  if (expire) {
+    expire.value = "";
+  }
+}
+
+
+/* =========================================================
+   ADMIN CODE LIST
+   ========================================================= */
+
+function renderAdminCodes() {
+  const container =
+    $("adminCodes");
+
+  if (!container) {
+    return;
+  }
+
+  const codes =
+    getCodes();
+
+  const list =
+    Object.values(
+      codes
+    ).sort(
+      (a, b) =>
+        Number(b.createdAt || 0) -
+        Number(a.createdAt || 0)
+    );
+
+  if (!list.length) {
+    container.innerHTML =
+      "<p>No token codes yet.</p>";
+
+    return;
+  }
+
+  container.innerHTML =
+    list.map(
+      item => {
+
+        const expired =
+          item.expire &&
+          Date.now() >
+            Number(item.expire);
+
+        const status =
+          item.used
+            ? "USED"
+            : expired
+              ? "EXPIRED"
+              : "ACTIVE";
+
+        const expireText =
+          item.expire
+            ? new Date(
+                item.expire
+              ).toLocaleString()
+            : "Never";
+
+        return `
+          <div class="admin-item">
+            <strong>
+              ${escapeHTML(item.code)}
+            </strong>
+
+            <span>
+              ${Number(item.tokens)} tokens
+            </span>
+
+            <small>
+              ${status}
+            </small>
+
+            <small>
+              Expires: ${escapeHTML(expireText)}
+            </small>
+
+            ${
+              item.usedBy
+                ? `
+                  <small>
+                    Used by:
+                    ${escapeHTML(item.usedBy)}
+                  </small>
+                `
+                : ""
+            }
+
+            <button
+              type="button"
+              class="delete-code"
+              data-code="${escapeHTML(item.code)}"
+            >
+              Delete
             </button>
           </div>
+        `;
+      }
+    ).join("");
+}
 
-          <div id="usersList" class="users-list">
-            Loading users...
+
+/* =========================================================
+   ADMIN DELETE CODE
+   ========================================================= */
+
+function deleteTokenCode(
+  code
+) {
+  const admin =
+    getUser();
+
+  if (!isAdmin(admin)) {
+    return false;
+  }
+
+  const codes =
+    getCodes();
+
+  if (!codes[code]) {
+    return false;
+  }
+
+  delete codes[code];
+
+  saveCodes(codes);
+
+  renderAdminCodes();
+
+  showMessage(
+    "Deleted",
+    `Token code ${code} was deleted.`,
+    "success"
+  );
+
+  return true;
+}
+
+
+/* =========================================================
+   ADMIN USER LIST
+   ========================================================= */
+
+function renderAdminUsers() {
+  const container =
+    $("adminUsers");
+
+  if (!container) {
+    return;
+  }
+
+  const admin =
+    getUser();
+
+  if (!isAdmin(admin)) {
+    return;
+  }
+
+  const users =
+    getUsers();
+
+  const list =
+    Object.values(
+      users
+    ).sort(
+      (a, b) =>
+        Number(b.lastLogin || 0) -
+        Number(a.lastLogin || 0)
+    );
+
+  if (!list.length) {
+    container.innerHTML =
+      "<p>No users yet.</p>";
+
+    return;
+  }
+
+  container.innerHTML =
+    list.map(
+      user => {
+
+        const adminUser =
+          isAdmin(user);
+
+        const permissions =
+          user.permissions ||
+          {};
+
+        const converter =
+          permissions.converter !== false;
+
+        const redeem =
+          permissions.redeem !== false;
+
+        const adminPanel =
+          permissions.adminPanel === true;
+
+        return `
+          <div class="admin-item">
+
+            <strong>
+              ${escapeHTML(user.email)}
+            </strong>
+
+            <span>
+              ${
+                adminUser
+                  ? "∞ Tokens"
+                  : `${Number(user.tokens || 0)} Tokens`
+              }
+            </span>
+
+            <small>
+              Joined:
+              ${new Date(
+                user.createdAt
+              ).toLocaleString()}
+            </small>
+
+            ${
+              adminUser
+                ? `
+                  <small>
+                    ADMIN ACCOUNT
+                  </small>
+                `
+                : `
+                  <label>
+                    <input
+                      type="checkbox"
+                      data-permission="converter"
+                      data-email="${escapeHTML(user.email)}"
+                      ${converter ? "checked" : ""}
+                    >
+                    Converter
+                  </label>
+
+                  <label>
+                    <input
+                      type="checkbox"
+                      data-permission="redeem"
+                      data-email="${escapeHTML(user.email)}"
+                      ${redeem ? "checked" : ""}
+                    >
+                    Redeem
+                  </label>
+
+                  <label>
+                    <input
+                      type="checkbox"
+                      data-permission="adminPanel"
+                      data-email="${escapeHTML(user.email)}"
+                      ${adminPanel ? "checked" : ""}
+                    >
+                    Admin panel
+                  </label>
+
+                  <br>
+
+                  <button
+                    type="button"
+                    class="add-user-token"
+                    data-email="${escapeHTML(user.email)}"
+                  >
+                    Add Tokens
+                  </button>
+
+                  <button
+                    type="button"
+                    class="reset-user-token"
+                    data-email="${escapeHTML(user.email)}"
+                  >
+                    Set Tokens
+                  </button>
+                `
+            }
+
           </div>
-        </div>
+        `;
+      }
+    ).join("");
+}
 
-      </section>
 
-    </main>
+/* =========================================================
+   ADMIN PERMISSIONS
+   ========================================================= */
 
-  </section>
+function updatePermission(
+  email,
+  permission,
+  enabled
+) {
+  const admin =
+    getUser();
 
-  <script type="module" src="script.js"></script>
-</body>
-    </html>
+  if (!isAdmin(admin)) {
+    return false;
+  }
+
+  email =
+    normalizeEmail(
+      email
+    );
+
+  if (
+    email ===
+    normalizeEmail(
+      CONFIG.ADMIN_EMAIL
+    )
+  ) {
+    return false;
+  }
+
+  const users =
+    getUsers();
+
+  if (!users[email]) {
+    return false;
+  }
+
+  if (!users[email].permissions) {
+    users[email].permissions = {};
+  }
+
+  users[email]
+    .permissions[
+      permission
+    ] = Boolean(enabled);
+
+  saveUsers(users);
+
+  renderAdminUsers();
+
+  return true;
+}
+
+
+/* =========================================================
+   ADMIN TOKEN MANAGEMENT
+   ========================================================= */
+
+function addUserTokens(
+  email,
+  amount
+) {
+  const admin =
+    getUser();
+
+  if (!isAdmin(admin)) {
+    return false;
+  }
+
+  email =
+    normalizeEmail(
+      email
+    );
+
+  amount =
+    Number(amount);
+
+  if (
+    !Number.isFinite(amount) ||
+    amount <= 0
+  ) {
+    return false;
+  }
+
+  const users =
+    getUsers();
+
+  if (!users[email]) {
+    return false;
+  }
+
+  if (isAdmin(users[email])) {
+    return false;
+  }
+
+  users[email].tokens =
+    Number(
+      users[email].tokens || 0
+    ) + amount;
+
+  saveUsers(users);
+
+  renderAdminUsers();
+
+  if (
+    normalizeEmail(
+      getCurrentEmail()
+    ) === email
+  ) {
+    renderUser();
+  }
+
+  showMessage(
+    "Tokens added",
+    `${amount} tokens added.`,
+    "success"
+  );
+
+  return true;
+}
+
+
+function setUserTokens(
+  email,
+  amount
+) {
+  const admin =
+    getUser();
+
+  if (!isAdmin(admin)) {
+    return false;
+  }
+
+  email =
+    normalizeEmail(
+      email
+    );
+
+  amount =
+    Number(amount);
+
+  if (
+    !Number.isFinite(amount) ||
+    amount < 0
+  ) {
+    return false;
+  }
+
+  const users =
+    getUsers();
+
+  if (!users[email]) {
+    return false;
+  }
+
+  if (isAdmin(users[email])) {
+    return false;
+  }
+
+  users[email].tokens =
+    Math.floor(amount);
+
+  saveUsers(users);
+
+  renderAdminUsers();
+
+  if (
+    normalizeEmail(
+      getCurrentEmail()
+    ) === email
+  ) {
+    renderUser();
+  }
+
+  showMessage(
+    "Tokens updated",
+    `User now has ${Math.floor(amount)} tokens.`,
+    "success"
+  );
+
+  return true;
+}
+
+
+/* =========================================================
+   MESSAGE SYSTEM
+   ========================================================= */
+
+function showMessage(
+  title,
+  text,
+  type = "info"
+) {
+  let box =
+    $("convertxMessage");
+
+  if (!box) {
+
+    box =
+      document.createElement(
+        "div"
+      );
+
+    box.id =
+      "convertxMessage";
+
+    box.style.position =
+      "fixed";
+
+    box.style.left =
+      "50%";
+
+    box.style.bottom =
+      "25px";
+
+    box.style.transform =
+      "translateX(-50%)";
+
+    box.style.zIndex =
+      "99999";
+
+    box.style.maxWidth =
+      "90%";
+
+    box.style.width =
+      "420px";
+
+    box.style.padding =
+      "15px";
+
+    box.style.border =
+      "1px solid #333";
+
+    box.style.borderRadius =
+      "12px";
+
+    box.style.background =
+      "#111";
+
+    box.style.color =
+      "#fff";
+
+    box.style.boxShadow =
+      "0 15px 40px rgba(0,0,0,.4)";
+
+    document.body.appendChild(
+      box
+    );
+  }
+
+  box.innerHTML = `
+    <strong>
+      ${escapeHTML(title)}
+    </strong>
+
+    <div style="
+      margin-top:5px;
+      color:#aaa;
+      font-size:13px;
+    ">
+      ${escapeHTML(text)}
+    </div>
+  `;
+
+  box.style.borderColor =
+    type === "error"
+      ? "#662222"
+      : type === "success"
+        ? "#285a35"
+        : "#333";
+
+  clearTimeout(
+    box._timer
+  );
+
+  box._timer =
+    setTimeout(
+      () => {
+        box.remove();
+      },
+      3500
+    );
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+   ========================================================= */
+
+function escapeHTML(value) {
+  return String(value ?? "")
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
+}
+
+
+/* =========================================================
+   RANDOM ID
+   ========================================================= */
+
+function cryptoRandomID() {
+  try {
+
+    if (
+      crypto &&
+      crypto.randomUUID
+    ) {
+      return crypto.randomUUID();
+    }
+
+  } catch {}
+
+  return (
+    "user_" +
+    Date.now() +
+    "_" +
+    Math.random()
+      .toString(36)
+      .slice(2)
+  );
+}
+
+
+/* =========================================================
+   UTILITIES
+   ========================================================= */
+
+function sleep(ms) {
+  return new Promise(
+    resolve =>
+      setTimeout(
+        resolve,
+        ms
+      )
+  );
+}
+
+
+/* =========================================================
+   EVENT HELPERS
+   ========================================================= */
+
+function bindClick(
+  id,
+  callback
+) {
+  const element =
+    $(id);
+
+  if (!element) {
+    return;
+  }
+
+  element.addEventListener(
+    "click",
+    callback
+  );
+}
+
+
+/* =========================================================
+   LOGIN EVENTS
+   ========================================================= */
+
+function setupLogin() {
+
+  bindClick(
+    "loginButton",
+    () => {
+
+      const input =
+        $("gmailInput");
+
+      login(
+        input
+          ? input.value
+          : ""
+      );
+    }
+  );
+
+
+  const input =
+    $("gmailInput");
+
+  if (input) {
+
+    input.addEventListener(
+      "keydown",
+      event => {
+
+        if (
+          event.key ===
+          "Enter"
+        ) {
+          login(
+            input.value
+          );
+        }
+      }
+    );
+  }
+}
+
+
+/* =========================================================
+   CONVERTER EVENTS
+   ========================================================= */
+
+function setupConverter() {
+
+  all(
+    "[data-type]"
+  ).forEach(
+    button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+          setConverterType(
+            button.dataset.type
+          );
+        }
+      );
+    }
+  );
+
+
+  const input =
+    $("fileInput");
+
+  if (input) {
+
+    input.addEventListener(
+      "change",
+      event => {
+
+        const file =
+          event.target.files?.[0];
+
+        handleFile(file);
+      }
+    );
+  }
+
+
+  const upload =
+    $("uploadBox");
+
+  if (upload) {
+
+    upload.addEventListener(
+      "click",
+      event => {
+
+        if (
+          event.target ===
+          input
+        ) {
+          return;
+        }
+
+        input?.click();
+      }
+    );
+
+
+    upload.addEventListener(
+      "dragover",
+      event => {
+
+        event.preventDefault();
+
+        upload.classList.add(
+          "dragging"
+        );
+      }
+    );
+
+
+    upload.addEventListener(
+      "dragleave",
+      () => {
+
+        upload.classList.remove(
+          "dragging"
+        );
+      }
+    );
+
+
+    upload.addEventListener(
+      "drop",
+      event => {
+
+        event.preventDefault();
+
+        upload.classList.remove(
+          "dragging"
+        );
+
+        const file =
+          event.dataTransfer
+            ?.files?.[0];
+
+        handleFile(file);
+      }
+    );
+  }
+
+
+  bindClick(
+    "convertButton",
+    convertFile
+  );
+}
+
+
+/* =========================================================
+   REDEEM EVENTS
+   ========================================================= */
+
+function setupRedeem() {
+
+  bindClick(
+    "redeemButton",
+    () => {
+
+      const input =
+        $("redeemInput");
+
+      redeemCode(
+        input
+          ? input.value
+          : ""
+      );
+    }
+  );
+
+
+  const input =
+    $("redeemInput");
+
+  if (input) {
+
+    input.addEventListener(
+      "keydown",
+      event => {
+
+        if (
+          event.key ===
+          "Enter"
+        ) {
+          redeemCode(
+            input.value
+          );
+        }
+      }
+    );
+  }
+}
+
+
+/* =========================================================
+   ADMIN EVENTS
+   ========================================================= */
+
+function setupAdmin() {
+
+  bindClick(
+    "createCodeButton",
+    () => {
+
+      createTokenCode(
+        $("codeInput")?.value ||
+          "",
+
+        $("tokenInput")?.value ||
+          "",
+
+        $("expireInput")?.value ||
+          ""
+      );
+    }
+  );
+
+
+  document.addEventListener(
+    "change",
+    event => {
+
+      const target =
+        event.target;
+
+      if (
+        target.matches(
+          "[data-permission][data-email]"
+        )
+      ) {
+
+        updatePermission(
+          target.dataset.email,
+          target.dataset.permission,
+          target.checked
+        );
+      }
+    }
+  );
+
+
+  document.addEventListener(
+    "click",
+    event => {
+
+      const target =
+        event.target;
+
+
+      if (
+        target.matches(
+          ".delete-code"
+        )
+      ) {
+
+        const code =
+          target.dataset.code;
+
+        if (
+          confirm(
+            `Delete code ${code}?`
+          )
+        ) {
+          deleteTokenCode(
+            code
+          );
+        }
+
+        return;
+      }
+
+
+      if (
+        target.matches(
+          ".add-user-token"
+        )
+      ) {
+
+        const email =
+          target.dataset.email;
+
+        const amount =
+          prompt(
+            "How many tokens?"
+          );
+
+        if (
+          amount !== null
+        ) {
+          addUserTokens(
+            email,
+            amount
+          );
+        }
+
+        return;
+      }
+
+
+      if (
+        target.matches(
+          ".reset-user-token"
+        )
+      ) {
+
+        const email =
+          target.dataset.email;
+
+        const amount =
+          prompt(
+            "Set token amount:"
+          );
+
+        if (
+          amount !== null
+        ) {
+          setUserTokens(
+            email,
+            amount
+          );
+        }
+      }
+    }
+  );
+}
+
+
+/* =========================================================
+   LOGOUT
+   ========================================================= */
+
+function setupLogout() {
+
+  bindClick(
+    "logoutButton",
+    logout
+  );
+}
+
+
+/* =========================================================
+   INITIALIZE
+   ========================================================= */
+
+function initialize() {
+
+  getSettings();
+
+  setupLogin();
+
+  setupConverter();
+
+  setupRedeem();
+
+  setupAdmin();
+
+  setupLogout();
+
+  updateConverterUI();
+
+  const email =
+    getCurrentEmail();
+
+  if (
+    email &&
+    getUser(email)
+  ) {
+    showApp();
+  } else {
+    showLogin();
+  }
+}
+
+
+/* =========================================================
+   CLEANUP
+   ========================================================= */
+
+window.addEventListener(
+  "beforeunload",
+  () => {
+
+    cleanupPreview();
+
+    if (
+      state.outputObjectURL
+    ) {
+      URL.revokeObjectURL(
+        state.outputObjectURL
+      );
+    }
+
+    cleanupMedia();
+  }
+);
+
+
+/* =========================================================
+   GLOBAL API
+   ========================================================= */
+
+window.ConvertX = {
+
+  login,
+
+  logout,
+
+  setConverterType,
+
+  handleFile,
+
+  convertFile,
+
+  redeemCode,
+
+  createTokenCode,
+
+  addUserTokens,
+
+  setUserTokens,
+
+  deleteTokenCode,
+
+  updatePermission,
+
+  getUser
+};
+
+
+/* =========================================================
+   START
+   ========================================================= */
+
+if (
+  document.readyState ===
+  "loading"
+) {
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    initialize
+  );
+
+} else {
+
+  initialize();
+}
