@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    /* ================================
-       ELEMENTS
-    ================================= */
+    // =========================================
+    // ELEMENTS
+    // =========================================
 
     const loginScreen = document.getElementById("loginScreen");
     const app = document.getElementById("app");
@@ -52,18 +52,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const toast = document.getElementById("toast");
 
 
-    /* ================================
-       STATE
-    ================================= */
+    // =========================================
+    // STATE
+    // =========================================
 
     let currentMode = "photo";
     let currentFormat = "png";
+
     let selectedFile = null;
+
     let convertedBlob = null;
     let convertedName = "";
+
     let downloadURL = null;
+
     let converting = false;
 
+
+    // =========================================
+    // COST
+    // =========================================
 
     const COSTS = {
         photo: 5,
@@ -71,44 +79,53 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
 
-    /* ================================
-       TOKENS
-       NEW USERS START WITH 100
-    ================================= */
+    // =========================================
+    // TOKENS
+    // =========================================
 
     let savedTokens =
         localStorage.getItem("convertx_tokens");
 
-    let tokens =
-        savedTokens === null
-            ? 100
-            : Number(savedTokens);
+    let tokens;
 
+    if (savedTokens === null) {
 
-    if (
-        !Number.isFinite(tokens) ||
-        tokens < 0
-    ) {
-        tokens = 100;
+        tokens = 10000;
+
+        localStorage.setItem(
+            "convertx_tokens",
+            "10000"
+        );
+
+    } else {
+
+        tokens = Number(savedTokens);
+
+        if (
+            !Number.isFinite(tokens) ||
+            tokens < 0
+        ) {
+
+            tokens = 10000;
+
+            localStorage.setItem(
+                "convertx_tokens",
+                "10000"
+            );
+        }
     }
-
-
-    localStorage.setItem(
-        "convertx_tokens",
-        String(tokens)
-    );
 
 
     function updateTokens() {
 
         if (tokenCount) {
             tokenCount.textContent =
-                tokens;
+                tokens.toLocaleString();
         }
 
         if (bigTokenCount) {
             bigTokenCount.textContent =
-                tokens;
+                tokens.toLocaleString();
         }
 
         localStorage.setItem(
@@ -118,9 +135,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    /* ================================
-       TOAST
-    ================================= */
+    // =========================================
+    // TOAST
+    // =========================================
 
     let toastTimer;
 
@@ -136,16 +153,18 @@ document.addEventListener("DOMContentLoaded", () => {
         clearTimeout(toastTimer);
 
         toastTimer = setTimeout(() => {
+
             toast.classList.remove("show");
+
         }, 2500);
     }
 
 
-    /* ================================
-       PROFILE
-    ================================= */
+    // =========================================
+    // LOGIN
+    // =========================================
 
-    function getDisplayName(email) {
+    function getName(email) {
 
         if (!email) {
             return "Demo";
@@ -154,10 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let name =
             email
                 .split("@")[0]
-                .replace(
-                    /[^a-zA-Z0-9._-]/g,
-                    ""
-                );
+                .trim();
 
         if (!name) {
             return "Demo";
@@ -170,10 +186,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    function openApp(email) {
+    function login() {
 
-        email =
-            String(email || "").trim();
+        let email =
+            loginName
+                ? loginName.value.trim()
+                : "";
 
 
         if (!email) {
@@ -182,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         const name =
-            getDisplayName(email);
+            getName(email);
 
 
         localStorage.setItem(
@@ -198,23 +216,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         if (userName) {
-            userName.textContent = name;
+            userName.textContent =
+                name;
         }
 
 
         if (avatar) {
             avatar.textContent =
-                name.charAt(0).toUpperCase();
+                name
+                    .charAt(0)
+                    .toUpperCase();
         }
 
 
         if (loginScreen) {
-            loginScreen.classList.add("hidden");
+            loginScreen.classList.add(
+                "hidden"
+            );
         }
 
 
         if (app) {
-            app.classList.remove("hidden");
+            app.classList.remove(
+                "hidden"
+            );
         }
 
 
@@ -222,21 +247,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    /* ================================
-       LOGIN
-    ================================= */
-
     if (loginBtn) {
 
-        loginBtn.onclick = () => {
-
-            openApp(
-                loginName
-                    ? loginName.value
-                    : ""
-            );
-
-        };
+        loginBtn.addEventListener(
+            "click",
+            login
+        );
     }
 
 
@@ -250,19 +266,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     event.preventDefault();
 
-                    openApp(
-                        loginName.value
-                    );
+                    login();
                 }
-
             }
         );
     }
 
 
-    /* ================================
-       AUTO LOGIN
-    ================================= */
+    // =========================================
+    // AUTO LOGIN
+    // =========================================
 
     const savedEmail =
         localStorage.getItem(
@@ -272,7 +285,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (savedEmail) {
 
-        openApp(savedEmail);
+        if (loginName) {
+            loginName.value =
+                savedEmail;
+        }
+
+        login();
 
     } else {
 
@@ -283,54 +301,60 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (app) {
-            app.classList.add("hidden");
+            app.classList.add(
+                "hidden"
+            );
         }
     }
 
 
-    /* ================================
-       LOGOUT
-    ================================= */
+    // =========================================
+    // LOGOUT
+    // =========================================
 
     if (logoutBtn) {
 
-        logoutBtn.onclick = () => {
+        logoutBtn.addEventListener(
+            "click",
+            () => {
 
-            localStorage.removeItem(
-                "convertx_fake_email"
-            );
-
-            localStorage.removeItem(
-                "convertx_fake_name"
-            );
-
-
-            if (app) {
-                app.classList.add("hidden");
-            }
-
-
-            if (loginScreen) {
-                loginScreen.classList.remove(
-                    "hidden"
+                localStorage.removeItem(
+                    "convertx_fake_email"
                 );
+
+                localStorage.removeItem(
+                    "convertx_fake_name"
+                );
+
+
+                if (app) {
+                    app.classList.add(
+                        "hidden"
+                    );
+                }
+
+
+                if (loginScreen) {
+                    loginScreen.classList.remove(
+                        "hidden"
+                    );
+                }
+
+
+                if (loginName) {
+                    loginName.value = "";
+                }
+
+
+                resetFile();
             }
-
-
-            if (loginName) {
-                loginName.value = "";
-                loginName.focus();
-            }
-
-
-            resetFile();
-        };
+        );
     }
 
 
-    /* ================================
-       MODE
-    ================================= */
+    // =========================================
+    // MODE BUTTONS
+    // =========================================
 
     modeButtons.forEach(button => {
 
@@ -338,7 +362,9 @@ document.addEventListener("DOMContentLoaded", () => {
             "click",
             () => {
 
-                if (converting) return;
+                if (converting) {
+                    return;
+                }
 
 
                 modeButtons.forEach(
@@ -350,7 +376,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
 
 
-                button.classList.add("active");
+                button.classList.add(
+                    "active"
+                );
 
 
                 currentMode =
@@ -366,9 +394,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
 
-    /* ================================
-       FORMAT
-    ================================= */
+    // =========================================
+    // FORMAT BUTTONS
+    // =========================================
 
     formatButtons.forEach(button => {
 
@@ -392,7 +420,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
 
 
-                button.classList.add("active");
+                button.classList.add(
+                    "active"
+                );
 
 
                 currentFormat =
@@ -403,9 +433,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
 
-    /* ================================
-       CONVERTER UI
-    ================================= */
+    // =========================================
+    // CONVERTER UI
+    // =========================================
 
     function updateConverterUI() {
 
@@ -414,12 +444,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         if (costLabel) {
+
             costLabel.textContent =
                 `${cost} Tokens`;
         }
 
 
         if (buttonCost) {
+
             buttonCost.textContent =
                 cost;
         }
@@ -427,155 +459,189 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (currentMode === "photo") {
 
-            formatArea.classList.remove(
-                "hidden"
-            );
+            if (formatArea) {
+                formatArea.classList.remove(
+                    "hidden"
+                );
+            }
 
 
-            supportedText.textContent =
-                "JPG or PNG · Max 50MB";
+            if (supportedText) {
+
+                supportedText.textContent =
+                    "JPG or PNG · Max 50MB";
+            }
 
 
-            fileInput.accept =
-                "image/jpeg,image/png";
+            if (fileInput) {
+
+                fileInput.accept =
+                    "image/jpeg,image/png";
+            }
 
         } else {
 
-            formatArea.classList.add(
-                "hidden"
-            );
+            if (formatArea) {
+                formatArea.classList.add(
+                    "hidden"
+                );
+            }
 
 
-            supportedText.textContent =
-                "MP4, WebM or MOV · Max 200MB";
+            if (supportedText) {
+
+                supportedText.textContent =
+                    "MP4, WebM or MOV · Max 200MB";
+            }
 
 
-            fileInput.accept =
-                "video/*";
+            if (fileInput) {
+
+                fileInput.accept =
+                    "video/*";
+            }
         }
     }
 
 
-    /* ================================
-       BROWSE
-    ================================= */
+    // =========================================
+    // BROWSE
+    // =========================================
 
-    browseBtn.addEventListener(
-        "click",
-        event => {
+    if (browseBtn) {
 
-            event.stopPropagation();
+        browseBtn.addEventListener(
+            "click",
+            event => {
 
-            if (!converting) {
-                fileInput.click();
+                event.stopPropagation();
+
+                if (!converting) {
+
+                    fileInput.click();
+                }
             }
-        }
-    );
+        );
+    }
 
 
-    dropZone.addEventListener(
-        "click",
-        event => {
+    if (dropZone) {
 
-            if (
-                event.target.closest(
-                    "#browseBtn"
-                )
-            ) {
-                return;
+        dropZone.addEventListener(
+            "click",
+            event => {
+
+                if (
+                    event.target.closest(
+                        "#browseBtn"
+                    )
+                ) {
+                    return;
+                }
+
+
+                if (!converting) {
+
+                    fileInput.click();
+                }
             }
+        );
 
 
-            if (!converting) {
-                fileInput.click();
+        dropZone.addEventListener(
+            "dragover",
+            event => {
+
+                event.preventDefault();
+
+                if (!converting) {
+
+                    dropZone.classList.add(
+                        "dragging"
+                    );
+                }
             }
-        }
-    );
+        );
 
 
-    fileInput.addEventListener(
-        "change",
-        () => {
+        dropZone.addEventListener(
+            "dragleave",
+            () => {
 
-            if (
-                fileInput.files &&
-                fileInput.files.length > 0
-            ) {
-
-                handleFile(
-                    fileInput.files[0]
-                );
-            }
-        }
-    );
-
-
-    /* ================================
-       DRAG DROP
-    ================================= */
-
-    dropZone.addEventListener(
-        "dragover",
-        event => {
-
-            event.preventDefault();
-
-            if (!converting) {
-                dropZone.classList.add(
+                dropZone.classList.remove(
                     "dragging"
                 );
             }
-        }
-    );
+        );
 
 
-    dropZone.addEventListener(
-        "dragleave",
-        () => {
+        dropZone.addEventListener(
+            "drop",
+            event => {
 
-            dropZone.classList.remove(
-                "dragging"
-            );
-        }
-    );
+                event.preventDefault();
 
-
-    dropZone.addEventListener(
-        "drop",
-        event => {
-
-            event.preventDefault();
-
-            dropZone.classList.remove(
-                "dragging"
-            );
+                dropZone.classList.remove(
+                    "dragging"
+                );
 
 
-            if (converting) return;
+                if (converting) {
+                    return;
+                }
 
 
-            const files =
-                event.dataTransfer.files;
+                const files =
+                    event.dataTransfer.files;
 
 
-            if (
-                files &&
-                files.length > 0
-            ) {
+                if (
+                    files &&
+                    files.length > 0
+                ) {
 
-                handleFile(files[0]);
+                    handleFile(
+                        files[0]
+                    );
+                }
             }
-        }
-    );
+        );
+    }
 
 
-    /* ================================
-       HANDLE FILE
-    ================================= */
+    // =========================================
+    // FILE INPUT
+    // =========================================
+
+    if (fileInput) {
+
+        fileInput.addEventListener(
+            "change",
+            () => {
+
+                if (
+                    fileInput.files &&
+                    fileInput.files.length > 0
+                ) {
+
+                    handleFile(
+                        fileInput.files[0]
+                    );
+                }
+            }
+        );
+    }
+
+
+    // =========================================
+    // HANDLE FILE
+    // =========================================
 
     function handleFile(file) {
 
-        if (!file) return;
+        if (!file) {
+            return;
+        }
 
 
         const maxSize =
@@ -605,7 +671,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ) {
 
             showToast(
-                "Choose a JPG or PNG file"
+                "Choose JPG or PNG"
             );
 
             return;
@@ -642,52 +708,82 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        fileName.textContent =
-            file.name;
+        if (fileName) {
+            fileName.textContent =
+                file.name;
+        }
 
 
-        fileSize.textContent =
-            formatBytes(file.size);
+        if (fileSize) {
+            fileSize.textContent =
+                formatBytes(file.size);
+        }
 
 
-        fileIcon.textContent =
+        if (fileIcon) {
+            fileIcon.textContent =
+                currentMode === "photo"
+                    ? "IMG"
+                    : "VID";
+        }
+
+
+        if (fileCard) {
+            fileCard.classList.remove(
+                "hidden"
+            );
+        }
+
+
+        if (convertBtn) {
+            convertBtn.disabled = false;
+        }
+
+
+        if (resultCard) {
+            resultCard.classList.add(
+                "hidden"
+            );
+        }
+
+
+        if (
             currentMode === "photo"
-                ? "IMG"
-                : "VID";
-
-
-        fileCard.classList.remove(
-            "hidden"
-        );
-
-
-        convertBtn.disabled = false;
-
-
-        resultCard.classList.add(
-            "hidden"
-        );
-
-
-        if (currentMode === "photo") {
+        ) {
 
             const reader =
                 new FileReader();
 
 
-            reader.onload = event => {
+            reader.onload =
+                event => {
 
-                imagePreview.src =
-                    event.target.result;
-
-
-                previewWrap.classList.remove(
-                    "hidden"
-                );
-            };
+                    imagePreview.src =
+                        event.target.result;
 
 
-            reader.readAsDataURL(file);
+                    previewWrap.classList.remove(
+                        "hidden"
+                    );
+                };
+
+
+            reader.onerror =
+                () => {
+
+                    previewWrap.classList.add(
+                        "hidden"
+                    );
+
+                    showToast(
+                        "Could not preview image"
+                    );
+                };
+
+
+            reader.readAsDataURL(
+                file
+            );
 
         } else {
 
@@ -698,21 +794,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    /* ================================
-       REMOVE FILE
-    ================================= */
+    // =========================================
+    // REMOVE FILE
+    // =========================================
 
-    removeFile.addEventListener(
-        "click",
-        event => {
+    if (removeFile) {
 
-            event.stopPropagation();
+        removeFile.addEventListener(
+            "click",
+            event => {
 
-            if (!converting) {
-                resetFile();
+                event.stopPropagation();
+
+                if (!converting) {
+
+                    resetFile();
+                }
             }
-        }
-    );
+        );
+    }
 
 
     function resetFile() {
@@ -724,36 +824,42 @@ document.addEventListener("DOMContentLoaded", () => {
         convertedName = "";
 
 
-        fileInput.value = "";
+        if (fileInput) {
+            fileInput.value = "";
+        }
 
 
-        fileCard.classList.add(
-            "hidden"
-        );
+        if (fileCard) {
+            fileCard.classList.add(
+                "hidden"
+            );
+        }
 
 
-        previewWrap.classList.add(
-            "hidden"
-        );
+        if (previewWrap) {
+            previewWrap.classList.add(
+                "hidden"
+            );
+        }
 
 
-        progressArea.classList.add(
-            "hidden"
-        );
+        if (progressArea) {
+            progressArea.classList.add(
+                "hidden"
+            );
+        }
 
 
-        resultCard.classList.add(
-            "hidden"
-        );
+        if (resultCard) {
+            resultCard.classList.add(
+                "hidden"
+            );
+        }
 
 
-        convertBtn.disabled = true;
-
-
-        setProgress(
-            0,
-            "Preparing..."
-        );
+        if (convertBtn) {
+            convertBtn.disabled = true;
+        }
 
 
         if (downloadURL) {
@@ -764,841 +870,147 @@ document.addEventListener("DOMContentLoaded", () => {
 
             downloadURL = null;
         }
-    }
-
-
-    /* ================================
-       CONVERT
-    ================================= */
-
-    convertBtn.addEventListener(
-        "click",
-        async () => {
-
-            if (converting) return;
-
-
-            if (!selectedFile) {
-
-                showToast(
-                    "Choose a file first"
-                );
-
-                return;
-            }
-
-
-            const cost =
-                COSTS[currentMode];
-
-
-            if (tokens < cost) {
-
-                showToast(
-                    `Not enough tokens · Need ${cost}`
-                );
-
-                return;
-            }
-
-
-            converting = true;
-
-            convertBtn.disabled = true;
-
-
-            progressArea.classList.remove(
-                "hidden"
-            );
-
-
-            setProgress(
-                5,
-                "Preparing..."
-            );
-
-
-            try {
-
-                let result;
-
-
-                if (
-                    currentMode === "photo"
-                ) {
-
-                    result =
-                        await convertImage(
-                            selectedFile,
-                            currentFormat
-                        );
-
-                } else {
-
-                    result =
-                        await videoToAudio(
-                            selectedFile
-                        );
-                }
-
-
-                if (
-                    !result ||
-                    !result.blob
-                ) {
-
-                    throw new Error(
-                        "Conversion failed"
-                    );
-                }
-
-
-                /* REAL TOKEN CHARGE */
-
-                tokens =
-                    tokens - cost;
-
-
-                updateTokens();
-
-
-                convertedBlob =
-                    result.blob;
-
-
-                convertedName =
-                    result.name;
-
-
-                resultName.textContent =
-                    convertedName;
-
-
-                setProgress(
-                    100,
-                    "Complete"
-                );
-
-
-                setTimeout(
-                    () => {
-
-                        progressArea.classList.add(
-                            "hidden"
-                        );
-
-
-                        resultCard.classList.remove(
-                            "hidden"
-                        );
-
-
-                        showToast(
-                            `Success · ${cost} tokens charged`
-                        );
-
-                    },
-                    400
-                );
-
-
-            } catch (error) {
-
-                console.error(error);
-
-
-                progressArea.classList.add(
-                    "hidden"
-                );
-
-
-                showToast(
-                    error.message ||
-                    "Conversion failed"
-                );
-
-            } finally {
-
-                converting = false;
-
-
-                convertBtn.disabled =
-                    !selectedFile;
-            }
-
-        }
-    );
-
-
-    /* ================================
-       IMAGE CONVERTER
-    ================================= */
-
-    function convertImage(
-        file,
-        format
-    ) {
-
-        return new Promise(
-            (resolve, reject) => {
-
-                const img =
-                    new Image();
-
-
-                const url =
-                    URL.createObjectURL(file);
-
-
-                img.onload = () => {
-
-                    try {
-
-                        URL.revokeObjectURL(
-                            url
-                        );
-
-
-                        setProgress(
-                            30,
-                            "Reading image..."
-                        );
-
-
-                        const canvas =
-                            document.createElement(
-                                "canvas"
-                            );
-
-
-                        canvas.width =
-                            img.naturalWidth;
-
-
-                        canvas.height =
-                            img.naturalHeight;
-
-
-                        const ctx =
-                            canvas.getContext(
-                                "2d"
-                            );
-
-
-                        if (!ctx) {
-
-                            throw new Error(
-                                "Canvas unavailable"
-                            );
-                        }
-
-
-                        if (format === "jpg") {
-
-                            ctx.fillStyle =
-                                "#ffffff";
-
-
-                            ctx.fillRect(
-                                0,
-                                0,
-                                canvas.width,
-                                canvas.height
-                            );
-                        }
-
-
-                        ctx.drawImage(
-                            img,
-                            0,
-                            0
-                        );
-
-
-                        setProgress(
-                            65,
-                            "Converting..."
-                        );
-
-
-                        const type =
-                            format === "jpg"
-                                ? "image/jpeg"
-                                : "image/png";
-
-
-                        canvas.toBlob(
-                            blob => {
-
-                                if (!blob) {
-
-                                    reject(
-                                        new Error(
-                                            "Could not create image"
-                                        )
-                                    );
-
-                                    return;
-                                }
-
-
-                                setProgress(
-                                    90,
-                                    "Finishing..."
-                                );
-
-
-                                resolve({
-
-                                    blob: blob,
-
-                                    name:
-                                        `${cleanName(file.name)}.${format}`
-
-                                });
-
-                            },
-                            type,
-                            format === "jpg"
-                                ? 0.92
-                                : undefined
-                        );
-
-
-                    } catch (error) {
-
-                        URL.revokeObjectURL(
-                            url
-                        );
-
-                        reject(error);
-                    }
-                };
-
-
-                img.onerror = () => {
-
-                    URL.revokeObjectURL(
-                        url
-                    );
-
-
-                    reject(
-                        new Error(
-                            "Could not read image"
-                        )
-                    );
-                };
-
-
-                img.src = url;
-            }
-        );
-    }
-
-
-    /* ================================
-       VIDEO → VOICE
-    ================================= */
-
-    async function videoToAudio(file) {
-
-        if (
-            typeof MediaRecorder ===
-            "undefined"
-        ) {
-
-            throw new Error(
-                "Your browser does not support audio export"
-            );
-        }
-
-
-        const AudioContext =
-            window.AudioContext ||
-            window.webkitAudioContext;
-
-
-        if (!AudioContext) {
-
-            throw new Error(
-                "Audio conversion is not supported"
-            );
-        }
 
 
         setProgress(
-            10,
-            "Loading video..."
+            0,
+            "Preparing..."
         );
-
-
-        const video =
-            document.createElement("video");
-
-
-        video.preload = "auto";
-        video.playsInline = true;
-        video.muted = false;
-
-
-        const videoURL =
-            URL.createObjectURL(file);
-
-
-        video.src = videoURL;
-
-
-        try {
-
-            await waitForVideo(video);
-
-
-            setProgress(
-                25,
-                "Preparing audio..."
-            );
-
-
-            const audioContext =
-                new AudioContext();
-
-
-            if (
-                audioContext.state ===
-                "suspended"
-            ) {
-
-                await audioContext.resume();
-            }
-
-
-            const source =
-                audioContext
-                    .createMediaElementSource(
-                        video
-                    );
-
-
-            const destination =
-                audioContext
-                    .createMediaStreamDestination();
-
-
-            source.connect(destination);
-
-            source.connect(
-                audioContext.destination
-            );
-
-
-            const mime =
-                MediaRecorder.isTypeSupported(
-                    "audio/webm;codecs=opus"
-                )
-                    ? "audio/webm;codecs=opus"
-                    : "audio/webm";
-
-
-            const recorder =
-                new MediaRecorder(
-                    destination.stream,
-                    {
-                        mimeType: mime
-                    }
-                );
-
-
-            const chunks = [];
-
-
-            recorder.ondataavailable =
-                event => {
-
-                    if (
-                        event.data &&
-                        event.data.size
-                    ) {
-
-                        chunks.push(
-                            event.data
-                        );
-                    }
-                };
-
-
-            const finished =
-                new Promise(
-                    (resolve, reject) => {
-
-                        recorder.onstop =
-                            () => {
-
-                                resolve(
-                                    new Blob(
-                                        chunks,
-                                        {
-                                            type: mime
-                                        }
-                                    )
-                                );
-                            };
-
-
-                        recorder.onerror =
-                            () => {
-
-                                reject(
-                                    new Error(
-                                        "Audio recording failed"
-                                    )
-                                );
-                            };
-                    }
-                );
-
-
-            const duration =
-                Number.isFinite(
-                    video.duration
-                )
-                    ? video.duration
-                    : 0;
-
-
-            await video.play();
-
-
-            recorder.start();
-
-
-            setProgress(
-                30,
-                "Extracting audio..."
-            );
-
-
-            const timer =
-                setInterval(
-                    () => {
-
-                        if (duration > 0) {
-
-                            const percent =
-                                30 +
-                                (
-                                    video.currentTime /
-                                    duration
-                                ) * 60;
-
-
-                            setProgress(
-                                Math.min(
-                                    90,
-                                    percent
-                                ),
-                                "Extracting audio..."
-                            );
-                        }
-
-                    },
-                    250
-                );
-
-
-            await new Promise(
-                (resolve, reject) => {
-
-                    video.onended =
-                        resolve;
-
-
-                    video.onerror =
-                        () => {
-
-                            reject(
-                                new Error(
-                                    "Video playback failed"
-                                )
-                            );
-                        };
-                }
-            );
-
-
-            clearInterval(timer);
-
-
-            if (
-                recorder.state !==
-                "inactive"
-            ) {
-
-                recorder.stop();
-            }
-
-
-            const blob =
-                await finished;
-
-
-            source.disconnect();
-
-
-            try {
-                await audioContext.close();
-            } catch (e) {}
-
-
-            setProgress(
-                95,
-                "Creating voice file..."
-            );
-
-
-            return {
-
-                blob: blob,
-
-                name:
-                    `${cleanName(file.name)}-voice.webm`
-            };
-
-
-        } finally {
-
-            video.pause();
-
-            video.removeAttribute("src");
-
-            video.load();
-
-            URL.revokeObjectURL(
-                videoURL
-            );
-        }
     }
 
 
-    /* ================================
-       WAIT VIDEO
-    ================================= */
+    // =========================================
+    // CONVERT BUTTON
+    // =========================================
 
-    function waitForVideo(video) {
+    if (convertBtn) {
 
-        return new Promise(
-            (resolve, reject) => {
+        convertBtn.addEventListener(
+            "click",
+            async () => {
 
-                if (
-                    video.readyState >= 1
-                ) {
+                if (converting) {
+                    return;
+                }
 
-                    resolve();
+
+                if (!selectedFile) {
+
+                    showToast(
+                        "Choose a file first"
+                    );
 
                     return;
                 }
 
 
-                const timeout =
-                    setTimeout(
-                        () => {
+                const cost =
+                    COSTS[currentMode];
 
-                            reject(
-                                new Error(
-                                    "Video loading timed out"
-                                )
+
+                if (tokens < cost) {
+
+                    showToast(
+                        `Not enough tokens · Need ${cost}`
+                    );
+
+                    return;
+                }
+
+
+                converting = true;
+
+                convertBtn.disabled = true;
+
+
+                progressArea.classList.remove(
+                    "hidden"
+                );
+
+
+                setProgress(
+                    5,
+                    "Preparing..."
+                );
+
+
+                try {
+
+                    let result;
+
+
+                    if (
+                        currentMode === "photo"
+                    ) {
+
+                        result =
+                            await convertImage(
+                                selectedFile,
+                                currentFormat
                             );
 
-                        },
-                        15000
+                    } else {
+
+                        result =
+                            await videoToAudio(
+                                selectedFile
+                            );
+                    }
+
+
+                    if (
+                        !result ||
+                        !result.blob
+                    ) {
+
+                        throw new Error(
+                            "Conversion failed"
+                        );
+                    }
+
+
+                    // =================================
+                    // REAL LOCAL TOKEN CHARGE
+                    // =================================
+
+                    tokens -= cost;
+
+                    updateTokens();
+
+
+                    convertedBlob =
+                        result.blob;
+
+
+                    convertedName =
+                        result.name;
+
+
+                    if (resultName) {
+
+                        resultName.textContent =
+                            convertedName;
+                    }
+
+
+                    setProgress(
+                        100,
+                        "Complete"
                     );
 
 
-                video.onloadedmetadata =
-                    () => {
+                    setTimeout(
+                        () => {
 
-                        clearTimeout(timeout);
-
-                        resolve();
-                    };
-
-
-                video.onerror =
-                    () => {
-
-                        clearTimeout(timeout);
-
-                        reject(
-                            new Error(
-                                "Could not load video"
-                            )
-                        );
-                    };
-            }
-        );
-    }
+                            progressArea.classList.add(
+                                "hidden"
+                            );
 
 
-    /* ================================
-       DOWNLOAD
-    ================================= */
-
-    downloadBtn.addEventListener(
-        "click",
-        () => {
-
-            if (!convertedBlob) {
-
-                showToast(
-                    "No converted file"
-                );
-
-                return;
-            }
+                            resultCard.classList.remove(
+                                "hidden"
+                            );
 
 
-            if (downloadURL) {
-
-                URL.revokeObjectURL(
-                    downloadURL
-                );
-            }
-
-
-            downloadURL =
-                URL.createObjectURL(
-                    convertedBlob
-                );
-
-
-            const link =
-                document.createElement("a");
-
-
-            link.href =
-                downloadURL;
-
-
-            link.download =
-                convertedName ||
-                "converted-file";
-
-
-            document.body.appendChild(
-                link
-            );
-
-
-            link.click();
-
-
-            link.remove();
-
-
-            showToast(
-                "Download started"
-            );
-        }
-    );
-
-
-    /* ================================
-       HELPERS
-    ================================= */
-
-    function cleanName(name) {
-
-        return String(name || "")
-            .replace(
-                /\.[^/.]+$/,
-                ""
-            )
-            .replace(
-                /[^a-zA-Z0-9._ -]/g,
-                ""
-            )
-            .trim() ||
-            "converted";
-    }
-
-
-    function formatBytes(bytes) {
-
-        if (!bytes) {
-            return "0 Bytes";
-        }
-
-
-        const units = [
-            "Bytes",
-            "KB",
-            "MB",
-            "GB"
-        ];
-
-
-        const index =
-            Math.min(
-                Math.floor(
-                    Math.log(bytes) /
-                    Math.log(1024)
-                ),
-                units.length - 1
-            );
-
-
-        return (
-            parseFloat(
-                (
-                    bytes /
-                    Math.pow(
-                        1024,
-                        index
-                    )
-                ).toFixed(2)
-            ) +
-            " " +
-            units[index]
-        );
-    }
-
-
-    function setProgress(
-        percent,
-        text
-    ) {
-
-        percent =
-            Math.round(
-                Math.max(
-                    0,
-                    Math.min(
-                        100,
-                        percent
-                    )
-                )
-            );
-
-
-        progressBar.style.width =
-            `${percent}%`;
-
-
-        progressPercent.textContent =
-            `${percent}%`;
-
-
-        progressText.textContent =
-            text;
-    }
-
-
-    /* ================================
-       START
-    ================================= */
-
-    updateConverterUI();
-
-    updateTokens();
-
-});
+                            showToast(
+                            
