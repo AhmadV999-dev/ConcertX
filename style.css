@@ -1,1808 +1,853 @@
-import { initializeApp } from
-  "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+/* =========================================================
+   CONVERTX - FULL STYLE
+   ========================================================= */
 
-import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithRedirect,
-  getRedirectResult,
-  onAuthStateChanged,
-  signOut
-} from
-  "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  collection,
-  getDocs,
-  runTransaction,
-  serverTimestamp,
-  query,
-  orderBy
-} from
-  "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+html {
+  scroll-behavior: smooth;
+}
 
-/*
-===========================================================
-  FIREBASE CONFIG
-===========================================================
+body {
+  min-height: 100vh;
+  background: #070707;
+  color: #f5f5f5;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+  line-height: 1.5;
+}
 
-Go to:
+button,
+input {
+  font: inherit;
+}
 
-Firebase Console
-→ Project settings
-→ Your apps
-→ Web app
-→ Firebase SDK setup
-→ Config
+button {
+  cursor: pointer;
+}
 
-Paste YOUR config below.
+a {
+  color: inherit;
+}
 
-Do NOT put a Firebase service-account private key here.
-===========================================================
-*/
+img,
+video {
+  max-width: 100%;
+}
 
-const firebaseConfig = {
-  apiKey: "PASTE_YOUR_API_KEY",
-  authDomain: "PASTE_YOUR_AUTH_DOMAIN",
-  projectId: "PASTE_YOUR_PROJECT_ID",
-  storageBucket: "PASTE_YOUR_STORAGE_BUCKET",
-  messagingSenderId: "PASTE_YOUR_MESSAGING_SENDER_ID",
-  appId: "PASTE_YOUR_APP_ID"
-};
-
-const ADMIN_EMAIL = "ffbbchfg@gmail.com";
-
-const STARTING_TOKENS = 100;
-
-const COSTS = {
-  image: 5,
-  "video-audio": 10,
-  "audio-video": 10
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-const provider = new GoogleAuthProvider();
-
-let currentUser = null;
-let currentUserData = null;
-let selectedFile = null;
-let conversionType = "image";
-let outputBlob = null;
-let outputName = "";
-let outputUrl = null;
+::selection {
+  background: #fff;
+  color: #000;
+}
 
 /* =========================================================
-   ELEMENTS
-========================================================= */
-
-const loginScreen = document.getElementById("loginScreen");
-const appScreen = document.getElementById("appScreen");
-
-const googleLogin = document.getElementById("googleLogin");
-const loginError = document.getElementById("loginError");
-
-const userPhoto = document.getElementById("userPhoto");
-const userName = document.getElementById("userName");
-const userEmail = document.getElementById("userEmail");
-
-const tokenCount = document.getElementById("tokenCount");
-
-const logoutBtn = document.getElementById("logoutBtn");
-
-const dropZone = document.getElementById("dropZone");
-const fileInput = document.getElementById("fileInput");
-const chooseBtn = document.getElementById("chooseBtn");
-
-const fileInfo = document.getElementById("fileInfo");
-const fileName = document.getElementById("fileName");
-const fileSize = document.getElementById("fileSize");
-
-const removeFile = document.getElementById("removeFile");
-
-const previewBox = document.getElementById("previewBox");
-
-const convertBtn = document.getElementById("convertBtn");
-const conversionCost = document.getElementById("conversionCost");
-
-const progressBox = document.getElementById("progressBox");
-const progressBar = document.getElementById("progressBar");
-const progressPercent = document.getElementById("progressPercent");
-const progressText = document.getElementById("progressText");
-
-const resultBox = document.getElementById("resultBox");
-const resultName = document.getElementById("resultName");
-const downloadBtn = document.getElementById("downloadBtn");
-
-const convertError = document.getElementById("convertError");
-
-const redeemOpen = document.getElementById("redeemOpen");
-const redeemPanel = document.getElementById("redeemPanel");
-const redeemInput = document.getElementById("redeemInput");
-const redeemBtn = document.getElementById("redeemBtn");
-const redeemMessage = document.getElementById("redeemMessage");
-
-const adminPanel = document.getElementById("adminPanel");
-
-const codeInput = document.getElementById("codeInput");
-const codeTokens = document.getElementById("codeTokens");
-const codeExpire = document.getElementById("codeExpire");
-const createCodeBtn = document.getElementById("createCodeBtn");
-const adminCodeMessage = document.getElementById("adminCodeMessage");
-
-const usersList = document.getElementById("usersList");
-const refreshUsers = document.getElementById("refreshUsers");
-
-/* =========================================================
-   GOOGLE LOGIN
-========================================================= */
-
-googleLogin.addEventListener("click", async () => {
-
-  loginError.textContent = "";
-
-  try {
-
-    googleLogin.disabled = true;
-    googleLogin.textContent = "Opening Google...";
-
-    /*
-      Redirect is used because it works better on mobile browsers.
-    */
-
-    await signInWithRedirect(auth, provider);
-
-  } catch (error) {
-
-    console.error(error);
-
-    loginError.textContent =
-      error.message || "Google login failed.";
-
-    googleLogin.disabled = false;
-    googleLogin.innerHTML =
-      `<span class="google-logo">G</span>
-       Continue with Google`;
-  }
-
-});
-
-/*
-  Handles the return from Google OAuth.
-*/
-
-getRedirectResult(auth).catch(error => {
-
-  console.error(error);
-
-  loginError.textContent =
-    error.message || "Google authentication failed.";
-
-});
-
-/* =========================================================
-   AUTH STATE
-========================================================= */
-
-onAuthStateChanged(auth, async user => {
-
-  if (!user) {
-
-    currentUser = null;
-    currentUserData = null;
-
-    loginScreen.classList.remove("hidden");
-    appScreen.classList.add("hidden");
-
-    return;
-  }
-
-  currentUser = user;
-
-  loginScreen.classList.add("hidden");
-  appScreen.classList.remove("hidden");
-
-  await loadUser();
-
-});
-
-/* =========================================================
-   USER INITIALIZATION
-========================================================= */
-
-async function loadUser() {
-
-  if (!currentUser) return;
-
-  const userRef =
-    doc(db, "users", currentUser.uid);
-
-  const snap =
-    await getDoc(userRef);
-
-  if (!snap.exists()) {
-
-    const isAdmin =
-      currentUser.email?.toLowerCase() ===
-      ADMIN_EMAIL.toLowerCase();
-
-    currentUserData = {
-
-      uid: currentUser.uid,
-
-      name: currentUser.displayName || "User",
-
-      email: currentUser.email || "",
-
-      photo: currentUser.photoURL || "",
-
-      tokens: isAdmin ? 0 : STARTING_TOKENS,
-
-      admin: isAdmin,
-
-      permissions: {
-
-        converter: true,
-
-        redeem: true,
-
-        adminPanel: isAdmin,
-
-        tokenManagement: isAdmin
-
-      },
-
-      createdAt: serverTimestamp()
-
-    };
-
-    await setDoc(
-      userRef,
-      currentUserData
+   LOGIN
+   ========================================================= */
+
+#loginPage {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(
+      circle at 50% 20%,
+      #181818 0,
+      #0b0b0b 35%,
+      #070707 70%
     );
+}
 
-  } else {
+.login-box {
+  width: 100%;
+  max-width: 430px;
+  text-align: center;
+  padding: 38px 30px;
+  border: 1px solid #242424;
+  border-radius: 24px;
+  background: rgba(15, 15, 15, 0.9);
+  box-shadow:
+    0 25px 80px rgba(0, 0, 0, 0.45);
+}
 
-    currentUserData = snap.data();
+.login-box h1 {
+  font-size: 46px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -3px;
+  margin-bottom: 14px;
+}
 
-    /*
-      Make sure the special admin email is recognized
-      on the frontend too.
-    */
+.login-box p {
+  color: #888;
+  font-size: 14px;
+  margin-bottom: 28px;
+}
 
-    if (
-      currentUser.email?.toLowerCase() ===
-      ADMIN_EMAIL.toLowerCase()
-    ) {
+.login-box input {
+  width: 100%;
+  height: 52px;
+  padding: 0 16px;
+  border: 1px solid #292929;
+  border-radius: 13px;
+  outline: none;
+  background: #0a0a0a;
+  color: #fff;
+  transition: 0.2s ease;
+}
 
-      currentUserData.admin = true;
+.login-box input::placeholder {
+  color: #555;
+}
 
-      currentUserData.permissions = {
+.login-box input:focus {
+  border-color: #777;
+  background: #0d0d0d;
+}
 
-        ...(currentUserData.permissions || {}),
+.login-box button {
+  width: 100%;
+  height: 52px;
+  margin-top: 10px;
+  border: 0;
+  border-radius: 13px;
+  background: #fff;
+  color: #000;
+  font-weight: 800;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
 
-        converter: true,
+.login-box button:hover {
+  opacity: 0.9;
+}
 
-        redeem: true,
-
-        adminPanel: true,
-
-        tokenManagement: true
-
-      };
-
-      await updateDoc(userRef, {
-
-        admin: true,
-
-        "permissions.converter": true,
-
-        "permissions.redeem": true,
-
-        "permissions.adminPanel": true,
-
-        "permissions.tokenManagement": true
-
-      });
-
-    }
-
-  }
-
-  updateUserUI();
-
+.login-box button:active {
+  transform: scale(0.98);
 }
 
 /* =========================================================
-   USER UI
-========================================================= */
+   APP
+   ========================================================= */
 
-function updateUserUI() {
+#app {
+  display: none;
+  min-height: 100vh;
+}
 
-  userName.textContent =
-    currentUser.displayName || "User";
-
-  userEmail.textContent =
-    currentUser.email || "";
-
-  userPhoto.src =
-    currentUser.photoURL ||
-    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='100%25' height='100%25' fill='%23202027'/%3E%3C/svg%3E";
-
-  if (currentUserData?.admin) {
-
-    tokenCount.textContent = "∞";
-
-    adminPanel.classList.remove("hidden");
-
-  } else {
-
-    tokenCount.textContent =
-      Number(currentUserData?.tokens || 0);
-
-    adminPanel.classList.add("hidden");
-
-  }
-
-  const canRedeem =
-    currentUserData?.permissions?.redeem !== false;
-
-  redeemOpen.classList.toggle(
-    "hidden",
-    !canRedeem
-  );
-
+.container {
+  width: min(940px, calc(100% - 32px));
+  margin: 0 auto;
 }
 
 /* =========================================================
-   LOGOUT
-========================================================= */
+   NAVIGATION
+   ========================================================= */
 
-logoutBtn.addEventListener("click", async () => {
-
-  try {
-
-    await signOut(auth);
-
-  } catch (error) {
-
-    console.error(error);
-
-  }
-
-});
-
-/* =========================================================
-   FORMAT SELECTOR
-========================================================= */
-
-document.querySelectorAll(".format").forEach(button => {
-
-  button.addEventListener("click", () => {
-
-    document
-      .querySelectorAll(".format")
-      .forEach(x => x.classList.remove("active"));
-
-    button.classList.add("active");
-
-    conversionType =
-      button.dataset.type;
-
-    conversionCost.textContent =
-      `−${COSTS[conversionType]} Tokens`;
-
-    resetFile();
-
-  });
-
-});
-
-/* =========================================================
-   FILE INPUT
-========================================================= */
-
-chooseBtn.addEventListener("click", () => {
-
-  fileInput.click();
-
-});
-
-fileInput.addEventListener("change", event => {
-
-  const file =
-    event.target.files?.[0];
-
-  if (file) {
-
-    handleFile(file);
-
-  }
-
-});
-
-/* =========================================================
-   DRAG AND DROP
-========================================================= */
-
-dropZone.addEventListener("dragover", event => {
-
-  event.preventDefault();
-
-  dropZone.classList.add("drag");
-
-});
-
-dropZone.addEventListener("dragleave", () => {
-
-  dropZone.classList.remove("drag");
-
-});
-
-dropZone.addEventListener("drop", event => {
-
-  event.preventDefault();
-
-  dropZone.classList.remove("drag");
-
-  const file =
-    event.dataTransfer.files?.[0];
-
-  if (file) {
-
-    handleFile(file);
-
-  }
-
-});
-
-/* =========================================================
-   FILE VALIDATION
-========================================================= */
-
-function handleFile(file) {
-
-  convertError.textContent = "";
-
-  resultBox.classList.add("hidden");
-
-  const valid =
-    validateFile(file);
-
-  if (!valid) return;
-
-  selectedFile = file;
-
-  fileName.textContent =
-    file.name;
-
-  fileSize.textContent =
-    formatBytes(file.size);
-
-  fileInfo.classList.remove("hidden");
-
-  convertBtn.disabled = false;
-
-  showPreview(file);
-
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #202020;
+  background: rgba(7, 7, 7, 0.88);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
-function validateFile(file) {
+.logo {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -1.2px;
+}
 
-  if (conversionType === "image") {
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
 
-    if (
-      ![
-        "image/jpeg",
-        "image/png"
-      ].includes(file.type)
-    ) {
+.token-count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 7px 12px;
+  border: 1px solid #292929;
+  border-radius: 999px;
+  background: #101010;
+  color: #ddd;
+  font-size: 12px;
+  font-weight: 700;
+}
 
-      convertError.textContent =
-        "Photo Converter only accepts JPG or PNG.";
+.avatar {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #fff;
+  color: #000;
+  font-size: 13px;
+  font-weight: 900;
+}
 
-      return false;
-    }
+/* =========================================================
+   MAIN
+   ========================================================= */
 
-  }
+main {
+  padding: 65px 0 100px;
+}
 
-  if (conversionType === "video-audio") {
+.hero {
+  text-align: center;
+  margin-bottom: 38px;
+}
 
-    if (!file.type.startsWith("video/")) {
+.hero h2 {
+  font-size: clamp(38px, 8vw, 68px);
+  line-height: 0.98;
+  letter-spacing: -4px;
+  font-weight: 900;
+  margin-bottom: 15px;
+}
 
-      convertError.textContent =
-        "Video → Voice requires a video file.";
+.hero p {
+  color: #777;
+  font-size: 15px;
+}
 
-      return false;
-    }
+/* =========================================================
+   GENERAL SECTION
+   ========================================================= */
 
-  }
+.section {
+  margin-top: 22px;
+  padding: 22px;
+  border: 1px solid #222;
+  border-radius: 20px;
+  background: #101010;
+  box-shadow:
+    0 15px 45px rgba(0, 0, 0, 0.15);
+}
 
-  if (conversionType === "audio-video") {
+.section h3 {
+  font-size: 19px;
+  letter-spacing: -0.4px;
+  margin-bottom: 6px;
+}
 
-    if (!file.type.startsWith("audio/")) {
+.section-description {
+  color: #777;
+  font-size: 13px;
+  margin-bottom: 17px;
+}
 
-      convertError.textContent =
-        "Voice → Video requires an audio file.";
+/* =========================================================
+   CONVERTER
+   ========================================================= */
 
-      return false;
-    }
+.converter {
+  padding: 20px;
+  border: 1px solid #222;
+  border-radius: 20px;
+  background: #101010;
+  box-shadow:
+    0 15px 50px rgba(0, 0, 0, 0.2);
+}
 
-  }
+/* =========================================================
+   TYPE BUTTONS
+   ========================================================= */
 
-  return true;
+.types {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
 
+.types::-webkit-scrollbar {
+  display: none;
+}
+
+.types button {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 1px solid #292929;
+  border-radius: 11px;
+  background: #0b0b0b;
+  color: #858585;
+  font-size: 13px;
+  font-weight: 700;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.15s ease;
+}
+
+.types button:hover {
+  color: #fff;
+  border-color: #444;
+}
+
+.types button:active {
+  transform: scale(0.97);
+}
+
+.types button.active {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+
+/* =========================================================
+   UPLOAD AREA
+   ========================================================= */
+
+#uploadBox {
+  position: relative;
+  min-height: 270px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  text-align: center;
+  border: 1px dashed #3a3a3a;
+  border-radius: 16px;
+  background:
+    linear-gradient(
+      135deg,
+      #0d0d0d,
+      #0a0a0a
+    );
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+#uploadBox:hover {
+  border-color: #666;
+  background: #0e0e0e;
+}
+
+#uploadBox.dragging {
+  border-color: #fff;
+  background: #151515;
+  transform: scale(1.005);
+}
+
+#uploadBox h3 {
+  font-size: 19px;
+  margin-bottom: 7px;
+}
+
+#uploadBox p {
+  color: #777;
+  font-size: 13px;
+}
+
+/* Optional upload icon */
+
+.upload-icon {
+  width: 55px;
+  height: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 15px;
+  border: 1px solid #292929;
+  border-radius: 16px;
+  background: #111;
+  color: #fff;
+  font-size: 25px;
+}
+
+/* =========================================================
+   FILE INFO
+   ========================================================= */
+
+#fileInfo {
+  display: none;
+  margin-top: 14px;
+  padding: 15px;
+  border: 1px solid #252525;
+  border-radius: 14px;
+  background: #0c0c0c;
+}
+
+.file-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+#fileName {
+  max-width: 75%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+#fileSize {
+  color: #666;
+  font-size: 11px;
+  text-align: right;
 }
 
 /* =========================================================
    PREVIEW
-========================================================= */
+   ========================================================= */
 
-function showPreview(file) {
+#preview {
+  width: 100%;
+  margin-top: 14px;
+}
 
-  previewBox.innerHTML = "";
+#preview img,
+#preview video {
+  width: 100%;
+  max-height: 430px;
+  display: block;
+  object-fit: contain;
+  border: 1px solid #222;
+  border-radius: 14px;
+  background: #000;
+}
 
-  if (conversionType === "image") {
-
-    const img =
-      document.createElement("img");
-
-    img.src =
-      URL.createObjectURL(file);
-
-    previewBox.appendChild(img);
-
-    previewBox.classList.remove("hidden");
-
-    return;
-  }
-
-  if (conversionType === "video-audio") {
-
-    const video =
-      document.createElement("video");
-
-    video.src =
-      URL.createObjectURL(file);
-
-    video.controls = true;
-
-    previewBox.appendChild(video);
-
-    previewBox.classList.remove("hidden");
-
-    return;
-  }
-
-  if (conversionType === "audio-video") {
-
-    const audio =
-      document.createElement("audio");
-
-    audio.src =
-      URL.createObjectURL(file);
-
-    audio.controls = true;
-
-    previewBox.appendChild(audio);
-
-    previewBox.classList.remove("hidden");
-
-  }
-
+#preview audio {
+  width: 100%;
+  display: block;
+  margin-top: 5px;
 }
 
 /* =========================================================
-   REMOVE
-========================================================= */
+   CONVERT BUTTON
+   ========================================================= */
 
-removeFile.addEventListener("click", resetFile);
+#convertButton {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 15px;
+  border: 0;
+  border-radius: 13px;
+  background: #fff;
+  color: #000;
+  font-size: 14px;
+  font-weight: 900;
+  transition:
+    opacity 0.2s ease,
+    transform 0.15s ease;
+}
 
-function resetFile() {
+#convertButton:hover {
+  opacity: 0.9;
+}
 
-  selectedFile = null;
+#convertButton:active {
+  transform: scale(0.99);
+}
 
-  fileInput.value = "";
-
-  fileInfo.classList.add("hidden");
-
-  previewBox.classList.add("hidden");
-
-  previewBox.innerHTML = "";
-
-  convertBtn.disabled = true;
-
-  resultBox.classList.add("hidden");
-
-  convertError.textContent = "";
-
+#convertButton:disabled {
+  opacity: 0.45;
+  cursor: wait;
 }
 
 /* =========================================================
-   TOKEN CHECK
-========================================================= */
+   PROGRESS
+   ========================================================= */
 
-function hasEnoughTokens(cost) {
-
-  if (currentUserData?.admin) {
-
-    return true;
-
-  }
-
-  return Number(currentUserData?.tokens || 0) >= cost;
-
+#progress {
+  display: none;
+  margin-top: 13px;
+  padding: 13px;
+  border-radius: 11px;
+  background: #0b0b0b;
+  color: #888;
+  text-align: center;
+  font-size: 12px;
 }
 
 /* =========================================================
-   CONVERT
-========================================================= */
+   RESULT
+   ========================================================= */
 
-convertBtn.addEventListener("click", async () => {
+#result {
+  display: none;
+  margin-top: 14px;
+  padding: 15px;
+  border: 1px solid #263d2c;
+  border-radius: 14px;
+  background: #0b110d;
+}
 
-  if (!selectedFile || !currentUser) return;
+#downloadButton {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  border-radius: 11px;
+  background: #fff;
+  color: #000;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 900;
+  transition: opacity 0.2s ease;
+}
 
-  convertError.textContent = "";
-
-  const cost =
-    COSTS[conversionType];
-
-  if (!hasEnoughTokens(cost)) {
-
-    convertError.textContent =
-      `Not enough tokens. You need ${cost} tokens.`;
-
-    return;
-
-  }
-
-  convertBtn.disabled = true;
-
-  progressBox.classList.remove("hidden");
-
-  resultBox.classList.add("hidden");
-
-  setProgress(5, "Preparing...");
-
-  try {
-
-    let result;
-
-    if (conversionType === "image") {
-
-      result =
-        await convertImage(selectedFile);
-
-    }
-
-    if (conversionType === "video-audio") {
-
-      result =
-        await videoToAudio(selectedFile);
-
-    }
-
-    if (conversionType === "audio-video") {
-
-      result =
-        await audioToVideo(selectedFile);
-
-    }
-
-    outputBlob =
-      result.blob;
-
-    outputName =
-      result.name;
-
-    /*
-      Charge only AFTER conversion succeeds.
-    */
-
-    await chargeTokens(cost);
-
-    outputUrl =
-      URL.createObjectURL(outputBlob);
-
-    downloadBtn.href =
-      outputUrl;
-
-    downloadBtn.download =
-      outputName;
-
-    resultName.textContent =
-      outputName;
-
-    resultBox.classList.remove("hidden");
-
-    setProgress(100, "Complete");
-
-  } catch (error) {
-
-    console.error(error);
-
-    convertError.textContent =
-      error.message ||
-      "Conversion failed.";
-
-    setProgress(0, "Failed");
-
-  } finally {
-
-    convertBtn.disabled = false;
-
-  }
-
-});
-
-/* =========================================================
-   SECURE TOKEN DECREMENT TRANSACTION
-========================================================= */
-
-async function chargeTokens(cost) {
-
-  if (currentUserData?.admin) {
-
-    return;
-
-  }
-
-  const userRef =
-    doc(db, "users", currentUser.uid);
-
-  await runTransaction(db, async transaction => {
-
-    const snap =
-      await transaction.get(userRef);
-
-    if (!snap.exists()) {
-
-      throw new Error("User account not found.");
-
-    }
-
-    const data =
-      snap.data();
-
-    const currentTokens =
-      Number(data.tokens || 0);
-
-    if (currentTokens < cost) {
-
-      throw new Error("Not enough tokens.");
-
-    }
-
-    transaction.update(
-      userRef,
-      {
-        tokens: currentTokens - cost
-      }
-    );
-
-  });
-
-  const snap =
-    await getDoc(userRef);
-
-  currentUserData =
-    snap.data();
-
-  updateUserUI();
-
+#downloadButton:hover {
+  opacity: 0.9;
 }
 
 /* =========================================================
-   IMAGE CONVERTER
-========================================================= */
+   REDEEM
+   ========================================================= */
 
-function convertImage(file) {
+.redeem-row {
+  display: flex;
+  gap: 9px;
+}
 
-  return new Promise((resolve, reject) => {
+.redeem-row input {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid #282828;
+  border-radius: 11px;
+  outline: none;
+  background: #090909;
+  color: #fff;
+}
 
-    const img =
-      new Image();
+.redeem-row input::placeholder {
+  color: #555;
+}
 
-    const url =
-      URL.createObjectURL(file);
+.redeem-row input:focus {
+  border-color: #555;
+}
 
-    img.onload = () => {
-
-      const canvas =
-        document.createElement("canvas");
-
-      canvas.width =
-        img.naturalWidth;
-
-      canvas.height =
-        img.naturalHeight;
-
-      const ctx =
-        canvas.getContext("2d");
-
-      ctx.drawImage(
-        img,
-        0,
-        0
-      );
-
-      const targetType =
-        file.type === "image/jpeg"
-          ? "image/png"
-          : "image/jpeg";
-
-      const extension =
-        targetType === "image/png"
-          ? "png"
-          : "jpg";
-
-      canvas.toBlob(blob => {
-
-        URL.revokeObjectURL(url);
-
-        if (!blob) {
-
-          reject(
-            new Error("Image conversion failed.")
-          );
-
-          return;
-
-        }
-
-        const base =
-          file.name
-            .replace(/\.[^/.]+$/, "");
-
-        resolve({
-
-          blob,
-
-          name:
-            `${base}_converted.${extension}`
-
-        });
-
-      }, targetType, .92);
-
-    };
-
-    img.onerror = () => {
-
-      URL.revokeObjectURL(url);
-
-      reject(
-        new Error("Could not read image.")
-      );
-
-    };
-
-    img.src = url;
-
-  });
-
+.redeem-row button {
+  min-width: 100px;
+  height: 48px;
+  padding: 0 15px;
+  border: 0;
+  border-radius: 11px;
+  background: #fff;
+  color: #000;
+  font-weight: 900;
 }
 
 /* =========================================================
-   VIDEO → AUDIO
-========================================================= */
+   ADMIN
+   ========================================================= */
 
-async function videoToAudio(file) {
+#adminPanel {
+  display: none;
+}
 
-  setProgress(20, "Loading video...");
+.admin-form {
+  display: grid;
+  gap: 9px;
+}
 
-  const video =
-    document.createElement("video");
+.admin-form input {
+  width: 100%;
+  height: 47px;
+  padding: 0 13px;
+  border: 1px solid #282828;
+  border-radius: 10px;
+  outline: none;
+  background: #090909;
+  color: #fff;
+}
 
-  video.src =
-    URL.createObjectURL(file);
+.admin-form input:focus {
+  border-color: #555;
+}
 
-  video.muted = false;
+.admin-form button {
+  min-height: 48px;
+  border: 0;
+  border-radius: 11px;
+  background: #fff;
+  color: #000;
+  font-weight: 900;
+}
 
-  video.playsInline = true;
+.admin-list {
+  display: grid;
+  gap: 9px;
+  margin-top: 16px;
+}
 
-  await waitForEvent(video, "loadedmetadata");
+.admin-item {
+  padding: 15px;
+  border: 1px solid #242424;
+  border-radius: 13px;
+  background: #0b0b0b;
+}
 
-  setProgress(40, "Capturing audio...");
+.admin-item strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 4px;
+  word-break: break-word;
+}
 
-  if (!video.captureStream) {
+.admin-item span {
+  display: block;
+  color: #ddd;
+  font-size: 13px;
+}
 
-    throw new Error(
-      "This browser does not support video capture."
-    );
+.admin-item small {
+  display: block;
+  margin-top: 4px;
+  color: #666;
+  font-size: 11px;
+}
 
-  }
+.admin-item label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  margin-right: 12px;
+  color: #aaa;
+  font-size: 12px;
+}
 
-  const stream =
-    video.captureStream();
+.admin-item input[type="checkbox"] {
+  accent-color: #fff;
+}
 
-  const audioTracks =
-    stream.getAudioTracks();
+.admin-item button {
+  margin-top: 11px;
+  margin-right: 7px;
+  padding: 8px 11px;
+  border: 1px solid #292929;
+  border-radius: 8px;
+  background: #111;
+  color: #ddd;
+  font-size: 11px;
+  font-weight: 700;
+}
 
-  if (!audioTracks.length) {
-
-    throw new Error(
-      "This video does not contain an audio track."
-    );
-
-  }
-
-  const audioStream =
-    new MediaStream(audioTracks);
-
-  const mime =
-    getSupportedMime([
-      "audio/webm;codecs=opus",
-      "audio/webm"
-    ]);
-
-  if (!mime) {
-
-    throw new Error(
-      "This browser cannot create WebM audio."
-    );
-
-  }
-
-  const recorder =
-    new MediaRecorder(
-      audioStream,
-      { mimeType: mime }
-    );
-
-  const chunks = [];
-
-  recorder.ondataavailable =
-    event => {
-
-      if (event.data.size) {
-
-        chunks.push(event.data);
-
-      }
-
-    };
-
-  const finished =
-    new Promise((resolve, reject) => {
-
-      recorder.onstop = () => {
-
-        resolve(
-          new Blob(
-            chunks,
-            { type: mime }
-          )
-        );
-
-      };
-
-      recorder.onerror =
-        () => reject(
-          new Error("Audio recording failed.")
-        );
-
-    });
-
-  recorder.start();
-
-  video.currentTime = 0;
-
-  await video.play();
-
-  await new Promise(resolve => {
-
-    video.addEventListener(
-      "ended",
-      resolve,
-      { once: true }
-    );
-
-  });
-
-  recorder.stop();
-
-  setProgress(90, "Finalizing audio...");
-
-  const blob =
-    await finished;
-
-  URL.revokeObjectURL(video.src);
-
-  const base =
-    file.name.replace(/\.[^/.]+$/, "");
-
-  return {
-
-    blob,
-
-    name:
-      `${base}_audio.webm`
-
-  };
-
+.admin-item button:hover {
+  border-color: #555;
+  color: #fff;
 }
 
 /* =========================================================
-   AUDIO → DARK VIDEO
-========================================================= */
+   LOGOUT
+   ========================================================= */
 
-async function audioToVideo(file) {
-
-  setProgress(15, "Loading audio...");
-
-  const audio =
-    document.createElement("audio");
-
-  audio.src =
-    URL.createObjectURL(file);
-
-  audio.crossOrigin = "anonymous";
-
-  await waitForEvent(
-    audio,
-    "loadedmetadata"
-  );
-
-  if (!audio.captureStream) {
-
-    throw new Error(
-      "This browser does not support audio capture."
-    );
-
-  }
-
-  const audioStream =
-    audio.captureStream();
-
-  const canvas =
-    document.createElement("canvas");
-
-  canvas.width = 1280;
-  canvas.height = 720;
-
-  const ctx =
-    canvas.getContext("2d");
-
-  ctx.fillStyle = "#050507";
-  ctx.fillRect(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-  const videoStream =
-    canvas.captureStream(30);
-
-  audioStream
-    .getAudioTracks()
-    .forEach(track => {
-
-      videoStream.addTrack(track);
-
-    });
-
-  const mime =
-    getSupportedMime([
-      "video/webm;codecs=vp9,opus",
-      "video/webm;codecs=vp8,opus",
-      "video/webm"
-    ]);
-
-  if (!mime) {
-
-    throw new Error(
-      "This browser cannot create WebM video."
-    );
-
-  }
-
-  const recorder =
-    new MediaRecorder(
-      videoSt            #ff9a9e,
-            #fad0c4,
-            #fbc2eb
-        );
-
-    color: #5a1830;
-
-    touch-action: none;
-    overscroll-behavior: none;
-
-    -webkit-user-select: none;
-    user-select: none;
+#logoutButton {
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 1px solid #292929;
+  border-radius: 9px;
+  background: transparent;
+  color: #777;
+  font-size: 11px;
+  font-weight: 700;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
 
-
-/* =========================
-   SCREEN
-========================= */
-
-.screen {
-    position: fixed;
-
-    inset: 0;
-
-    width: 100vw;
-    height: 100dvh;
-
-    display: flex;
-
-    justify-content: center;
-    align-items: center;
-
-    padding: 20px;
-
-    overflow: hidden;
-
-    transition:
-        opacity 0.45s ease,
-        transform 0.45s ease;
+#logoutButton:hover {
+  color: #fff;
+  border-color: #555;
 }
 
-.hidden {
+/* =========================================================
+   CUSTOM MESSAGE
+   ========================================================= */
+
+#convertxMessage {
+  animation:
+    messageIn 0.25s ease;
+}
+
+@keyframes messageIn {
+  from {
     opacity: 0;
+    transform:
+      translate(-50%, 15px);
+  }
 
-    visibility: hidden;
-
-    pointer-events: none;
-
-    transform: scale(0.94);
-}
-
-
-/* =========================
-   MAIN LOVE CARD
-========================= */
-
-.love-card,
-.final-card {
-    position: relative;
-
-    z-index: 5;
-
-    width: min(92vw, 500px);
-
-    padding: 35px 25px;
-
-    text-align: center;
-
-    border-radius: 32px;
-
-    border: 1px solid rgba(255, 255, 255, 0.65);
-
-    background:
-        rgba(255, 255, 255, 0.3);
-
-    box-shadow:
-        0 20px 50px rgba(137, 36, 77, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.65);
-
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-
-    animation: cardAppear 0.7s ease both;
-}
-
-
-/* =========================
-   SMALL HEART
-========================= */
-
-.small-heart {
-    font-size: 45px;
-
-    line-height: 1;
-
-    margin-bottom: 18px;
-
-    animation:
-        heartBeat 1.4s ease-in-out infinite;
-}
-
-
-/* =========================
-   QUESTION
-========================= */
-
-h1 {
-    margin: 0 auto;
-
-    max-width: 430px;
-
-    font-size:
-        clamp(23px, 6vw, 34px);
-
-    line-height: 1.6;
-
-    font-weight: 700;
-
-    text-shadow:
-        0 2px 8px rgba(255, 255, 255, 0.6);
-}
-
-
-/* =========================
-   MESSAGE
-========================= */
-
-.message {
-    min-height: 45px;
-
-    margin-top: 12px;
-
-    font-size:
-        clamp(17px, 4.5vw, 22px);
-
-    line-height: 1.5;
-
-    font-weight: 600;
-
-    color: #8c2450;
-
-    opacity: 0;
-
-    transform: translateY(5px);
-
-    transition:
-        opacity 0.2s ease,
-        transform 0.2s ease;
-}
-
-.message.show {
+  to {
     opacity: 1;
-
-    transform: translateY(0);
+    transform:
+      translate(-50%, 0);
+  }
 }
 
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
 
-/* =========================
-   BUTTON AREA
-========================= */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
 
-.button-area {
-    position: relative;
+::-webkit-scrollbar-track {
+  background: #070707;
+}
 
+::-webkit-scrollbar-thumb {
+  background: #292929;
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 650px) {
+
+  .container {
+    width:
+      calc(100% - 20px);
+  }
+
+  nav {
+    height: 62px;
+  }
+
+  .logo {
+    font-size: 19px;
+  }
+
+  main {
+    padding:
+      40px 0 70px;
+  }
+
+  .hero {
+    margin-bottom: 28px;
+  }
+
+  .hero h2 {
+    font-size: 40px;
+    letter-spacing: -2.5px;
+  }
+
+  .hero p {
+    font-size: 13px;
+  }
+
+  .converter,
+  .section {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  #uploadBox {
+    min-height: 205px;
+    padding: 20px;
+  }
+
+  #uploadBox h3 {
+    font-size: 17px;
+  }
+
+  .redeem-row {
+    flex-direction: column;
+  }
+
+  .redeem-row button {
     width: 100%;
+  }
 
-    min-height: 115px;
+  .nav-right {
+    gap: 5px;
+  }
 
-    margin-top: 20px;
+  .token-count {
+    padding:
+      6px 9px;
+    font-size: 10px;
+  }
 
-    display: flex;
+  .avatar {
+    width: 33px;
+    height: 33px;
+  }
 
-    justify-content: center;
+  #logoutButton {
+    padding:
+      6px 8px;
+    font-size: 10px;
+  }
 
-    align-items: center;
+  .login-box {
+    padding:
+      30px 20px;
+    border-radius: 20px;
+  }
 
-    gap: 14px;
+  .login-box h1 {
+    font-size: 40px;
+  }
 }
 
-
-/* =========================
-   BUTTONS
-========================= */
-
-.choice-button {
-    position: relative;
-
-    min-width: 105px;
-
-    min-height: 52px;
-
-    padding: 12px 25px;
-
-    border: none;
-
-    border-radius: 999px;
-
-    font-family: Arial, sans-serif;
-
-    font-size: 18px;
-
-    font-weight: 700;
-
-    cursor: pointer;
-
-    touch-action: manipulation;
-
-    -webkit-user-select: none;
-    user-select: none;
-
-    box-shadow:
-        0 8px 20px rgba(112, 27, 62, 0.18);
-
-    transition:
-        width 0.25s ease,
-        height 0.25s ease,
-        min-width 0.25s ease,
-        min-height 0.25s ease,
-        transform 0.25s ease,
-        box-shadow 0.25s ease;
-}
-
-
-/* Tap animation */
-
-.choice-button:active {
-    transform: scale(0.94);
-}
-
-
-/* =========================
-   NO BUTTON
-========================= */
-
-.no-button {
-    z-index: 20;
-
-    background:
-        rgba(255, 255, 255, 0.92);
-
-    color: #d72b5b;
-}
-
-
-/* =========================
-   YES BUTTON
-========================= */
-
-.yes-button {
-    z-index: 10;
-
-    background:
-        linear-gradient(
-            135deg,
-            #ff477e,
-            #ff1f56
-        );
-
-    color: white;
-}
-
-
-/* =========================
-   BACKGROUND HEARTS
-========================= */
-
-.background-hearts {
-    position: fixed;
-
-    inset: 0;
-
-    width: 100%;
-
-    height: 100%;
-
-    overflow: hidden;
-
-    pointer-events: none;
-
-    z-index: 1;
-}
-
-.background-hearts span {
-    position: absolute;
-
-    bottom: -80px;
-
-    font-size: 30px;
-
-    opacity: 0.25;
-
-    animation:
-        floatHeart linear infinite;
-}
-
-
-/* Individual heart positions */
-
-.background-hearts span:nth-child(1) {
-    left: 5%;
-
-    animation-duration: 9s;
-
-    animation-delay: 0s;
-}
-
-.background-hearts span:nth-child(2) {
-    left: 18%;
-
-    animation-duration: 12s;
-
-    animation-delay: 2s;
-}
-
-.background-hearts span:nth-child(3) {
-    left: 32%;
-
-    animation-duration: 10s;
-
-    animation-delay: 4s;
-}
-
-.background-hearts span:nth-child(4) {
-    left: 47%;
-
-    animation-duration: 14s;
-
-    animation-delay: 1s;
-}
-
-.background-hearts span:nth-child(5) {
-    left: 61%;
-
-    animation-duration: 11s;
-
-    animation-delay: 3s;
-}
-
-.background-hearts span:nth-child(6) {
-    left: 74%;
-
-    animation-duration: 13s;
-
-    animation-delay: 5s;
-}
-
-.background-hearts span:nth-child(7) {
-    left: 86%;
-
-    animation-duration: 9s;
-
-    animation-delay: 2s;
-}
-
-.background-hearts span:nth-child(8) {
-    left: 94%;
-
-    animation-duration: 15s;
-
-    animation-delay: 6s;
-}
-
-
-/* =========================
-   FINAL SCREEN
-========================= */
-
-.final-screen {
-    z-index: 50;
-
-    background:
-        radial-gradient(
-            circle at center,
-            rgba(255, 255, 255, 0.25),
-            transparent 45%
-        ),
-        linear-gradient(
-            135deg,
-            #ff758c,
-            #ff7eb3,
-            #fbc2eb
-        );
-}
-
-
-/* =========================
-   FINAL CARD
-========================= */
-
-.final-card {
-    overflow: hidden;
-
-    animation:
-        finalCardAppear 0.8s ease both;
-}
-
-
-/* =========================
-   BIG HEART
-========================= */
-
-.big-heart {
-    font-size:
-        clamp(100px, 30vw, 170px);
-
-    line-height: 1;
-
-    margin-bottom: 20px;
-
-    filter:
-        drop-shadow(
-            0 15px 25px
-            rgba(173, 20, 70, 0.3)
-        );
-
-    animation:
-        bigHeartBeat 1.2s ease-in-out infinite;
-}
-
-
-/* =========================
-   FINAL TEXT
-========================= */
-
-.final-card h2 {
-    margin: 0;
-
-    color: white;
-
-    font-family: Arial, sans-serif;
-
-    font-size:
-        clamp(30px, 8vw, 48px);
-
-    font-weight: 800;
-
-    text-shadow:
-        0 4px 15px
-        rgba(130, 20, 60, 0.25);
-}
-
-
-/* =========================
-   FINAL FLOATING HEARTS
-========================= */
-
-.final-hearts {
-    position: absolute;
-
-    inset: 0;
-
-    pointer-events: none;
-}
-
-.final-hearts span {
-    position: absolute;
-
-    font-size: 28px;
-
-    animation:
-        finalFloat 3s ease-in-out infinite;
-}
-
-
-/* Heart positions */
-
-.final-hearts span:nth-child(1) {
-    top: 10%;
-    left: 10%;
-    animation-delay: 0s;
-}
-
-.final-hearts span:nth-child(2) {
-    top: 20%;
-    right: 10%;
-    animation-delay: 0.5s;
-}
-
-.final-hearts span:nth-child(3) {
-    bottom: 15%;
-    left: 12%;
-    animation-delay: 1s;
-}
-
-.final-hearts span:nth-child(4) {
-    bottom: 12%;
-    right: 12%;
-    animation-delay: 1.5s;
-}
-
-.final-hearts span:nth-child(5) {
-    top: 45%;
-    left: 4%;
-    animation-delay: 2s;
-}
-
-.final-hearts span:nth-child(6) {
-    top: 45%;
-    right: 4%;
-    animation-delay: 2.5s;
-}
-
-
-/* =========================
-   ANIMATIONS
-========================= */
-
-@keyframes cardAppear {
-
-    from {
-        opacity: 0;
-
-        transform:
-            scale(0.85)
-            translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-
-        transform:
-            scale(1)
-            translateY(0);
-    }
-}
-
-
-@keyframes finalCardAppear {
-
-    from {
-        opacity: 0;
-
-        transform:
-            scale(0.7);
-    }
-
-    to {
-        opacity: 1;
-
-        transform:
-            scale(1);
-    }
-}
-
-
-@keyframes heartBeat {
-
-    0%,
-    100% {
-        transform: scale(1);
-    }
-
-    15% {
-        transform: scale(1.18);
-    }
-
-    30% {
-        transform: scale(1);
-    }
-
-    45% {
-        transform: scale(1.12);
-    }
-
-    60% {
-        transform: scale(1);
-    }
-}
-
-
-@keyframes bigHeartBeat {
-
-    0%,
-    100% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.15);
-    }
-}
-
-
-@keyframes floatHeart {
-
-    0% {
-        transform:
-            translateY(0)
-            rotate(0deg);
-
-        opacity: 0;
-    }
-
-    10% {
-        opacity: 0.25;
-    }
-
-    50% {
-        opacity: 0.35;
-    }
-
-    100% {
-        transform:
-            translateY(-115vh)
-            rotate(360deg);
-
-        opacity: 0;
-    }
-}
-
-
-@keyframes finalFloat {
-
-    0%,
-    100% {
-        transform:
-            translateY(0)
-            scale(1);
-    }
-
-    50% {
-        transform:
-            translateY(-18px)
-            scale(1.15);
-    }
-}
-
-
-/* =========================
-   SMALL PHONES
-========================= */
+/* =========================================================
+   VERY SMALL PHONES
+   ========================================================= */
 
 @media (max-width: 380px) {
 
-    .love-card,
-    .final-card {
-        padding: 27px 17px;
+  .hero h2 {
+    font-size: 34px;
+  }
 
-        border-radius: 26px;
-    }
+  .types button {
+    padding:
+      8px 11px;
+    font-size: 11px;
+  }
 
-    h1 {
-        font-size: 22px;
-    }
+  #uploadBox {
+    min-height: 180px;
+  }
 
-    .choice-button {
-        min-width: 92px;
-
-        padding:
-            11px 19px;
-
-        font-size: 17px;
-    }
-
-    .button-area {
-        gap: 9px;
-    }
-}
-
-
-/* =========================
-   LANDSCAPE PHONE
-========================= */
-
-@media
-(orientation: landscape)
-and (max-height: 500px) {
-
-    .love-card {
-        padding:
-            16px 25px;
-    }
-
-    .small-heart {
-        font-size: 30px;
-
-        margin-bottom: 5px;
-    }
-
-    h1 {
-        font-size: 21px;
-
-        line-height: 1.3;
-    }
-
-    .message {
-        min-height: 30px;
-
-        margin-top: 5px;
-
-        font-size: 16px;
-    }
-
-    .button-area {
-        min-height: 70px;
-
-        margin-top: 5px;
-    }
+  .section h3 {
+    font-size: 17px;
+  }
 }
