@@ -1,124 +1,285 @@
-// ConvertX - script.js
-// Demo/local system. No real Google login or passwords.
+"use strict";
 
-const ADMIN_EMAIL = "ffbbchfg@gmail.com";
+/* =========================================================
+   CONVERTX v3.0.0
+   Local/demo converter
+   No Firebase
+   No real Google login
+   No passwords
+========================================================= */
 
-const COSTS = {
-  image: 5,
-  "video-audio": 10,
-  "audio-video": 10
+const CONFIG = {
+  ADMIN_EMAIL: "ffbbchfg@gmail.com",
+
+  STORAGE: {
+    USERS: "convertx_users_v3",
+    CODES: "convertx_codes_v3",
+    CURRENT_USER: "convertx_current_user_v3"
+  },
+
+  COSTS: {
+    image: 5,
+    "video-audio": 10,
+    "audio-video": 10
+  },
+
+  LIMITS: {
+    maxImageMB: 50,
+    maxVideoMB: 500,
+    maxAudioMB: 200
+  },
+
+  VERSION: "3.0.0"
 };
 
-const KEYS = {
-  users: "convertx_users",
-  codes: "convertx_codes",
-  current: "convertx_current_user"
+const state = {
+  converterType: "image",
+  selectedFile: null,
+  outputBlob: null,
+  outputName: "",
+  converting: false,
+  currentObjectURL: null,
+  outputObjectURL: null,
+  videoElement: null,
+  audioElement: null,
+  mediaRecorder: null,
+  mediaStreams: []
 };
 
-let selectedType = "image";
-let selectedFile = null;
-let convertedBlob = null;
-let convertedName = "";
+/* =========================================================
+   HELPERS
+========================================================= */
 
 const $ = id => document.getElementById(id);
 
+function all(selector) {
+  return [...document.querySelectorAll(selector)];
+}
+
+/* =========================================================
+   STORAGE
+========================================================= */
+
+function readJSON(key, fallback) {
+  try {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJSON(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
 function getUsers() {
-  return JSON.parse(localStorage.getItem(KEYS.users) || "{}");
+  return readJSON(CONFIG.STORAGE.USERS, {});
 }
 
 function saveUsers(users) {
-  localStorage.setItem(KEYS.users, JSON.stringify(users));
+  writeJSON(CONFIG.STORAGE.USERS, users);
 }
 
 function getCodes() {
-  return JSON.parse(localStorage.getItem(KEYS.codes) || "{}");
+  return readJSON(CONFIG.STORAGE.CODES, {});
 }
 
 function saveCodes(codes) {
-  localStorage.setItem(KEYS.codes, JSON.stringify(codes));
+  writeJSON(CONFIG.STORAGE.CODES, codes);
 }
 
 function getCurrentEmail() {
-  return localStorage.getItem(KEYS.current);
+  return localStorage.getItem(CONFIG.STORAGE.CURRENT_USER);
 }
 
-function getCurrentUser() {
-  const email = getCurrentEmail();
-  if (!email) return null;
-
-  const users = getUsers();
-  return users[email] || null;
+function setCurrentEmail(email) {
+  localStorage.setItem(CONFIG.STORAGE.CURRENT_USER, email);
 }
 
-function isAdmin(user) {
-  return user && (
-    user.admin === true ||
-    user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()
+function clearCurrentEmail() {
+  localStorage.removeItem(CONFIG.STORAGE.CURRENT_USER);
+}
+
+/* =========================================================
+   USER SYSTEM
+========================================================= */
+
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
+}
+
+function isGmail(email) {
+  return /^[a-zA-Z0-9._%+-]+@gmail\.com$/i.test(email);
+}
+
+function randomID() {
+  if (crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  return (
+    "cx_" +
+    Date.now() +
+    "_" +
+    Math.random().toString(36).slice(2)
   );
 }
 
-function escapeHTML(text) {
-  return String(text)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-/* =========================
-   LOGIN
-========================= */
-
-function login(email) {
-  email = email.trim().toLowerCase();
-
-  if (!email.endsWith("@gmail.com")) {
-    alert("Please enter a Gmail address.");
-    return;
-  }
+function getUser(email = getCurrentEmail()) {
+  if (!email) return null;
 
   const users = getUsers();
 
-  if (!users[email]) {
-    users[email] = {
-      email,
-      name: email.split("@")[0],
-      tokens: 100,
-      admin: email === ADMIN_EMAIL.toLowerCase(),
-      permissions: {
-        converter: true,
-        redeem: true,
-        adminPanel: email === ADMIN_EMAIL.toLowerCase()
-      },
-      createdAt: Date.now()
-    };
+  return users[normalizeEmail(email)] || null;
+}
+
+function isAdmin(user) {
+  if (!user) return false;
+
+  return (
+    user.admin === true ||
+    normalizeEmail(user.email) ===
+      normalizeEmail(CONFIG.ADMIN_EMAIL)
+  );
+}
+
+function createUser(email) {
+  email = normalizeEmail(email);
+
+  const users = getUsers();
+
+  if (users[email]) {
+    return users[email];
   }
 
-  localStorage.setItem(KEYS.current, email);
+  const admin =
+    email === normalizeEmail(CONFIG.ADMIN_EMAIL);
+
+  const name =
+    email
+      .split("@")[0]
+      .replace(/[._-]+/g, " ")
+      .trim() || "User";
+
+  const user = {
+    id: randomID(),
+
+    email,
+
+    name,
+
+    tokens: admin ? 0 : 100,
+
+    admin,
+
+    createdAt: Date.now(),
+
+    lastLogin: Date.now(),
+
+    permissions: {
+      converter: true,
+      redeem: true,
+      adminPanel: admin
+    },
+
+    usage: {
+      image: 0,
+      "video-audio": 0,
+      "audio-video": 0
+    }
+  };
+
+  users[email] = user;
+
   saveUsers(users);
 
+  return user;
+}
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+function login(email) {
+  email = normalizeEmail(email);
+
+  if (!email) {
+    showMessage(
+      "Login",
+      "Enter your Gmail address first.",
+      "error"
+    );
+
+    return false;
+  }
+
+  if (!isGmail(email)) {
+    showMessage(
+      "Invalid Gmail",
+      "Use a Gmail address ending with @gmail.com.",
+      "error"
+    );
+
+    return false;
+  }
+
+  let user = getUser(email);
+
+  if (!user) {
+    user = createUser(email);
+
+    showMessage(
+      "Welcome",
+      "Your new account received 100 tokens.",
+      "success"
+    );
+  } else {
+    const users = getUsers();
+
+    users[email].lastLogin = Date.now();
+
+    saveUsers(users);
+  }
+
+  setCurrentEmail(email);
+
   showApp();
+
+  return true;
 }
 
 function logout() {
-  localStorage.removeItem(KEYS.current);
-  selectedFile = null;
-  convertedBlob = null;
+  cleanupMedia();
+
+  clearCurrentEmail();
+
+  state.selectedFile = null;
+  state.outputBlob = null;
+  state.outputName = "";
 
   showLogin();
 }
+
+/* =========================================================
+   PAGE
+========================================================= */
 
 function showLogin() {
   const loginPage = $("loginPage");
   const app = $("app");
 
-  if (loginPage) loginPage.style.display = "flex";
-  if (app) app.style.display = "none";
+  if (loginPage) {
+    loginPage.style.display = "flex";
+  }
+
+  if (app) {
+    app.style.display = "none";
+  }
 }
 
 function showApp() {
-  const user = getCurrentUser();
+  const user = getUser();
 
   if (!user) {
     showLogin();
@@ -128,866 +289,835 @@ function showApp() {
   const loginPage = $("loginPage");
   const app = $("app");
 
-  if (loginPage) loginPage.style.display = "none";
-  if (app) app.style.display = "block";
+  if (loginPage) {
+    loginPage.style.display = "none";
+  }
 
-  updateUserUI();
+  if (app) {
+    app.style.display = "block";
+  }
+
+  renderUser();
+
+  applyPermissions();
 
   if (isAdmin(user)) {
     showAdminPanel();
   } else {
     hideAdminPanel();
   }
+
+  updateConverterUI();
 }
 
-function updateUserUI() {
-  const user = getCurrentUser();
+/* =========================================================
+   USER UI
+========================================================= */
+
+function renderUser() {
+  const user = getUser();
+
   if (!user) return;
 
-  const tokenElements = document.querySelectorAll(
+  const admin = isAdmin(user);
+
+  const tokenText = admin
+    ? "∞ Tokens"
+    : `${Math.max(0, Number(user.tokens || 0))} Tokens`;
+
+  all(
     "#tokenCount, .token-count, [data-token-count]"
-  );
-
-  tokenElements.forEach(el => {
-    el.textContent = isAdmin(user)
-      ? "∞ Tokens"
-      : `${user.tokens} Tokens`;
+  ).forEach(element => {
+    element.textContent = tokenText;
   });
 
-  const emailElements = document.querySelectorAll(
+  all(
     "#userEmail, .user-email, [data-user-email]"
-  );
-
-  emailElements.forEach(el => {
-    el.textContent = user.email;
+  ).forEach(element => {
+    element.textContent = user.email;
   });
 
-  const nameElements = document.querySelectorAll(
+  all(
     "#userName, .user-name, [data-user-name]"
-  );
-
-  nameElements.forEach(el => {
-    el.textContent = user.name;
+  ).forEach(element => {
+    element.textContent = user.name;
   });
 
-  const avatars = document.querySelectorAll(
-    "#avatar, .avatar, [data-avatar]"
-  );
+  const initial =
+    user.name.trim().charAt(0).toUpperCase() || "U";
 
-  avatars.forEach(el => {
-    el.textContent = user.name.charAt(0).toUpperCase();
+  all(
+    "#avatar, .avatar, [data-avatar]"
+  ).forEach(element => {
+    element.textContent = initial;
+  });
+
+  all(
+    "#accountEmail, [data-account-email]"
+  ).forEach(element => {
+    element.textContent = user.email;
+  });
+
+  all(
+    "#accountTokens, [data-account-tokens]"
+  ).forEach(element => {
+    element.textContent = tokenText;
   });
 }
 
-/* =========================
-   CONVERTER TYPE
-========================= */
+/* =========================================================
+   PERMISSIONS
+========================================================= */
+
+function applyPermissions() {
+  const user = getUser();
+
+  if (!user) return;
+
+  const converterAllowed =
+    !user.permissions ||
+    user.permissions.converter !== false;
+
+  const redeemAllowed =
+    !user.permissions ||
+    user.permissions.redeem !== false;
+
+  const converter =
+    $("converterSection") ||
+    document.querySelector(".converter");
+
+  const redeem =
+    $("redeemSection") ||
+    document.querySelector(".redeem-section");
+
+  if (converter) {
+    converter.style.display =
+      converterAllowed ? "" : "none";
+  }
+
+  if (redeem) {
+    redeem.style.display =
+      redeemAllowed ? "" : "none";
+  }
+}
+
+/* =========================================================
+   CONVERTER TYPES
+========================================================= */
 
 function setConverterType(type) {
-  if (!COSTS[type]) return;
+  if (!CONFIG.COSTS[type]) {
+    return;
+  }
 
-  selectedType = type;
-  selectedFile = null;
-  convertedBlob = null;
+  const user = getUser();
 
-  document.querySelectorAll("[data-type]").forEach(button => {
+  if (
+    user &&
+    user.permissions &&
+    user.permissions.converter === false
+  ) {
+    showMessage(
+      "Disabled",
+      "Converter access is disabled for this account.",
+      "error"
+    );
+
+    return;
+  }
+
+  cleanupMedia();
+
+  state.converterType = type;
+  state.selectedFile = null;
+  state.outputBlob = null;
+  state.outputName = "";
+
+  all("[data-type]").forEach(button => {
     button.classList.toggle(
       "active",
       button.dataset.type === type
     );
   });
 
-  updateUploadText();
+  updateConverterUI();
+
   clearFileUI();
 }
 
-function updateUploadText() {
-  const title = $("uploadTitle");
-  const text = $("uploadText");
-
-  const data = {
+function updateConverterUI() {
+  const info = {
     image: {
       title: "Upload JPG or PNG",
-      text: "Convert JPG ↔ PNG"
+      description:
+        "Convert JPG to PNG or PNG to JPG",
+      accept: ".jpg,.jpeg,.png",
+      cost: "5 tokens"
     },
+
     "video-audio": {
       title: "Upload a video",
-      text: "Convert video to audio"
+      description:
+        "Extract the audio from your video",
+      accept: "video/*",
+      cost: "10 tokens"
     },
+
     "audio-video": {
       title: "Upload audio",
-      text: "Convert audio to video"
+      description:
+        "Create a dark video using your audio",
+      accept: "audio/*",
+      cost: "10 tokens"
     }
   };
 
-  if (title) title.textContent = data[selectedType].title;
-  if (text) text.textContent = data[selectedType].text;
+  const data = info[state.converterType];
+
+  if (!data) return;
+
+  if ($("uploadTitle")) {
+    $("uploadTitle").textContent = data.title;
+  }
+
+  if ($("uploadText")) {
+    $("uploadText").textContent =
+      `${data.description} · ${data.cost}`;
+  }
+
+  if ($("fileInput")) {
+    $("fileInput").accept = data.accept;
+  }
+
+  all("[data-cost]").forEach(element => {
+    element.textContent = data.cost;
+  });
 }
 
-function getAcceptedTypes() {
-  if (selectedType === "image") {
-    return ["image/jpeg", "image/png"];
+/* =========================================================
+   FILE VALIDATION
+========================================================= */
+
+function getMaxSize(type) {
+  if (type === "image") {
+    return CONFIG.LIMITS.maxImageMB * 1024 * 1024;
   }
 
-  if (selectedType === "video-audio") {
-    return ["video/mp4", "video/webm", "video/ogg", "video/quicktime"];
+  if (type === "video-audio") {
+    return CONFIG.LIMITS.maxVideoMB * 1024 * 1024;
   }
 
-  if (selectedType === "audio-video") {
-    return ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/webm"];
+  return CONFIG.LIMITS.maxAudioMB * 1024 * 1024;
+}
+
+function isSupportedFile(file) {
+  if (!file) return false;
+
+  if (file.size > getMaxSize(state.converterType)) {
+    return false;
   }
 
-  return [];
+  if (state.converterType === "image") {
+    return [
+      "image/jpeg",
+      "image/png"
+    ].includes(file.type);
+  }
+
+  if (state.converterType === "video-audio") {
+    return file.type.startsWith("video/");
+  }
+
+  if (state.converterType === "audio-video") {
+    return file.type.startsWith("audio/");
+  }
+
+  return false;
 }
 
 function handleFile(file) {
   if (!file) return;
 
-  const accepted = getAcceptedTypes();
+  if (!isSupportedFile(file)) {
+    const maxMB =
+      getMaxSize(state.converterType) /
+      1024 /
+      1024;
 
-  if (!accepted.includes(file.type)) {
-    alert("That file type isn't supported.");
+    showMessage(
+      "Unsupported file",
+      `This file isn't supported or is larger than ${maxMB} MB.`,
+      "error"
+    );
+
     return;
   }
 
-  selectedFile = file;
-  convertedBlob = null;
+  cleanupPreview();
 
-  showFileUI(file);
+  state.selectedFile = file;
+  state.outputBlob = null;
+  state.outputName = "";
+
+  renderFile(file);
 }
 
-function showFileUI(file) {
+/* =========================================================
+   FILE UI
+========================================================= */
+
+function renderFile(file) {
   const info = $("fileInfo");
   const name = $("fileName");
   const size = $("fileSize");
-
-  if (name) name.textContent = file.name;
-
-  if (size) {
-    size.textContent = formatBytes(file.size);
-  }
+  const preview = $("preview");
 
   if (info) {
     info.style.display = "block";
   }
 
-  const preview = $("preview");
+  if (name) {
+    name.textContent = file.name;
+  }
+
+  if (size) {
+    size.textContent =
+      `${formatBytes(file.size)} · ${file.type || "Unknown type"}`;
+  }
 
   if (!preview) return;
+
+  cleanupPreview();
+
+  const url = URL.createObjectURL(file);
+
+  state.currentObjectURL = url;
 
   preview.innerHTML = "";
 
   if (file.type.startsWith("image/")) {
     const img = document.createElement("img");
-    img.src = URL.createObjectURL(file);
-    img.alt = "Preview";
+
+    img.src = url;
+    img.alt = "Image preview";
+
     preview.appendChild(img);
   }
 
   if (file.type.startsWith("video/")) {
     const video = document.createElement("video");
-    video.src = URL.createObjectURL(file);
+
+    video.src = url;
     video.controls = true;
+    video.playsInline = true;
     video.preload = "metadata";
+
     preview.appendChild(video);
   }
 
   if (file.type.startsWith("audio/")) {
     const audio = document.createElement("audio");
-    audio.src = URL.createObjectURL(file);
+
+    audio.src = url;
     audio.controls = true;
+    audio.preload = "metadata";
+
     preview.appendChild(audio);
   }
 }
 
 function clearFileUI() {
-  const info = $("fileInfo");
-  const preview = $("preview");
-  const result = $("result");
+  cleanupPreview();
 
-  if (info) info.style.display = "none";
-  if (preview) preview.innerHTML = "";
-  if (result) result.style.display = "none";
+  if ($("fileInfo")) {
+    $("fileInfo").style.display = "none";
+  }
 
-  const fileInput = $("fileInput");
-  if (fileInput) fileInput.value = "";
+  if ($("preview")) {
+    $("preview").innerHTML = "";
+  }
+
+  if ($("result")) {
+    $("result").style.display = "none";
+  }
+
+  if ($("fileInput")) {
+    $("fileInput").value = "";
+  }
+
+  if ($("downloadButton")) {
+    $("downloadButton").removeAttribute("href");
+    $("downloadButton").removeAttribute("download");
+  }
 }
+
+function cleanupPreview() {
+  if (state.currentObjectURL) {
+    URL.revokeObjectURL(
+      state.currentObjectURL
+    );
+
+    state.currentObjectURL = null;
+  }
+}
+
+/* =========================================================
+   FORMAT
+========================================================= */
 
 function formatBytes(bytes) {
-  if (!bytes) return "0 B";
+  if (!Number.isFinite(bytes) || bytes <= 0) {
+    return "0 B";
+  }
 
-  const units = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  const units = [
+    "B",
+    "KB",
+    "MB",
+    "GB"
+  ];
 
-  return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${units[i]}`;
+  const index = Math.min(
+    Math.floor(
+      Math.log(bytes) /
+      Math.log(1024)
+    ),
+    units.length - 1
+  );
+
+  return (
+    (bytes /
+      Math.pow(1024, index)
+    ).toFixed(index === 0 ? 0 : 2)
+    +
+    " " +
+    units[index]
+  );
 }
 
-/* =========================
-   TOKENS
-========================= */
+function getBaseName(filename) {
+  return filename
+    .replace(/\.[^/.]+$/, "")
+    .replace(
+      /[<>:"/\\|?*\x00-\x1F]/g,
+      "_"
+    );
+}
 
-function hasEnoughTokens() {
-  const user = getCurrentUser();
+/* =========================================================
+   TOKENS
+========================================================= */
+
+function canUseConverter() {
+  const user = getUser();
 
   if (!user) {
-    alert("Please login first.");
+    showMessage(
+      "Login required",
+      "Login before converting files.",
+      "error"
+    );
+
     return false;
   }
 
-  if (isAdmin(user)) return true;
+  if (
+    user.permissions &&
+    user.permissions.converter === false
+  ) {
+    showMessage(
+      "Access denied",
+      "Converter permission is disabled.",
+      "error"
+    );
 
-  const cost = COSTS[selectedType];
+    return false;
+  }
 
-  if (user.tokens < cost) {
-    alert(`You need ${cost} tokens.`);
+  if (isAdmin(user)) {
+    return true;
+  }
+
+  const cost =
+    CONFIG.COSTS[state.converterType];
+
+  const tokens =
+    Number(user.tokens || 0);
+
+  if (tokens < cost) {
+    showMessage(
+      "Not enough tokens",
+      `This conversion costs ${cost} tokens. You have ${tokens}.`,
+      "error"
+    );
+
     return false;
   }
 
   return true;
 }
 
-function spendTokens() {
+function spendTokens(amount) {
+  const user = getUser();
+
+  if (!user || isAdmin(user)) {
+    return;
+  }
+
   const users = getUsers();
-  const email = getCurrentEmail();
-  const user = users[email];
 
-  if (!user || isAdmin(user)) return;
+  const email =
+    normalizeEmail(user.email);
 
-  user.tokens -= COSTS[selectedType];
+  if (!users[email]) {
+    return;
+  }
+
+  users[email].tokens =
+    Math.max(
+      0,
+      Number(users[email].tokens || 0) -
+        Number(amount || 0)
+    );
+
+  if (!users[email].usage) {
+    users[email].usage = {};
+  }
+
+  users[email].usage[state.converterType] =
+    Number(
+      users[email].usage[state.converterType] || 0
+    ) + 1;
 
   saveUsers(users);
-  updateUserUI();
+
+  renderUser();
 }
 
-/* =========================
-   IMAGE CONVERTER
-========================= */
-
-async function convertImage() {
-  if (!selectedFile) {
-    alert("Upload an image first.");
-    return;
-  }
-
-  const img = new Image();
-
-  img.onload = () => {
-    const canvas = document.createElement("canvas");
-
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
-
-    const ctx = canvas.getContext("2d");
-
-    if (selectedFile.type === "image/png") {
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    ctx.drawImage(img, 0, 0);
-
-    const targetPNG = selectedFile.type === "image/jpeg";
-
-    canvas.toBlob(blob => {
-      if (!blob) {
-        alert("Conversion failed.");
-        return;
-      }
-
-      convertedBlob = blob;
-
-      const baseName = selectedFile.name
-        .replace(/\.[^/.]+$/, "");
-
-      convertedName = targetPNG
-        ? `${baseName}.png`
-        : `${baseName}.jpg`;
-
-      spendTokens();
-      showResult();
-    }, targetPNG ? "image/png" : "image/jpeg", 0.92);
-  };
-
-  img.onerror = () => {
-    alert("Could not read the image.");
-  };
-
-  img.src = URL.createObjectURL(selectedFile);
-}
-
-/* =========================
-   VIDEO → AUDIO
-========================= */
-
-async function videoToAudio() {
-  if (!selectedFile) {
-    alert("Upload a video first.");
-    return;
-  }
-
-  if (!window.MediaRecorder) {
-    alert("Your browser doesn't support this converter.");
-    return;
-  }
-
-  const video = document.createElement("video");
-  const url = URL.createObjectURL(selectedFile);
-
-  video.src = url;
-  video.muted = true;
-  video.playsInline = true;
-
-  try {
-    await new Promise((resolve, reject) => {
-      video.onloadedmetadata = resolve;
-      video.onerror = reject;
-    });
-
-    const stream = video.captureStream();
-
-    const audioTracks = stream.getAudioTracks();
-
-    if (!audioTracks.length) {
-      URL.revokeObjectURL(url);
-      alert("This video has no audio track.");
-      return;
-    }
-
-    const audioStream = new MediaStream(audioTracks);
-
-    let mime = "audio/webm";
-
-    if (!MediaRecorder.isTypeSupported(mime)) {
-      mime = "";
-    }
-
-    const recorder = new MediaRecorder(
-      audioStream,
-      mime ? { mimeType: mime } : undefined
-    );
-
-    const chunks = [];
-
-    recorder.ondataavailable = e => {
-      if (e.data.size > 0) chunks.push(e.data);
-    };
-
-    recorder.onstop = () => {
-      convertedBlob = new Blob(chunks, {
-        type: recorder.mimeType || "audio/webm"
-      });
-
-      const baseName = selectedFile.name
-        .replace(/\.[^/.]+$/, "");
-
-      convertedName = `${baseName}.webm`;
-
-      URL.revokeObjectURL(url);
-
-      spendTokens();
-      showResult();
-    };
-
-    video.onended = () => recorder.stop();
-
-    recorder.start();
-    await video.play();
-
-  } catch (error) {
-    URL.revokeObjectURL(url);
-    alert("Video conversion failed.");
-  }
-}
-
-/* =========================
-   AUDIO → VIDEO
-========================= */
-
-async function audioToVideo() {
-  if (!selectedFile) {
-    alert("Upload audio first.");
-    return;
-  }
-
-  if (!window.MediaRecorder) {
-    alert("Your browser doesn't support this converter.");
-    return;
-  }
-
-  const audio = document.createElement("audio");
-  const audioURL = URL.createObjectURL(selectedFile);
-
-  audio.src = audioURL;
-  audio.preload = "auto";
-
-  try {
-    await new Promise((resolve, reject) => {
-      audio.onloadedmetadata = resolve;
-      audio.onerror = reject;
-    });
-
-    const duration = audio.duration;
-
-    if (!isFinite(duration) || duration <= 0) {
-      throw new Error("Invalid audio duration");
-    }
-
-    const canvas = document.createElement("canvas");
-
-    canvas.width = 1280;
-    canvas.height = 720;
-
-    const ctx = canvas.getContext("2d");
-
-    ctx.fillStyle = "#080808";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const canvasStream = canvas.captureStream(30);
-
-    const AudioContext =
-      window.AudioContext || window.webkitAudioContext;
-
-    if (!AudioContext) {
-      throw new Error("AudioContext unavailable");
-    }
-
-    const audioContext = new AudioContext();
-
-    const source =
-      audioContext.createMediaElementSource(audio);
-
-    const destination =
-      audioContext.createMediaStreamDestination();
-
-    source.connect(destination);
-
-    const combined = new MediaStream();
-
-    canvasStream.getVideoTracks().forEach(track => {
-      combined.addTrack(track);
-    });
-
-    destination.stream.getAudioTracks().forEach(track => {
-      combined.addTrack(track);
-    });
-
-    let mime = "video/webm;codecs=vp9,opus";
-
-    if (!MediaRecorder.isTypeSupported(mime)) {
-      mime = "video/webm";
-    }
-
-    const recorder = new MediaRecorder(
-      combined,
-      { mimeType: mime }
-    );
-
-    const chunks = [];
-
-    recorder.ondataavailable = e => {
-      if (e.data.size > 0) chunks.push(e.data);
-    };
-
-    recorder.onstop = async () => {
-      convertedBlob = new Blob(chunks, {
-        type: recorder.mimeType || "video/webm"
-      });
-
-      const baseName = selectedFile.name
-        .replace(/\.[^/.]+$/, "");
-
-      convertedName = `${baseName}.webm`;
-
-      canvasStream.getTracks().forEach(t => t.stop());
-      combined.getTracks().forEach(t => t.stop());
-
-      await audioContext.close();
-
-      URL.revokeObjectURL(audioURL);
-
-      spendTokens();
-      showResult();
-    };
-
-    audio.onended = () => {
-      setTimeout(() => recorder.stop(), 300);
-    };
-
-    recorder.start(100);
-
-    await audioContext.resume();
-    await audio.play();
-
-  } catch (error) {
-    URL.revokeObjectURL(audioURL);
-    console.error(error);
-    alert("Audio conversion failed.");
-  }
-}
-
-/* =========================
-   CONVERT BUTTON
-========================= */
+/* =========================================================
+   CONVERT
+========================================================= */
 
 async function convertFile() {
-  if (!selectedFile) {
-    alert("Upload a file first.");
+  if (state.converting) return;
+
+  if (!state.selectedFile) {
+    showMessage(
+      "No file",
+      "Upload a file first.",
+      "error"
+    );
+
     return;
   }
 
-  if (!hasEnoughTokens()) return;
+  if (!canUseConverter()) {
+    return;
+  }
 
-  setProgress(true);
+  state.converting = true;
+
+  setConvertButton(true);
+
+  showProgress(5);
 
   try {
-    if (selectedType === "image") {
+    if (state.converterType === "image") {
       await convertImage();
     }
 
-    if (selectedType === "video-audio") {
-      await videoToAudio();
+    else if (
+      state.converterType === "video-audio"
+    ) {
+      await convertVideoToAudio();
     }
 
-    if (selectedType === "audio-video") {
-      await audioToVideo();
+    else if (
+      state.converterType === "audio-video"
+    ) {
+      await convertAudioToVideo();
     }
-  } catch (error) {
-    console.error(error);
-    alert("Something went wrong.");
   }
 
-  setProgress(false);
-}
+  catch (error) {
+    console.error(
+      "ConvertX error:",
+      error
+    );
 
-function setProgress(active) {
-  const progress = $("progress");
-  const convertButton = $("convertButton");
+    showMessage(
+      "Conversion failed",
+      error.message ||
+        "Something went wrong during conversion.",
+      "error"
+    );
 
-  if (progress) {
-    progress.style.display = active ? "block" : "none";
+    cleanupMedia();
   }
 
-  if (convertButton) {
-    convertButton.disabled = active;
-    convertButton.textContent = active
-      ? "Converting..."
-      : "Convert";
-  }
-}
+  finally {
+    state.converting = false;
 
-/* =========================
-   RESULT
-========================= */
+    setConvertButton(false);
 
-function showResult() {
-  if (!convertedBlob) return;
-
-  const result = $("result");
-  const download = $("downloadButton");
-
-  if (result) {
-    result.style.display = "block";
-  }
-
-  if (download) {
-    const url = URL.createObjectURL(convertedBlob);
-
-    download.href = url;
-    download.download = convertedName;
-    download.textContent = `Download ${convertedName}`;
+    showProgress(0);
   }
 }
 
-/* =========================
-   REDEEM CODES
-========================= */
+/* =========================================================
+   IMAGE
+========================================================= */
 
-function redeemCode(codeInput) {
-  const user = getCurrentUser();
+function convertImage() {
+  return new Promise(
+    (resolve, reject) => {
+      const file =
+        state.selectedFile;
 
-  if (!user) {
-    alert("Login first.");
-    return;
+      const image =
+        new Image();
+
+      const url =
+        URL.createObjectURL(file);
+
+      image.onload = () => {
+        try {
+          showProgress(30);
+
+          const canvas =
+            document.createElement(
+              "canvas"
+            );
+
+          canvas.width =
+            image.naturalWidth;
+
+          canvas.height =
+            image.naturalHeight;
+
+          const ctx =
+            canvas.getContext("2d");
+
+          if (!ctx) {
+            throw new Error(
+              "Canvas is not supported."
+            );
+          }
+
+          const toPNG =
+            file.type ===
+            "image/jpeg";
+
+          if (!toPNG) {
+            ctx.fillStyle =
+              "#ffffff";
+
+            ctx.fillRect(
+              0,
+              0,
+              canvas.width,
+              canvas.height
+            );
+          }
+
+          ctx.drawImage(
+            image,
+            0,
+            0
+          );
+
+          showProgress(70);
+
+          const mime =
+            toPNG
+              ? "image/png"
+              : "image/jpeg";
+
+          canvas.toBlob(
+            blob => {
+              URL.revokeObjectURL(
+                url
+              );
+
+              if (!blob) {
+                reject(
+                  new Error(
+                    "Browser could not create the image."
+                  )
+                );
+
+                return;
+              }
+
+              state.outputBlob =
+                blob;
+
+              state.outputName =
+                `${getBaseName(file.name)}.${toPNG ? "png" : "jpg"}`;
+
+              spendTokens(
+                CONFIG.COSTS.image
+              );
+
+              showProgress(100);
+
+              showResult();
+
+              resolve();
+            },
+            mime,
+            0.94
+          );
+        }
+
+        catch (error) {
+          URL.revokeObjectURL(url);
+
+          reject(error);
+        }
+      };
+
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+
+        reject(
+          new Error(
+            "Could not read this image."
+          )
+        );
+      };
+
+      image.src = url;
+    }
+  );
+}
+
+/* =========================================================
+   VIDEO → AUDIO
+========================================================= */
+
+async function convertVideoToAudio() {
+  const file =
+    state.selectedFile;
+
+  if (!window.MediaRecorder) {
+    throw new Error(
+      "Your browser does not support MediaRecorder."
+    );
   }
 
-  if (user.permissions && user.permissions.redeem === false) {
-    alert("Redeem is disabled for your account.");
-    return;
-  }
+  const video =
+    document.createElement("video");
 
-  const code = codeInput.trim().toUpperCase();
+  state.videoElement =
+    video;
 
-  if (!code) {
-    alert("Enter a code.");
-    return;
-  }
+  const url =
+    URL.createObjectURL(file);
 
-  const codes = getCodes();
-  const tokenCode = codes[code];
+  state.currentObjectURL =
+    url;
 
-  if (!tokenCode) {
-    alert("Invalid code.");
-    return;
-  }
+  video.src = url;
 
-  if (tokenCode.used) {
-    alert("This code has already been used.");
-    return;
-  }
+  video.preload = "auto";
+
+  video.playsInline = true;
+
+  await waitForMetadata(video);
 
   if (
-    tokenCode.expire &&
-    Date.now() > tokenCode.expire
+    !video.duration ||
+    !Number.isFinite(video.duration)
   ) {
-    alert("This code has expired.");
-    return;
+    throw new Error(
+      "Could not read video duration."
+    );
   }
 
-  const users = getUsers();
+  showProgress(20);
 
-  users[user.email].tokens =
-    Number(users[user.email].tokens || 0) +
-    Number(tokenCode.tokens || 0);
+  let stream;
 
-  tokenCode.used = true;
-  tokenCode.usedBy = user.email;
-  tokenCode.usedAt = Date.now();
-
-  saveUsers(users);
-  saveCodes(codes);
-
-  updateUserUI();
-
-  alert(`Added ${tokenCode.tokens} tokens.`);
-}
-
-/* =========================
-   ADMIN PANEL
-========================= */
-
-function showAdminPanel() {
-  const panel = $("adminPanel");
-  if (panel) panel.style.display = "block";
-
-  renderAdminCodes();
-  renderAdminUsers();
-}
-
-function hideAdminPanel() {
-  const panel = $("adminPanel");
-  if (panel) panel.style.display = "none";
-}
-
-function createTokenCode(code, tokens, expire) {
-  const user = getCurrentUser();
-
-  if (!isAdmin(user)) {
-    alert("Admin only.");
-    return;
+  if (
+    typeof video.captureStream ===
+    "function"
+  ) {
+    stream =
+      video.captureStream();
   }
 
-  code = code.trim().toUpperCase();
-  tokens = Number(tokens);
-
-  if (!code) {
-    alert("Enter a token code.");
-    return;
+  else if (
+    typeof video.mozCaptureStream ===
+    "function"
+  ) {
+    stream =
+      video.mozCaptureStream();
   }
 
-  if (!Number.isFinite(tokens) || tokens <= 0) {
-    alert("Enter a valid token amount.");
-    return;
+  else {
+    throw new Error(
+      "This browser cannot capture video audio."
+    );
   }
 
-  const codes = getCodes();
+  const audioTracks =
+    stream.getAudioTracks();
 
-  if (codes[code]) {
-    alert("That code already exists.");
-    return;
+  if (!audioTracks.length) {
+    throw new Error(
+      "This video does not contain an audio track."
+    );
   }
 
-  let expireTime = null;
+  const audioStream =
+    new MediaStream(
+      audioTracks
+    );
 
-  if (expire) {
-    const date = new Date(expire);
+  state.mediaStreams.push(
+    stream,
+    audioStream
+  );
 
-    if (isNaN(date.getTime())) {
-      alert("Invalid expiration date.");
-      return;
-    }
+  const mime =
+    chooseMime([
+      "audio/webm;codecs=opus",
+      "audio/webm",
+      "audio/ogg;codecs=opus"
+    ]);
 
-    expireTime = date.getTime();
-  }
+  const recorder =
+    mime
+      ? new MediaRecorder(
+          audioStream,
+          { mimeType: mime }
+        )
+      : new MediaRecorder(
+          audioStream
+        );
 
-  codes[code] = {
-    code,
-    tokens,
-    expire: expireTime,
-    used: false,
-    createdAt: Date.now()
-  };
+  state.mediaRecorder =
+    recorder;
 
-  saveCodes(codes);
+  const chunks = [];
 
-  renderAdminCodes();
-
-  alert("Token code created.");
-}
-
-function renderAdminCodes() {
-  const container = $("adminCodes");
-  if (!container) return;
-
-  const codes = getCodes();
-  const list = Object.values(codes);
-
-  if (!list.length) {
-    container.innerHTML = "<p>No token codes yet.</p>";
-    return;
-  }
-
-  container.innerHTML = list.map(code => {
-    const expiration = code.expire
-      ? new Date(code.expire).toLocaleString()
-      : "Never";
-
-    return `
-      <div class="admin-item">
-        <strong>${escapeHTML(code.code)}</strong>
-        <span>${code.tokens} tokens</span>
-        <small>
-          ${code.used ? "USED" : "UNUSED"} ·
-          Expires: ${escapeHTML(expiration)}
-        </small>
-      </div>
-    `;
-  }).join("");
-}
-
-function renderAdminUsers() {
-  const container = $("adminUsers");
-  if (!container) return;
-
-  const users = getUsers();
-  const list = Object.values(users);
-
-  if (!list.length) {
-    container.innerHTML = "<p>No users yet.</p>";
-    return;
-  }
-
-  container.innerHTML = list.map(user => {
-    const admin = isAdmin(user);
-
-    return `
-      <div class="admin-item">
-        <strong>${escapeHTML(user.email)}</strong>
-        <span>
-          ${admin ? "∞" : user.tokens} tokens
-        </span>
-
-        ${
-          admin
-          ? `<small>ADMIN</small>`
-          : `
-            <label>
-              <input
-                type="checkbox"
-                data-permission="converter"
-                data-email="${escapeHTML(user.email)}"
-                ${user.permissions?.converter !== false ? "checked" : ""}
-              >
-              Converter
-            </label>
-
-            <label>
-              <input
-                type="checkbox"
-                data-permission="redeem"
-                data-email="${escapeHTML(user.email)}"
-                ${user.permissions?.redeem !== false ? "checked" : ""}
-              >
-              Redeem
-            </label>
-          `
-        }
-      </div>
-    `;
-  }).join("");
-}
-
-function updatePermission(email, permission, enabled) {
-  const current = getCurrentUser();
-
-  if (!isAdmin(current)) {
-    return;
-  }
-
-  const users = getUsers();
-
-  if (!users[email]) return;
-
-  if (!users[email].permissions) {
-    users[email].permissions = {};
-  }
-
-  users[email].permissions[permission] = enabled;
-
-  saveUsers(users);
-}
-
-/* =========================
-   EVENT SETUP
-========================= */
-
-document.addEventListener("DOMContentLoaded", () => {
-
-  const current = getCurrentEmail();
-
-  if (current && getCurrentUser()) {
-    showApp();
-  } else {
-    showLogin();
-  }
-
-  updateUploadText();
-
-  const loginButton = $("loginButton");
-
-  if (loginButton) {
-    loginButton.addEventListener("click", () => {
-      login($("gmailInput")?.value || "");
-    });
-  }
-
-  const gmailInput = $("gmailInput");
-
-  if (gmailInput) {
-    gmailInput.addEventListener("keydown", e => {
-      if (e.key === "Enter") {
-        login(gmailInput.value);
+  recorder.ondataavailable =
+    event => {
+      if (
+        event.data &&
+        event.data.size > 0
+      ) {
+        chunks.push(
+          event.data
+        );
       }
-    });
-  }
+    };
 
-  const logoutButton = $("logoutButton");
-
-  if (logoutButton) {
-    logoutButton.addEventListener("click", logout);
-  }
-
-  document.querySelectorAll("[data-type]").forEach(button => {
-    button.addEventListener("click", () => {
-      setConverterType(button.dataset.type);
-    });
-  });
-
-  const fileInput = $("fileInput");
-
-  if (fileInput) {
-    fileInput.addEventListener("change", e => {
-      handleFile(e.target.files[0]);
-    });
-  }
-
-  cons
+  const finished =
+    new Promise(
+      (resolve, reject) => {
+        recorder.onerror = () => {
+          reject(
+            new Error(
+              "Audio recording failed
