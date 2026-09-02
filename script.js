@@ -4,49 +4,101 @@ document.addEventListener("DOMContentLoaded", () => {
     // ELEMENTS
     // =========================================
 
-    const loginScreen = document.getElementById("loginScreen");
-    const app = document.getElementById("app");
+    const loginScreen =
+        document.getElementById("loginScreen");
 
-    const loginName = document.getElementById("loginName");
-    const loginBtn = document.getElementById("loginBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
+    const app =
+        document.getElementById("app");
 
-    const userName = document.getElementById("userName");
-    const avatar = document.getElementById("avatar");
+    const loginName =
+        document.getElementById("loginName");
 
-    const modeButtons = document.querySelectorAll(".mode");
-    const formatButtons = document.querySelectorAll(".format");
+    const loginBtn =
+        document.getElementById("loginBtn");
 
-    const formatArea = document.getElementById("formatArea");
-    const costLabel = document.getElementById("costLabel");
-    const buttonCost = document.getElementById("buttonCost");
+    const logoutBtn =
+        document.getElementById("logoutBtn");
 
-    const dropZone = document.getElementById("dropZone");
-    const browseBtn = document.getElementById("browseBtn");
-    const fileInput = document.getElementById("fileInput");
+    const userName =
+        document.getElementById("userName");
 
-    const fileCard = document.getElementById("fileCard");
-    const fileName = document.getElementById("fileName");
-    const fileSize = document.getElementById("fileSize");
-    const fileIcon = document.getElementById("fileIcon");
-    const removeFile = document.getElementById("removeFile");
+    const avatar =
+        document.getElementById("avatar");
 
-    const previewWrap = document.getElementById("previewWrap");
-    const imagePreview = document.getElementById("imagePreview");
+    const userCount =
+        document.getElementById("userCount");
 
-    const convertBtn = document.getElementById("convertBtn");
+    const heroUserCount =
+        document.getElementById("heroUserCount");
 
-    const progressArea = document.getElementById("progressArea");
-    const progressBar = document.getElementById("progressBar");
-    const progressPercent = document.getElementById("progressPercent");
-    const progressText = document.getElementById("progressText");
+    const modeButtons =
+        document.querySelectorAll(".mode");
 
-    const resultCard = document.getElementById("resultCard");
-    const resultName = document.getElementById("resultName");
-    const downloadBtn = document.getElementById("downloadBtn");
+    const formatButtons =
+        document.querySelectorAll(".format");
 
-    const supportedText = document.getElementById("supportedText");
-    const toast = document.getElementById("toast");
+    const formatArea =
+        document.getElementById("formatArea");
+
+    const dropZone =
+        document.getElementById("dropZone");
+
+    const browseBtn =
+        document.getElementById("browseBtn");
+
+    const fileInput =
+        document.getElementById("fileInput");
+
+    const fileCard =
+        document.getElementById("fileCard");
+
+    const fileName =
+        document.getElementById("fileName");
+
+    const fileSize =
+        document.getElementById("fileSize");
+
+    const fileIcon =
+        document.getElementById("fileIcon");
+
+    const removeFile =
+        document.getElementById("removeFile");
+
+    const previewWrap =
+        document.getElementById("previewWrap");
+
+    const imagePreview =
+        document.getElementById("imagePreview");
+
+    const supportedText =
+        document.getElementById("supportedText");
+
+    const convertBtn =
+        document.getElementById("convertBtn");
+
+    const progressArea =
+        document.getElementById("progressArea");
+
+    const progressBar =
+        document.getElementById("progressBar");
+
+    const progressPercent =
+        document.getElementById("progressPercent");
+
+    const progressText =
+        document.getElementById("progressText");
+
+    const resultCard =
+        document.getElementById("resultCard");
+
+    const resultName =
+        document.getElementById("resultName");
+
+    const downloadBtn =
+        document.getElementById("downloadBtn");
+
+    const toast =
+        document.getElementById("toast");
 
 
     // =========================================
@@ -54,11 +106,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================================
 
     let currentMode = "photo";
+
     let currentFormat = "png";
 
     let selectedFile = null;
 
     let convertedBlob = null;
+
     let convertedName = "";
 
     let downloadURL = null;
@@ -66,6 +120,22 @@ document.addEventListener("DOMContentLoaded", () => {
     let converting = false;
 
     let toastTimer = null;
+
+
+    // =========================================
+    // USER COUNT
+    // =========================================
+
+    function updateUserCount() {
+
+        if (userCount) {
+            userCount.textContent = "1";
+        }
+
+        if (heroUserCount) {
+            heroUserCount.textContent = "1";
+        }
+    }
 
 
     // =========================================
@@ -83,13 +153,15 @@ document.addEventListener("DOMContentLoaded", () => {
         clearTimeout(toastTimer);
 
         toastTimer = setTimeout(() => {
+
             toast.classList.remove("show");
+
         }, 2500);
     }
 
 
     // =========================================
-    // LOGIN
+    // NAME
     // =========================================
 
     function getName(email) {
@@ -98,32 +170,39 @@ document.addEventListener("DOMContentLoaded", () => {
             return "Demo";
         }
 
-        const name = email
-            .split("@")[0]
-            .trim();
+        const part =
+            email
+                .split("@")[0]
+                .trim();
 
-        if (!name) {
+        if (!part) {
             return "Demo";
         }
 
         return (
-            name.charAt(0).toUpperCase() +
-            name.slice(1)
+            part.charAt(0).toUpperCase() +
+            part.slice(1)
         );
     }
 
 
+    // =========================================
+    // LOGIN
+    // =========================================
+
     function login() {
 
-        let email = loginName
-            ? loginName.value.trim()
-            : "";
+        let email =
+            loginName
+                ? loginName.value.trim()
+                : "";
 
         if (!email) {
             email = "demo@gmail.com";
         }
 
-        const name = getName(email);
+        const name =
+            getName(email);
 
         localStorage.setItem(
             "convertx_fake_email",
@@ -136,21 +215,30 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
         if (userName) {
-            userName.textContent = name;
+            userName.textContent =
+                name;
         }
 
         if (avatar) {
             avatar.textContent =
-                name.charAt(0).toUpperCase();
+                name
+                    .charAt(0)
+                    .toUpperCase();
         }
 
         if (loginScreen) {
-            loginScreen.classList.add("hidden");
+            loginScreen.classList.add(
+                "hidden"
+            );
         }
 
         if (app) {
-            app.classList.remove("hidden");
+            app.classList.remove(
+                "hidden"
+            );
         }
+
+        updateUserCount();
     }
 
 
@@ -184,51 +272,69 @@ document.addEventListener("DOMContentLoaded", () => {
     // AUTO LOGIN
     // =========================================
 
-    const savedEmail = localStorage.getItem(
-        "convertx_fake_email"
-    );
+    const savedEmail =
+        localStorage.getItem(
+            "convertx_fake_email"
+        );
 
-    const savedName = localStorage.getItem(
-        "convertx_fake_name"
-    );
+    const savedName =
+        localStorage.getItem(
+            "convertx_fake_name"
+        );
+
 
     if (savedEmail) {
 
+        const name =
+            savedName ||
+            getName(savedEmail);
+
         if (loginName) {
-            loginName.value = savedEmail;
+            loginName.value =
+                savedEmail;
         }
 
         if (userName) {
             userName.textContent =
-                savedName || getName(savedEmail);
+                name;
         }
 
         if (avatar) {
-            const name =
-                savedName || getName(savedEmail);
-
             avatar.textContent =
-                name.charAt(0).toUpperCase();
+                name
+                    .charAt(0)
+                    .toUpperCase();
         }
 
         if (loginScreen) {
-            loginScreen.classList.add("hidden");
+            loginScreen.classList.add(
+                "hidden"
+            );
         }
 
         if (app) {
-            app.classList.remove("hidden");
+            app.classList.remove(
+                "hidden"
+            );
         }
 
     } else {
 
         if (loginScreen) {
-            loginScreen.classList.remove("hidden");
+            loginScreen.classList.remove(
+                "hidden"
+            );
         }
 
         if (app) {
-            app.classList.add("hidden");
+            app.classList.add(
+                "hidden"
+            );
         }
     }
+
+
+    updateUserCount();
 
 
     // =========================================
@@ -250,7 +356,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
 
                 if (app) {
-                    app.classList.add("hidden");
+                    app.classList.add(
+                        "hidden"
+                    );
                 }
 
                 if (loginScreen) {
@@ -270,7 +378,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // =========================================
-    // MODE BUTTONS
+    // MODE
     // =========================================
 
     modeButtons.forEach(button => {
@@ -284,12 +392,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 modeButtons.forEach(item => {
+
                     item.classList.remove(
                         "active"
                     );
+
                 });
 
-                button.classList.add("active");
+                button.classList.add(
+                    "active"
+                );
 
                 currentMode =
                     button.dataset.mode ||
@@ -304,7 +416,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // =========================================
-    // FORMAT BUTTONS
+    // FORMAT
     // =========================================
 
     formatButtons.forEach(button => {
@@ -321,12 +433,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 formatButtons.forEach(item => {
+
                     item.classList.remove(
                         "active"
                     );
+
                 });
 
-                button.classList.add("active");
+                button.classList.add(
+                    "active"
+                );
 
                 currentFormat =
                     button.dataset.format ||
@@ -339,7 +455,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // =========================================
-    // CONVERTER UI
+    // UI
     // =========================================
 
     function updateConverterUI() {
@@ -350,16 +466,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 formatArea.classList.remove(
                     "hidden"
                 );
-            }
-
-            if (costLabel) {
-                costLabel.textContent =
-                    "Free";
-            }
-
-            if (buttonCost) {
-                buttonCost.textContent =
-                    "Free";
             }
 
             if (supportedText) {
@@ -378,16 +484,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 formatArea.classList.add(
                     "hidden"
                 );
-            }
-
-            if (costLabel) {
-                costLabel.textContent =
-                    "Free";
-            }
-
-            if (buttonCost) {
-                buttonCost.textContent =
-                    "Free";
             }
 
             if (supportedText) {
@@ -425,6 +521,10 @@ document.addEventListener("DOMContentLoaded", () => {
         );
     }
 
+
+    // =========================================
+    // DROP ZONE
+    // =========================================
 
     if (dropZone) {
 
@@ -496,9 +596,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (
                     files &&
-                    files.length > 0
+                    files.length
                 ) {
-                    handleFile(files[0]);
+                    handleFile(
+                        files[0]
+                    );
                 }
             }
         );
@@ -506,7 +608,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // =========================================
-    // FILE INPUT
+    // INPUT
     // =========================================
 
     if (fileInput) {
@@ -517,8 +619,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (
                     fileInput.files &&
-                    fileInput.files.length > 0
+                    fileInput.files.length
                 ) {
+
                     handleFile(
                         fileInput.files[0]
                     );
@@ -574,7 +677,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (
             currentMode === "video" &&
-            !file.type.startsWith("video/")
+            !file.type.startsWith(
+                "video/"
+            )
         ) {
 
             showToast(
@@ -587,9 +692,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         selectedFile = file;
 
-        convertedBlob = null;
-        convertedName = "";
-
         resetResult();
 
 
@@ -598,12 +700,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 file.name;
         }
 
-
         if (fileSize) {
             fileSize.textContent =
-                formatBytes(file.size);
+                formatBytes(
+                    file.size
+                );
         }
-
 
         if (fileIcon) {
             fileIcon.textContent =
@@ -612,13 +714,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     : "VID";
         }
 
-
         if (fileCard) {
             fileCard.classList.remove(
                 "hidden"
             );
         }
-
 
         if (convertBtn) {
             convertBtn.disabled = false;
@@ -632,41 +732,41 @@ document.addEventListener("DOMContentLoaded", () => {
             const reader =
                 new FileReader();
 
-
             reader.onload =
                 event => {
 
-                    if (!imagePreview) {
-                        return;
+                    if (
+                        imagePreview
+                    ) {
+                        imagePreview.src =
+                            event.target.result;
                     }
 
-                    imagePreview.src =
-                        event.target.result;
-
-                    if (previewWrap) {
+                    if (
+                        previewWrap
+                    ) {
                         previewWrap.classList.remove(
                             "hidden"
                         );
                     }
                 };
 
+            reader.onerror = () => {
 
-            reader.onerror =
-                () => {
-
-                    if (previewWrap) {
-                        previewWrap.classList.add(
-                            "hidden"
-                        );
-                    }
-
-                    showToast(
-                        "Could not preview image"
+                if (previewWrap) {
+                    previewWrap.classList.add(
+                        "hidden"
                     );
-                };
+                }
 
+                showToast(
+                    "Could not preview image"
+                );
+            };
 
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(
+                file
+            );
 
         } else {
 
@@ -680,7 +780,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // =========================================
-    // REMOVE FILE
+    // REMOVE
     // =========================================
 
     if (removeFile) {
@@ -699,9 +799,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    // =========================================
+    // RESET RESULT
+    // =========================================
+
     function resetResult() {
 
         convertedBlob = null;
+
         convertedName = "";
 
         if (resultCard) {
@@ -721,17 +826,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    // =========================================
+    // RESET FILE
+    // =========================================
+
     function resetFile() {
 
         selectedFile = null;
 
         resetResult();
 
-
         if (fileInput) {
             fileInput.value = "";
         }
-
 
         if (fileCard) {
             fileCard.classList.add(
@@ -739,13 +846,11 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         }
 
-
         if (previewWrap) {
             previewWrap.classList.add(
                 "hidden"
             );
         }
-
 
         if (progressArea) {
             progressArea.classList.add(
@@ -753,11 +858,9 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         }
 
-
         if (convertBtn) {
             convertBtn.disabled = true;
         }
-
 
         setProgress(
             0,
@@ -767,7 +870,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // =========================================
-    // CONVERT BUTTON
+    // CONVERT
     // =========================================
 
     if (convertBtn) {
@@ -780,7 +883,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     return;
                 }
 
-
                 if (!selectedFile) {
 
                     showToast(
@@ -790,18 +892,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     return;
                 }
 
-
                 converting = true;
 
-                convertBtn.disabled = true;
-
+                convertBtn.disabled =
+                    true;
 
                 if (progressArea) {
                     progressArea.classList.remove(
                         "hidden"
                     );
                 }
-
 
                 setProgress(
                     5,
@@ -837,6 +937,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         !result ||
                         !result.blob
                     ) {
+
                         throw new Error(
                             "Conversion failed"
                         );
@@ -878,60 +979,4 @@ document.addEventListener("DOMContentLoaded", () => {
                             }
 
                             showToast(
-                                "Conversion complete"
-                            );
-
-                        },
-                        400
-                    );
-
-
-                } catch (error) {
-
-                    console.error(
-                        "ConvertX error:",
-                        error
-                    );
-
-
-                    if (progressArea) {
-                        progressArea.classList.add(
-                            "hidden"
-                        );
-                    }
-
-
-                    showToast(
-                        error.message ||
-                        "Conversion failed"
-                    );
-
-                } finally {
-
-                    converting = false;
-
-                    convertBtn.disabled =
-                        !selectedFile;
-                }
-            }
-        );
-    }
-
-
-    // =========================================
-    // IMAGE CONVERSION
-    // =========================================
-
-    function convertImage(
-        file,
-        format
-    ) {
-
-        return new Promise(
-            (resolve, reject) => {
-
-                const img =
-                    new Image();
-
-                const objectURL =
-     
+  
