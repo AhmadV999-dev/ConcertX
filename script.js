@@ -1,1313 +1,815 @@
 /* =========================================
    CONVERTX
-   LOCAL DEMO APP
-   Fake profile only
-   No Google login
+   LOCAL BROWSER CONVERTER
    No Firebase
+   No real Google login
 ========================================= */
 
-const loginScreen = document.getElementById("loginScreen");
-const app = document.getElementById("app");
+document.addEventListener("DOMContentLoaded", () => {
 
-const loginName = document.getElementById("loginName");
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
+    /* =====================================
+       ELEMENTS
+    ====================================== */
 
-const userName = document.getElementById("userName");
-const avatar = document.getElementById("avatar");
+    const loginScreen =
+        document.getElementById("loginScreen");
 
-const tokenCount = document.getElementById("tokenCount");
-const bigTokenCount = document.getElementById("bigTokenCount");
+    const app =
+        document.getElementById("app");
 
-const modeButtons = document.querySelectorAll(".mode");
-const formatButtons = document.querySelectorAll(".format");
+    const loginName =
+        document.getElementById("loginName");
 
-const formatArea = document.getElementById("formatArea");
-const costLabel = document.getElementById("costLabel");
-const buttonCost = document.getElementById("buttonCost");
+    const loginBtn =
+        document.getElementById("loginBtn");
 
-const dropZone = document.getElementById("dropZone");
-const fileInput = document.getElementById("fileInput");
-const browseBtn = document.getElementById("browseBtn");
+    const logoutBtn =
+        document.getElementById("logoutBtn");
 
-const fileCard = document.getElementById("fileCard");
-const fileName = document.getElementById("fileName");
-const fileSize = document.getElementById("fileSize");
-const fileIcon = document.getElementById("fileIcon");
-const removeFile = document.getElementById("removeFile");
+    const userName =
+        document.getElementById("userName");
 
-const previewWrap = document.getElementById("previewWrap");
-const imagePreview = document.getElementById("imagePreview");
+    const avatar =
+        document.getElementById("avatar");
 
-const convertBtn = document.getElementById("convertBtn");
+    const tokenCount =
+        document.getElementById("tokenCount");
 
-const progressArea = document.getElementById("progressArea");
-const progressBar = document.getElementById("progressBar");
-const progressPercent = document.getElementById("progressPercent");
-const progressText = document.getElementById("progressText");
+    const bigTokenCount =
+        document.getElementById("bigTokenCount");
 
-const resultCard = document.getElementById("resultCard");
-const resultName = document.getElementById("resultName");
-const downloadBtn = document.getElementById("downloadBtn");
+    const modeButtons =
+        document.querySelectorAll(".mode");
 
-const supportedText = document.getElementById("supportedText");
-const toast = document.getElementById("toast");
+    const formatButtons =
+        document.querySelectorAll(".format");
 
+    const formatArea =
+        document.getElementById("formatArea");
 
-/* =========================
-   STATE
-========================= */
+    const costLabel =
+        document.getElementById("costLabel");
 
-let currentMode = "photo";
-let currentFormat = "png";
-let selectedFile = null;
+    const buttonCost =
+        document.getElementById("buttonCost");
 
-let convertedBlob = null;
-let convertedName = "";
-let downloadURL = null;
+    const dropZone =
+        document.getElementById("dropZone");
 
-const COSTS = {
-    photo: 5,
-    video: 10
-};
+    const fileInput =
+        document.getElementById("fileInput");
 
+    const browseBtn =
+        document.getElementById("browseBtn");
 
-/* =========================
-   TOKENS
-========================= */
+    const fileCard =
+        document.getElementById("fileCard");
 
-let tokens = Number(
-    localStorage.getItem("convertx_tokens")
-);
+    const fileName =
+        document.getElementById("fileName");
 
-if (!Number.isFinite(tokens)) {
-    tokens = 100;
-    localStorage.setItem(
-        "convertx_tokens",
-        "100"
-    );
-}
+    const fileSize =
+        document.getElementById("fileSize");
 
-function updateTokens() {
-    tokenCount.textContent = tokens;
-    bigTokenCount.textContent = tokens;
+    const fileIcon =
+        document.getElementById("fileIcon");
 
-    localStorage.setItem(
-        "convertx_tokens",
-        String(tokens)
-    );
-}
+    const removeFile =
+        document.getElementById("removeFile");
 
+    const previewWrap =
+        document.getElementById("previewWrap");
 
-/* =========================
-   TOAST
-========================= */
+    const imagePreview =
+        document.getElementById("imagePreview");
 
-let toastTimer;
+    const convertBtn =
+        document.getElementById("convertBtn");
 
-function showToast(message) {
+    const progressArea =
+        document.getElementById("progressArea");
 
-    if (!toast) return;
+    const progressBar =
+        document.getElementById("progressBar");
 
-    toast.textContent = message;
-    toast.classList.add("show");
+    const progressPercent =
+        document.getElementById("progressPercent");
 
-    clearTimeout(toastTimer);
+    const progressText =
+        document.getElementById("progressText");
 
-    toastTimer = setTimeout(() => {
-        toast.classList.remove("show");
-    }, 2500);
-}
+    const resultCard =
+        document.getElementById("resultCard");
 
+    const resultName =
+        document.getElementById("resultName");
 
-/* =========================
-   FAKE PROFILE LOGIN
-========================= */
+    const downloadBtn =
+        document.getElementById("downloadBtn");
 
-function continueToApp() {
+    const supportedText =
+        document.getElementById("supportedText");
 
-    let value = loginName
-        ? loginName.value.trim()
-        : "";
+    const toast =
+        document.getElementById("toast");
 
-    /*
-       Fake demo account.
 
-       User can enter:
-       test@gmail.com
-       hello@gmail.com
-       anything they want.
+    /* =====================================
+       STATE
+    ====================================== */
 
-       NOTHING is sent anywhere.
-    */
+    let currentMode = "photo";
 
-    if (!value) {
-        value = "demo@gmail.com";
-    }
+    let currentFormat = "png";
 
-    localStorage.setItem(
-        "convertx_fake_email",
-        value
-    );
+    let selectedFile = null;
 
-    let displayName = value;
+    let convertedBlob = null;
 
-    /*
-       If user enters Gmail,
-       use the part before @ as profile name.
-    */
+    let convertedName = "";
 
-    if (value.includes("@")) {
-        displayName =
-            value.split("@")[0];
-    }
+    let downloadURL = null;
 
-    if (!displayName) {
-        displayName = "Demo User";
-    }
+    let converting = false;
 
-    displayName =
-        displayName.charAt(0).toUpperCase() +
-        displayName.slice(1);
 
-    localStorage.setItem(
-        "convertx_fake_name",
-        displayName
-    );
+    const COSTS = {
+        photo: 5,
+        video: 10
+    };
 
-    userName.textContent =
-        displayName;
 
-    avatar.textContent =
-        displayName
-            .charAt(0)
-            .toUpperCase();
+    /* =====================================
+       TOKENS
+    ====================================== */
 
-    loginScreen.classList.add("hidden");
-    app.classList.remove("hidden");
-
-    updateTokens();
-}
-
-
-/* =========================
-   LOGIN BUTTON
-========================= */
-
-if (loginBtn) {
-
-    loginBtn.addEventListener(
-        "click",
-        continueToApp
-    );
-}
-
-
-/* =========================
-   ENTER KEY
-========================= */
-
-if (loginName) {
-
-    loginName.addEventListener(
-        "keydown",
-        event => {
-
-            if (event.key === "Enter") {
-                continueToApp();
-            }
-
-        }
-    );
-}
-
-
-/* =========================
-   AUTO CONTINUE
-========================= */
-
-const savedEmail =
-    localStorage.getItem(
-        "convertx_fake_email"
-    );
-
-const savedName =
-    localStorage.getItem(
-        "convertx_fake_name"
-    );
-
-if (savedEmail) {
-
-    const name =
-        savedName ||
-        savedEmail.split("@")[0] ||
-        "Demo User";
-
-    userName.textContent = name;
-
-    avatar.textContent =
-        name.charAt(0).toUpperCase();
-
-    loginScreen.classList.add("hidden");
-    app.classList.remove("hidden");
-}
-
-
-/* =========================
-   LOGOUT
-========================= */
-
-if (logoutBtn) {
-
-    logoutBtn.addEventListener(
-        "click",
-        () => {
-
-            localStorage.removeItem(
-                "convertx_fake_email"
-            );
-
-            localStorage.removeItem(
-                "convertx_fake_name"
-            );
-
-            app.classList.add("hidden");
-            loginScreen.classList.remove("hidden");
-
-            if (loginName) {
-                loginName.value = "";
-            }
-
-        }
-    );
-}
-
-
-/* =========================
-   MODE BUTTONS
-========================= */
-
-modeButtons.forEach(button => {
-
-    button.addEventListener(
-        "click",
-        () => {
-
-            modeButtons.forEach(b => {
-                b.classList.remove("active");
-            });
-
-            button.classList.add("active");
-
-            currentMode =
-                button.dataset.mode;
-
-            resetFile();
-
-            updateConverterUI();
-        }
-    );
-
-});
-
-
-/* =========================
-   CONVERTER UI
-========================= */
-
-function updateConverterUI() {
-
-    const cost =
-        COSTS[currentMode];
-
-    costLabel.textContent =
-        `${cost} Tokens`;
-
-    buttonCost.textContent =
-        cost;
-
-    if (currentMode === "photo") {
-
-        formatArea.classList.remove(
-            "hidden"
+    let tokens =
+        Number(
+            localStorage.getItem(
+                "convertx_tokens"
+            )
         );
-
-        supportedText.textContent =
-            "JPG or PNG • Max 50MB";
-
-        fileInput.accept =
-            "image/jpeg,image/png";
-
-    } else {
-
-        formatArea.classList.add(
-            "hidden"
-        );
-
-        supportedText.textContent =
-            "MP4, WebM or MOV • Max 200MB";
-
-        fileInput.accept =
-            "video/*";
-    }
-}
-
-
-/* =========================
-   FORMAT BUTTONS
-========================= */
-
-formatButtons.forEach(button => {
-
-    button.addEventListener(
-        "click",
-        () => {
-
-            formatButtons.forEach(b => {
-                b.classList.remove("active");
-            });
-
-            button.classList.add("active");
-
-            currentFormat =
-                button.dataset.format;
-        }
-    );
-
-});
-
-
-/* =========================
-   FILE BROWSER
-========================= */
-
-browseBtn.addEventListener(
-    "click",
-    event => {
-
-        event.stopPropagation();
-
-        fileInput.click();
-    }
-);
-
-
-dropZone.addEventListener(
-    "click",
-    () => {
-        fileInput.click();
-    }
-);
-
-
-fileInput.addEventListener(
-    "change",
-    () => {
-
-        if (fileInput.files.length) {
-
-            handleFile(
-                fileInput.files[0]
-            );
-        }
-
-    }
-);
-
-
-/* =========================
-   DRAG & DROP
-========================= */
-
-["dragenter", "dragover"]
-.forEach(eventName => {
-
-    dropZone.addEventListener(
-        eventName,
-        event => {
-
-            event.preventDefault();
-
-            dropZone.classList.add(
-                "dragging"
-            );
-        }
-    );
-
-});
-
-
-["dragleave", "drop"]
-.forEach(eventName => {
-
-    dropZone.addEventListener(
-        eventName,
-        event => {
-
-            event.preventDefault();
-
-            dropZone.classList.remove(
-                "dragging"
-            );
-        }
-    );
-
-});
-
-
-dropZone.addEventListener(
-    "drop",
-    event => {
-
-        const file =
-            event.dataTransfer.files[0];
-
-        if (file) {
-            handleFile(file);
-        }
-
-    }
-);
-
-
-/* =========================
-   HANDLE FILE
-========================= */
-
-function handleFile(file) {
-
-    const maxSize =
-        currentMode === "photo"
-            ? 50 * 1024 * 1024
-            : 200 * 1024 * 1024;
-
-
-    if (file.size > maxSize) {
-
-        showToast(
-            currentMode === "photo"
-                ? "Photo is bigger than 50MB."
-                : "Video is bigger than 200MB."
-        );
-
-        return;
-    }
 
 
     if (
-        currentMode === "photo" &&
-        !file.type.startsWith("image/")
+        !Number.isFinite(tokens) ||
+        tokens < 0
     ) {
+        tokens = 100;
 
-        showToast(
-            "Please select a JPG or PNG image."
+        localStorage.setItem(
+            "convertx_tokens",
+            "100"
         );
-
-        return;
     }
 
 
-    if (
-        currentMode === "video" &&
-        !file.type.startsWith("video/")
-    ) {
+    function updateTokens() {
 
-        showToast(
-            "Please select a video file."
+        if (tokenCount) {
+            tokenCount.textContent =
+                tokens;
+        }
+
+        if (bigTokenCount) {
+            bigTokenCount.textContent =
+                tokens;
+        }
+
+        localStorage.setItem(
+            "convertx_tokens",
+            String(tokens)
         );
-
-        return;
     }
 
 
-    selectedFile = file;
+    /* =====================================
+       TOAST
+    ====================================== */
 
-    fileName.textContent =
-        file.name;
-
-    fileSize.textContent =
-        formatBytes(file.size);
+    let toastTimer = null;
 
 
-    fileIcon.textContent =
-        currentMode === "photo"
-            ? "IMG"
-            : "VID";
+    function showToast(message) {
 
+        if (!toast) return;
 
-    fileCard.classList.remove(
-        "hidden"
-    );
+        toast.textContent =
+            message;
 
-    convertBtn.disabled = false;
-
-    resultCard.classList.add(
-        "hidden"
-    );
-
-
-    if (downloadURL) {
-
-        URL.revokeObjectURL(
-            downloadURL
+        toast.classList.add(
+            "show"
         );
 
-        downloadURL = null;
+        clearTimeout(
+            toastTimer
+        );
+
+        toastTimer =
+            setTimeout(() => {
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            }, 2500);
     }
 
 
-    if (currentMode === "photo") {
+    /* =====================================
+       PROFILE
+    ====================================== */
 
-        const reader =
-            new FileReader();
+    function getDisplayName(value) {
 
-        reader.onload = event => {
+        value =
+            String(value || "")
+                .trim();
 
-            imagePreview.src =
-                event.target.result;
 
-            previewWrap.classList.remove(
+        if (!value) {
+            return "Demo";
+        }
+
+
+        if (value.includes("@")) {
+
+            value =
+                value.split("@")[0];
+        }
+
+
+        value =
+            value.replace(
+                /[^a-zA-Z0-9._-]/g,
+                ""
+            );
+
+
+        if (!value) {
+            return "Demo";
+        }
+
+
+        return (
+            value.charAt(0).toUpperCase() +
+            value.slice(1)
+        );
+    }
+
+
+    function openApp(value) {
+
+        const email =
+            String(value || "")
+                .trim() ||
+            "demo@gmail.com";
+
+
+        const name =
+            getDisplayName(email);
+
+
+        /*
+           This is only a local demo profile.
+           Nothing is sent to Google.
+        */
+
+        localStorage.setItem(
+            "convertx_fake_email",
+            email
+        );
+
+        localStorage.setItem(
+            "convertx_fake_name",
+            name
+        );
+
+
+        if (userName) {
+            userName.textContent =
+                name;
+        }
+
+
+        if (avatar) {
+            avatar.textContent =
+                name
+                    .charAt(0)
+                    .toUpperCase();
+        }
+
+
+        if (loginScreen) {
+            loginScreen.classList.add(
                 "hidden"
             );
-        };
+        }
 
-        reader.readAsDataURL(file);
+
+        if (app) {
+            app.classList.remove(
+                "hidden"
+            );
+        }
+
+
+        updateTokens();
+    }
+
+
+    /* =====================================
+       LOGIN
+    ====================================== */
+
+    if (loginBtn) {
+
+        loginBtn.addEventListener(
+            "click",
+            () => {
+
+                openApp(
+                    loginName
+                        ? loginName.value
+                        : ""
+                );
+
+            }
+        );
+    }
+
+
+    if (loginName) {
+
+        loginName.addEventListener(
+            "keydown",
+            event => {
+
+                if (
+                    event.key === "Enter"
+                ) {
+
+                    event.preventDefault();
+
+                    openApp(
+                        loginName.value
+                    );
+                }
+
+            }
+        );
+    }
+
+
+    /* =====================================
+       AUTO LOGIN
+    ====================================== */
+
+    const savedEmail =
+        localStorage.getItem(
+            "convertx_fake_email"
+        );
+
+
+    if (savedEmail) {
+
+        openApp(
+            savedEmail
+        );
 
     } else {
 
-        previewWrap.classList.add(
-            "hidden"
-        );
-    }
-}
-
-
-/* =========================
-   REMOVE FILE
-========================= */
-
-removeFile.addEventListener(
-    "click",
-    resetFile
-);
-
-
-function resetFile() {
-
-    selectedFile = null;
-
-    convertedBlob = null;
-    convertedName = "";
-
-    fileInput.value = "";
-
-    fileCard.classList.add(
-        "hidden"
-    );
-
-    previewWrap.classList.add(
-        "hidden"
-    );
-
-    resultCard.classList.add(
-        "hidden"
-    );
-
-    progressArea.classList.add(
-        "hidden"
-    );
-
-    convertBtn.disabled = true;
-
-    progressBar.style.width =
-        "0%";
-
-    progressPercent.textContent =
-        "0%";
-
-
-    if (downloadURL) {
-
-        URL.revokeObjectURL(
-            downloadURL
-        );
-
-        downloadURL = null;
-    }
-}
-
-
-/* =========================
-   CONVERT
-========================= */
-
-convertBtn.addEventListener(
-    "click",
-    async () => {
-
-        if (!selectedFile) {
-
-            showToast(
-                "Choose a file first."
+        if (loginScreen) {
+            loginScreen.classList.remove(
+                "hidden"
             );
-
-            return;
         }
 
+        if (app) {
+            app.classList.add(
+                "hidden"
+            );
+        }
+    }
+
+
+    /* =====================================
+       LOGOUT
+    ====================================== */
+
+    if (logoutBtn) {
+
+        logoutBtn.addEventListener(
+            "click",
+            () => {
+
+                localStorage.removeItem(
+                    "convertx_fake_email"
+                );
+
+                localStorage.removeItem(
+                    "convertx_fake_name"
+                );
+
+
+                if (app) {
+                    app.classList.add(
+                        "hidden"
+                    );
+                }
+
+
+                if (loginScreen) {
+                    loginScreen.classList.remove(
+                        "hidden"
+                    );
+                }
+
+
+                if (loginName) {
+                    loginName.value = "";
+                    loginName.focus();
+                }
+
+
+                resetFile();
+
+            }
+        );
+    }
+
+
+    /* =====================================
+       MODE BUTTONS
+    ====================================== */
+
+    modeButtons.forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                if (converting) {
+                    return;
+                }
+
+
+                modeButtons.forEach(
+                    item => {
+                        item.classList.remove(
+                            "active"
+                        );
+                    }
+                );
+
+
+                button.classList.add(
+                    "active"
+                );
+
+
+                currentMode =
+                    button.dataset.mode ||
+                    "photo";
+
+
+                resetFile();
+
+                updateConverterUI();
+            }
+        );
+
+    });
+
+
+    /* =====================================
+       UPDATE UI
+    ====================================== */
+
+    function updateConverterUI() {
 
         const cost =
             COSTS[currentMode];
 
 
-        if (tokens < cost) {
+        if (costLabel) {
 
-            showToast(
-                `You need ${cost} Tokens.`
-            );
-
-            return;
+            costLabel.textContent =
+                `${cost} Tokens`;
         }
 
 
-        convertBtn.disabled = true;
+        if (buttonCost) {
 
-        progressArea.classList.remove(
-            "hidden"
-        );
-
-        setProgress(
-            5,
-            "Preparing..."
-        );
+            buttonCost.textContent =
+                cost;
+        }
 
 
-        try {
+        if (
+            currentMode === "photo"
+        ) {
 
-            let result;
-
-
-            if (currentMode === "photo") {
-
-                result =
-                    await convertImage(
-                        selectedFile,
-                        currentFormat
-                    );
-
-            } else {
-
-                result =
-                    await videoToAudio(
-                        selectedFile
-                    );
+            if (formatArea) {
+                formatArea.classList.remove(
+                    "hidden"
+                );
             }
 
 
-            /*
-               Charge ONLY after successful
-               conversion.
-            */
+            if (supportedText) {
 
-            tokens -= cost;
-
-            updateTokens();
+                supportedText.textContent =
+                    "JPG or PNG · Max 50MB";
+            }
 
 
-            convertedBlob =
-                result.blob;
+            if (fileInput) {
 
-            convertedName =
-                result.name;
+                fileInput.accept =
+                    "image/jpeg,image/png";
+            }
 
+        } else {
 
-            setProgress(
-                100,
-                "Complete"
-            );
-
-
-            setTimeout(
-                () => {
-
-                    progressArea.classList.add(
-                        "hidden"
-                    );
-
-                    resultName.textContent =
-                        convertedName;
-
-                    resultCard.classList.remove(
-                        "hidden"
-                    );
-
-                    showToast(
-                        `Converted successfully −${cost} Tokens`
-                    );
-
-                },
-                350
-            );
+            if (formatArea) {
+                formatArea.classList.add(
+                    "hidden"
+                );
+            }
 
 
-        } catch (error) {
+            if (supportedText) {
 
-            console.error(error);
+                supportedText.textContent =
+                    "MP4, WebM or MOV · Max 200MB";
+            }
 
-            progressArea.classList.add(
-                "hidden"
-            );
 
-            showToast(
-                "Conversion failed. Your tokens were not used."
-            );
+            if (fileInput) {
 
-        } finally {
-
-            convertBtn.disabled = false;
+                fileInput.accept =
+                    "video/*";
+            }
         }
-
     }
-);
 
 
-/* =========================
-   IMAGE CONVERTER
-========================= */
+    /* =====================================
+       FORMAT BUTTONS
+    ====================================== */
 
-function convertImage(
-    file,
-    format
-) {
+    formatButtons.forEach(button => {
 
-    return new Promise(
-        (resolve, reject) => {
+        button.addEventListener(
+            "click",
+            () => {
 
-            const img =
-                new Image();
-
-            const objectURL =
-                URL.createObjectURL(
-                    file
-                );
-
-
-            img.onload = () => {
-
-                URL.revokeObjectURL(
-                    objectURL
-                );
-
-
-                setProgress(
-                    25,
-                    "Reading image..."
-                );
-
-
-                const canvas =
-                    document.createElement(
-                        "canvas"
-                    );
-
-
-                canvas.width =
-                    img.naturalWidth;
-
-                canvas.height =
-                    img.naturalHeight;
-
-
-                const ctx =
-                    canvas.getContext(
-                        "2d"
-                    );
-
-
-                if (!ctx) {
-
-                    reject(
-                        new Error(
-                            "Canvas unavailable."
-                        )
-                    );
-
+                if (currentMode !== "photo") {
                     return;
                 }
 
 
-                /*
-                   JPG cannot keep transparency,
-                   so use a white background.
-                */
+                formatButtons.forEach(
+                    item => {
+                        item.classList.remove(
+                            "active"
+                        );
+                    }
+                );
 
-                if (format === "jpg") {
 
-                    ctx.fillStyle =
-                        "#ffffff";
+                button.classList.add(
+                    "active"
+                );
 
-                    ctx.fillRect(
-                        0,
-                        0,
-                        canvas.width,
-                        canvas.height
-                    );
+
+                currentFormat =
+                    button.dataset.format ||
+                    "png";
+            }
+        );
+
+    });
+
+
+    /* =====================================
+       BROWSE
+    ====================================== */
+
+    if (browseBtn) {
+
+        browseBtn.addEventListener(
+            "click",
+            event => {
+
+                event.stopPropagation();
+
+                if (!converting) {
+                    fileInput.click();
+                }
+
+            }
+        );
+    }
+
+
+    if (dropZone) {
+
+        dropZone.addEventListener(
+            "click",
+            event => {
+
+                if (
+                    event.target === browseBtn ||
+                    event.target.closest(
+                        "#browseBtn"
+                    )
+                ) {
+                    return;
                 }
 
 
-                ctx.drawImage(
-                    img,
-                    0,
-                    0,
-                    canvas.width,
-                    canvas.height
-                );
-
-
-                setProgress(
-                    60,
-                    "Converting..."
-                );
-
-
-                const mime =
-                    format === "png"
-                        ? "image/png"
-                        : "image/jpeg";
-
-
-                canvas.toBlob(
-                    blob => {
-
-                        if (!blob) {
-
-                            reject(
-                                new Error(
-                                    "Could not create image."
-                                )
-                            );
-
-                            return;
-                        }
-
-
-                        setProgress(
-                            90,
-                            "Finishing..."
-                        );
-
-
-                        const baseName =
-                            file.name
-                                .replace(
-                                    /\.[^/.]+$/,
-                                    ""
-                                )
-                                .replace(
-                                    /[^\w\- ]/g,
-                                    ""
-                                );
-
-
-                        resolve({
-
-                            blob,
-
-                            name:
-                                `${baseName || "converted"}.${format}`
-
-                        });
-
-                    },
-
-                    mime,
-
-                    format === "jpg"
-                        ? 0.92
-                        : undefined
-                );
-
-            };
-
-
-            img.onerror = () => {
-
-                URL.revokeObjectURL(
-                    objectURL
-                );
-
-                reject(
-                    new Error(
-                        "Could not read image."
-                    )
-                );
-            };
-
-
-            img.src =
-                objectURL;
-
-        }
-    );
-}
-
-
-/* =========================
-   VIDEO → AUDIO
-========================= */
-
-async function videoToAudio(file) {
-
-    setProgress(
-        15,
-        "Loading video..."
-    );
-
-
-    const video =
-        document.createElement(
-            "video"
-        );
-
-
-    video.muted = false;
-    video.playsInline = true;
-    video.preload = "auto";
-
-
-    const url =
-        URL.createObjectURL(
-            file
-        );
-
-
-    video.src = url;
-
-
-    await new Promise(
-        (resolve, reject) => {
-
-            video.onloadedmetadata =
-                resolve;
-
-            video.onerror = () =>
-                reject(
-                    new Error(
-                        "Video could not be loaded."
-                    )
-                );
-        }
-    );
-
-
-    const AudioContext =
-        window.AudioContext ||
-        window.webkitAudioContext;
-
-
-    if (!AudioContext) {
-
-        URL.revokeObjectURL(url);
-
-        throw new Error(
-            "AudioContext is not supported."
-        );
-    }
-
-
-    setProgress(
-        30,
-        "Preparing audio..."
-    );
-
-
-    const audioContext =
-        new AudioContext();
-
-
-    const source =
-        audioContext
-            .createMediaElementSource(
-                video
-            );
-
-
-    const destination =
-        audioContext
-            .createMediaStreamDestination();
-
-
-    source.connect(
-        destination
-    );
-
-
-    const audioTracks =
-        destination.stream
-            .getAudioTracks();
-
-
-    if (!audioTracks.length) {
-
-        source.disconnect();
-
-        await audioContext.close();
-
-        URL.revokeObjectURL(url);
-
-        throw new Error(
-            "This video does not contain an audio track."
-        );
-    }
-
-
-    const stream =
-        new MediaStream(
-            audioTracks
-        );
-
-
-    let mimeType = "";
-
-
-    const possibleTypes = [
-        "audio/webm;codecs=opus",
-        "audio/webm"
-    ];
-
-
-    for (
-        const type
-        of possibleTypes
-    ) {
-
-        if (
-            MediaRecorder
-                .isTypeSupported(type)
-        ) {
-
-            mimeType = type;
-            break;
-        }
-    }
-
-
-    if (!mimeType) {
-
-        source.disconnect();
-
-        await audioContext.close();
-
-        URL.revokeObjectURL(url);
-
-        throw new Error(
-            "This browser cannot export WebM audio."
-        );
-    }
-
-
-    const recorder =
-        new MediaRecorder(
-            stream,
-            {
-                mimeType
-            }
-        );
-
-
-    const chunks = [];
-
-
-    recorder.ondataavailable =
-        event => {
-
-            if (event.data.size > 0) {
-
-                chunks.push(
-                    event.data
-                );
-            }
-        };
-
-
-    const finished =
-        new Promise(
-            (resolve, reject) => {
-
-                recorder.onstop =
-                    () => {
-
-                        resolve(
-                            new Blob(
-                                chunks,
-                                {
-                                    type:
-                                        mimeType
-                                }
-                            )
-                        );
-                    };
-
-
-                recorder.onerror =
-                    event => {
-
-                        reject(
-                            event.error
-                        );
-                    };
+                if (!converting) {
+                    fileInput.click();
+                }
 
             }
         );
+    }
 
 
-    await video.play();
+    if (fileInput) {
 
-    recorder.start(250);
-
-
-    const duration =
-        Number.isFinite(
-            video.duration
-        )
-            ? video.duration
-            : 0;
-
-
-    const progressTimer =
-        setInterval(
+        fileInput.addEventListener(
+            "change",
             () => {
 
-                if (duration > 0) {
+                if (
+                    fileInput.files &&
+                    fileInput.files.length
+                ) {
 
-                    const percent =
-                        Math.min(
-                            90,
-                            30 +
-                            (
-                                video.currentTime /
-                                duration
-                            ) * 55
-                        );
-
-
-                    setProgress(
-                        percent,
-                        "Extracting audio..."
+                    handleFile(
+                        fileInput.files[0]
                     );
                 }
 
-            },
-            200
+            }
+        );
+    }
+
+
+    /* =====================================
+       DRAG & DROP
+    ====================================== */
+
+    if (dropZone) {
+
+        [
+            "dragenter",
+            "dragover"
+        ].forEach(
+            eventName => {
+
+                dropZone.addEventListener(
+                    eventName,
+                    event => {
+
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        if (!converting) {
+
+                            dropZone.classList.add(
+                                "dragging"
+                            );
+                        }
+
+                    }
+                );
+
+            }
         );
 
 
-    await new Promise(
-        resolve => {
+        [
+            "dragleave",
+            "drop"
+        ].forEach(
+            eventName => {
 
-            video.onended =
-                resolve;
+                dropZone.addEventListener(
+                    eventName,
+                    event => {
+
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        dropZone.classList.remove(
+                            "dragging"
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+        dropZone.addEventListener(
+            "drop",
+            event => {
+
+                if (converting) {
+                    return;
+                }
+
+
+                const files =
+                    event.dataTransfer.files;
+
+
+                if (
+                    files &&
+                    files.length
+                ) {
+
+                    handleFile(
+                        files[0]
+                    );
+                }
+
+            }
+        );
+    }
+
+
+    /* =====================================
+       HANDLE FILE
+    ====================================== */
+
+    function handleFile(file) {
+
+        if (!file) {
+            return;
         }
-    );
 
 
-    clearInterval(
-        progressTimer
-    );
+        const maxSize =
+            currentMode === "photo"
+                ? 50 * 1024 * 1024
+                : 200 * 1024 * 1024;
 
 
-    recorder.stop();
-
-
-    const blob =
-        await finished;
-
-
-    source.disconnect();
-
-    await audioContext.close();
-
-    video.pause();
-
-    URL.revokeObjectURL(url);
-
-
-    setProgress(
-        95,
-        "Creating file..."
-    );
-
-
-    const baseName =
-        file.name
-            .replace(
-                /\.[^/.]+$/,
-                ""
-            )
-            .replace(
-                /[^\w\- ]/g,
-                ""
-            );
-
-
-    return {
-
-        blob,
-
-        name:
-            `${baseName || "audio"}-voice.webm`
-
-    };
-}
-
-
-/* =========================
-   PROGRESS
-========================= */
-
-function setProgress(
-    percent,
-    text
-) {
-
-    percent =
-        Math.max(
-            0,
-            Math.min(
-                100,
-                Math.round(percent)
-            )
-        );
-
-
-    progressBar.style.width =
-        `${percent}%`;
-
-
-    progressPercent.textContent =
-        `${percent}%`;
-
-
-    progressText.textContent =
-        text;
-}
-
-
-/* =========================
-   DOWNLOAD
-========================= */
-
-downloadBtn.addEventListener(
-    "click",
-    () => {
-
-        if (!convertedBlob) {
+        if (file.size > maxSize) {
 
             showToast(
-                "No converted file."
+                currentMode === "photo"
+                    ? "Photo is bigger than 50MB."
+                    : "Video is bigger than 200MB."
             );
 
             return;
         }
+
+
+        if (
+            currentMode === "photo" &&
+            ![
+                "image/jpeg",
+                "image/png"
+            ].includes(file.type)
+        ) {
+
+            showToast(
+                "Please choose a JPG or PNG image."
+            );
+
+            return;
+        }
+
+
+        if (
+            currentMode === "video" &&
+            !file.type.startsWith(
+                "video/"
+            )
+        ) {
+
+            showToast(
+                "Please choose a video file."
+            );
+
+            return;
+        }
+
+
+        selectedFile = file;
+
+        convertedBlob = null;
+
+        convertedName = "";
 
 
         if (downloadURL) {
@@ -1315,86 +817,261 @@ downloadBtn.addEventListener(
             URL.revokeObjectURL(
                 downloadURL
             );
+
+            downloadURL = null;
         }
 
 
-        downloadURL =
-            URL.createObjectURL(
-                convertedBlob
+        fileName.textContent =
+            file.name;
+
+
+        fileSize.textContent =
+            formatBytes(
+                file.size
             );
 
 
-        const link =
-            document.createElement(
-                "a"
+        fileIcon.textContent =
+            currentMode === "photo"
+                ? "IMG"
+                : "VID";
+
+
+        fileCard.classList.remove(
+            "hidden"
+        );
+
+
+        convertBtn.disabled =
+            false;
+
+
+        resultCard.classList.add(
+            "hidden"
+        );
+
+
+        progressArea.classList.add(
+            "hidden"
+        );
+
+
+        if (
+            currentMode === "photo"
+        ) {
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload =
+                event => {
+
+                    imagePreview.src =
+                        event.target.result;
+
+                    previewWrap.classList.remove(
+                        "hidden"
+                    );
+                };
+
+
+            reader.onerror =
+                () => {
+
+                    previewWrap.classList.add(
+                        "hidden"
+                    );
+
+                    showToast(
+                        "Could not preview image."
+                    );
+                };
+
+
+            reader.readAsDataURL(
+                file
             );
 
+        } else {
 
-        link.href =
-            downloadURL;
-
-        link.download =
-            convertedName;
-
-
-        document.body.appendChild(
-            link
-        );
-
-
-        link.click();
-
-        link.remove();
-    }
-);
-
-
-/* =========================
-   FILE SIZE
-========================= */
-
-function formatBytes(bytes) {
-
-    if (bytes === 0) {
-        return "0 Bytes";
+            previewWrap.classList.add(
+                "hidden"
+            );
+        }
     }
 
 
-    const units = [
-        "Bytes",
-        "KB",
-        "MB",
-        "GB"
-    ];
+    /* =====================================
+       REMOVE FILE
+    ====================================== */
+
+    if (removeFile) {
+
+        removeFile.addEventListener(
+            "click",
+            event => {
+
+                event.stopPropagation();
+
+                if (!converting) {
+                    resetFile();
+                }
+
+            }
+        );
+    }
 
 
-    const index =
-        Math.floor(
-            Math.log(bytes) /
-            Math.log(1024)
+    function resetFile() {
+
+        selectedFile = null;
+
+        convertedBlob = null;
+
+        convertedName = "";
+
+
+        if (fileInput) {
+            fileInput.value = "";
+        }
+
+
+        if (fileCard) {
+            fileCard.classList.add(
+                "hidden"
+            );
+        }
+
+
+        if (previewWrap) {
+            previewWrap.classList.add(
+                "hidden"
+            );
+        }
+
+
+        if (resultCard) {
+            resultCard.classList.add(
+                "hidden"
+            );
+        }
+
+
+        if (progressArea) {
+            progressArea.classList.add(
+                "hidden"
+            );
+        }
+
+
+        if (convertBtn) {
+            convertBtn.disabled = true;
+        }
+
+
+        setProgress(
+            0,
+            "Preparing..."
         );
 
 
-    return (
-        parseFloat(
-            (
-                bytes /
-                Math.pow(
-                    1024,
-                    index
-                )
-            ).toFixed(2)
-        )
-        +
-        " " +
-        units[index]
-    );
-}
+        if (downloadURL) {
+
+            URL.revokeObjectURL(
+                downloadURL
+            );
+
+            downloadURL = null;
+        }
+    }
 
 
-/* =========================
-   START
-========================= */
+    /* =====================================
+       CONVERT BUTTON
+    ====================================== */
 
-updateConverterUI();
-updateTokens();
+    if (convertBtn) {
+
+        convertBtn.addEventListener(
+            "click",
+            async () => {
+
+                if (converting) {
+                    return;
+                }
+
+
+                if (!selectedFile) {
+
+                    showToast(
+                        "Choose a file first."
+                    );
+
+                    return;
+                }
+
+
+                const cost =
+                    COSTS[currentMode];
+
+
+                if (tokens < cost) {
+
+                    showToast(
+                        `You need ${cost} tokens.`
+                    );
+
+                    return;
+                }
+
+
+                converting = true;
+
+                convertBtn.disabled =
+                    true;
+
+
+                progressArea.classList.remove(
+                    "hidden"
+                );
+
+
+                setProgress(
+                    5,
+                    "Preparing..."
+                );
+
+
+                try {
+
+                    let result;
+
+
+                    if (
+                        currentMode === "photo"
+                    ) {
+
+                        result =
+                            await convertImage(
+                                selectedFile,
+                                currentFormat
+                            );
+
+                    } else {
+
+                        result =
+                            await videoToAudio(
+                                selectedFile
+                            );
+                    }
+
+
+                    if (
+                        !result ||
+                        !result.blob
+                    ) {
+
+                        throw new Error(
+                           
