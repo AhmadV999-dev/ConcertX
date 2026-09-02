@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ConvertX</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -10,270 +10,225 @@
 <body>
 
   <!-- LOGIN -->
-  <section id="loginPage" class="login-page">
-    <div class="login-box">
-      <div class="logo">ConvertX</div>
-      <h1>Welcome to ConvertX</h1>
-      <p>Simple file conversion</p>
+  <section id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="brand-logo">C</div>
 
-      <button id="googleLoginButton" class="google-button">
-        <span>G</span>
-        Continue with Google
-      </button>
+      <h1>ConvertX</h1>
+      <p>Simple. Fast. Private.</p>
 
-      <small>Demo login • No password required</small>
-    </div>
-  </section>
+      <div class="fake-google">
+        <div class="google-icon">G</div>
+        <div>
+          <strong>Demo Google Account</strong>
+          <span>Sign in to continue</span>
+        </div>
+      </div>
 
+      <input id="loginName" type="text" placeholder="Enter your name">
 
-  <!-- GMAIL GUI -->
-  <section id="gmailModal" class="modal hidden">
-    <div class="modal-box">
-      <div class="google-logo">G</div>
-
-      <h2>Sign in</h2>
-      <p>Use your Gmail account to continue to ConvertX</p>
-
-      <input
-        id="gmailInput"
-        type="email"
-        placeholder="Enter Gmail address"
-        autocomplete="off"
-      >
-
-      <button id="gmailContinueButton">
+      <button id="loginBtn" class="primary-btn">
         Continue
       </button>
 
-      <button id="gmailCancelButton" class="secondary-button">
-        Cancel
-      </button>
-
-      <small>This is a demo login. No Google password is collected.</small>
+      <small>
+        Demo login • No real Google account required
+      </small>
     </div>
   </section>
 
 
-  <!-- MAIN APP -->
-  <main id="app" class="app hidden">
+  <!-- APP -->
+  <section id="app" class="app hidden">
 
-    <!-- NAVBAR -->
-    <nav class="navbar">
-      <div class="brand">ConvertX</div>
+    <!-- TOP BAR -->
+    <header class="topbar">
 
-      <div class="nav-right">
+      <div class="brand">
+        <div class="mini-logo">C</div>
+        <div>
+          <strong>ConvertX</strong>
+          <span>File Converter</span>
+        </div>
+      </div>
 
-        <div class="token-display">
-          🪙 <span id="tokenCount">0</span>
+      <div class="top-actions">
+
+        <div class="token-pill">
+          <span class="coin">◆</span>
+          <strong id="tokenCount">100</strong>
+          <span>Tokens</span>
         </div>
 
-        <button id="profileButton" class="profile-button">
-          <span id="profileName">User</span>
-        </button>
+        <div class="profile">
+          <div id="avatar" class="avatar">U</div>
 
-        <button id="logoutButton" class="logout-button">
-          Logout
-        </button>
+          <div class="profile-info">
+            <strong id="userName">User</strong>
+            <span>Demo Account</span>
+          </div>
+
+          <button id="logoutBtn" class="logout">
+            ×
+          </button>
+        </div>
 
       </div>
-    </nav>
+
+    </header>
 
 
-    <div class="container">
+    <!-- MAIN -->
+    <main class="main">
 
-      <!-- ACCOUNT -->
-      <section class="account-card">
+      <div class="welcome">
         <div>
-          <span class="label">Account</span>
-          <strong id="accountEmail">Not logged in</strong>
+          <span class="eyebrow">FILE TOOLS</span>
+          <h1>Convert anything.<br><span>Keep it simple.</span></h1>
+          <p>Fast browser-based conversion with no upload server.</p>
         </div>
 
-        <div>
-          <span class="label">Tokens</span>
-          <strong id="tokenDisplay">0</strong>
+        <div class="balance-card">
+          <span>Your balance</span>
+          <strong><b id="bigTokenCount">100</b> Tokens</strong>
         </div>
-      </section>
+      </div>
 
 
       <!-- CONVERTER -->
-      <section id="converterSection">
+      <section class="converter-card">
 
-        <div class="page-heading">
-          <h1>File Converter</h1>
-          <p>Convert your files quickly and easily.</p>
+        <div class="converter-head">
+          <div>
+            <h2>Converter</h2>
+            <p>Choose what you want to convert</p>
+          </div>
+
+          <div class="cost-badge">
+            <span id="costLabel">5 Tokens</span>
+          </div>
         </div>
 
 
-        <!-- CONVERTER TYPES -->
-        <div class="converter-types">
+        <!-- MODE -->
+        <div class="mode-grid">
 
-          <button
-            class="converter-type active"
-            data-converter-type="image"
-          >
-            <strong>JPG ↔ PNG</strong>
-            <span>5 tokens</span>
+          <button class="mode active" data-mode="photo">
+            <div class="mode-icon">▣</div>
+            <div>
+              <strong>Photo</strong>
+              <span>JPG ↔ PNG</span>
+            </div>
+            <b>5</b>
           </button>
 
-          <button
-            class="converter-type"
-            data-converter-type="video-audio"
-          >
-            <strong>Video → Audio</strong>
-            <span>10 tokens</span>
-          </button>
-
-          <button
-            class="converter-type"
-            data-converter-type="audio-video"
-          >
-            <strong>Audio → Video</strong>
-            <span>10 tokens</span>
+          <button class="mode" data-mode="video">
+            <div class="mode-icon">♫</div>
+            <div>
+              <strong>Video → Voice</strong>
+              <span>Extract audio</span>
+            </div>
+            <b>10</b>
           </button>
 
         </div>
 
 
-        <!-- UPLOAD -->
-        <div id="uploadArea" class="upload-area">
+        <!-- FORMAT -->
+        <div id="formatArea" class="format-area">
 
-          <input
-            id="fileInput"
-            type="file"
-            hidden
-          >
+          <label>OUTPUT FORMAT</label>
+
+          <div class="format-buttons">
+            <button class="format active" data-format="png">PNG</button>
+            <button class="format" data-format="jpg">JPG</button>
+          </div>
+
+        </div>
+
+
+        <!-- DROP ZONE -->
+        <div id="dropZone" class="drop-zone">
+
+          <input id="fileInput" type="file" hidden>
 
           <div class="upload-icon">↑</div>
 
-          <h2 id="uploadTitle">
-            Upload JPG or PNG
-          </h2>
+          <h3>Drop your file here</h3>
 
-          <p id="uploadDescription">
-            Convert JPG to PNG or PNG to JPG
+          <p>
+            or <button id="browseBtn">browse files</button>
           </p>
 
-          <button
-            id="chooseFileButton"
-            type="button"
-          >
-            Choose File
-          </button>
-
-          <div class="conversion-cost">
-            Cost: <strong id="conversionCost">5 tokens</strong>
-          </div>
+          <span id="supportedText">
+            JPG or PNG • Max 50MB
+          </span>
 
         </div>
 
 
-        <!-- FILE INFO -->
-        <div
-          id="fileInfo"
-          class="file-info hidden"
-        >
+        <!-- FILE -->
+        <div id="fileCard" class="file-card hidden">
 
-          <div class="file-details">
-            <strong id="fileName">File</strong>
-            <span id="fileSize">0 B</span>
+          <div class="file-icon" id="fileIcon">IMG</div>
+
+          <div class="file-info">
+            <strong id="fileName">file.jpg</strong>
+            <span id="fileSize">0 MB</span>
           </div>
 
-          <button
-            id="clearButton"
-            type="button"
-          >
-            Remove
+          <button id="removeFile" class="remove">
+            ×
           </button>
 
         </div>
 
 
         <!-- PREVIEW -->
-        <div
-          id="filePreview"
-          class="preview"
-          style="display:none;"
-        ></div>
-
-
-        <!-- PROGRESS -->
-        <div
-          id="progressContainer"
-          class="progress-container"
-          style="display:none;"
-        >
-          <progress
-            id="progress"
-            value="0"
-            max="100"
-          ></progress>
-
-          <span id="progressText">0%</span>
+        <div id="previewWrap" class="preview-wrap hidden">
+          <img id="imagePreview" alt="Preview">
         </div>
 
 
         <!-- CONVERT -->
-        <button
-          id="convertButton"
-          class="convert-button"
-          disabled
-        >
-          Convert
+        <button id="convertBtn" class="convert-btn" disabled>
+
+          <span>Convert</span>
+
+          <div class="convert-cost">
+            −<span id="buttonCost">5</span> ◆
+          </div>
+
         </button>
 
 
-        <!-- RESULT -->
-        <div
-          id="result"
-          class="result-card"
-          style="display:none;"
-        >
+        <!-- PROGRESS -->
+        <div id="progressArea" class="progress-area hidden">
 
-          <h2>Conversion Complete</h2>
-
-          <div id="resultPreview"></div>
-
-          <div class="result-info">
-            <strong id="resultName">output</strong>
-            <span id="resultSize">0 B</span>
+          <div class="progress-top">
+            <span id="progressText">Converting...</span>
+            <strong id="progressPercent">0%</strong>
           </div>
 
-          <a
-            id="downloadButton"
-            class="download-button"
-            href="#"
-            download
-          >
+          <div class="progress-track">
+            <div id="progressBar"></div>
+          </div>
+
+        </div>
+
+
+        <!-- RESULT -->
+        <div id="resultCard" class="result-card hidden">
+
+          <div class="success-icon">✓</div>
+
+          <div>
+            <strong id="resultName">Converted file</strong>
+            <span>Ready to download</span>
+          </div>
+
+          <button id="downloadBtn">
             Download
-          </a>
-
-        </div>
-
-      </section>
-
-
-      <!-- REDEEM -->
-      <section
-        id="redeemSection"
-        class="redeem-section"
-      >
-
-        <div class="section-heading">
-          <h2>Redeem Tokens</h2>
-          <p>Enter a token code to add tokens to your account.</p>
-        </div>
-
-        <div class="redeem-box">
-
-          <input
-            id="redeemCodeInput"
-            type="text"
-            placeholder="Enter token code"
-            autocomplete="off"
-          >
-
-          <button id="redeemButton">
-            Redeem
           </button>
 
         </div>
@@ -281,92 +236,55 @@
       </section>
 
 
-      <!-- ADMIN -->
-      <section
-        id="adminPanel"
-        class="admin-panel"
-        style="display:none;"
-      >
+      <!-- QUICK TOOLS -->
+      <section class="quick-section">
 
-        <div class="admin-header">
+        <div class="section-title">
           <div>
-            <h2>Admin Panel</h2>
-            <p>Manage ConvertX demo accounts and token codes.</p>
+            <h2>Quick tools</h2>
+            <p>More conversion tools</p>
           </div>
-
-          <span class="admin-badge">ADMIN</span>
         </div>
 
+        <div class="quick-grid">
 
-        <!-- CREATE CODE -->
-        <div class="admin-card">
-
-          <h3>Create Redeem Code</h3>
-
-          <div class="admin-form">
-
-            <input
-              id="codeInput"
-              type="text"
-              placeholder="Code (optional)"
-            >
-
-            <input
-              id="tokenInput"
-              type="number"
-              min="1"
-              placeholder="Token"
-            >
-
-            <input
-              id="expireInput"
-              type="datetime-local"
-            >
-
-            <button id="createCodeButton">
-              Create Code
-            </button>
-
+          <div class="quick-card">
+            <div class="quick-icon">▧</div>
+            <strong>PNG → JPG</strong>
+            <span>Image conversion</span>
+            <b>5 Tokens</b>
           </div>
 
-        </div>
-
-
-        <!-- CODES -->
-        <div class="admin-card">
-
-          <h3>Redeem Codes</h3>
-
-          <div id="adminCodes">
-            No token codes yet.
+          <div class="quick-card">
+            <div class="quick-icon">♫</div>
+            <strong>Video → Voice</strong>
+            <span>Extract audio</span>
+            <b>10 Tokens</b>
           </div>
 
-        </div>
-
-
-        <!-- USERS -->
-        <div class="admin-card">
-
-          <h3>Users</h3>
-
-          <div id="adminUsers">
-            No users yet.
+          <div class="quick-card">
+            <div class="quick-icon">▣</div>
+            <strong>JPG → PNG</strong>
+            <span>High quality</span>
+            <b>5 Tokens</b>
           </div>
 
         </div>
 
       </section>
 
-    </div>
+      <footer>
+        <span>ConvertX</span>
+        <span>•</span>
+        <span>Files stay in your browser</span>
+      </footer>
 
-  </main>
+    </main>
 
+  </section>
 
-  <!-- NOTIFICATIONS -->
-  <div id="messageContainer"></div>
-
+  <div id="toast"></div>
 
   <script src="script.js"></script>
-
 </body>
-</html>
+  </html>
