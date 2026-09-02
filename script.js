@@ -14,9 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const userName = document.getElementById("userName");
     const avatar = document.getElementById("avatar");
 
-    const tokenCount = document.getElementById("tokenCount");
-    const bigTokenCount = document.getElementById("bigTokenCount");
-
     const modeButtons = document.querySelectorAll(".mode");
     const formatButtons = document.querySelectorAll(".format");
 
@@ -68,79 +65,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let converting = false;
 
-
-    // =========================================
-    // COST
-    // =========================================
-
-    const COSTS = {
-        photo: 5,
-        video: 10
-    };
-
-
-    // =========================================
-    // TOKENS
-    // =========================================
-
-    let savedTokens =
-        localStorage.getItem("convertx_tokens");
-
-    let tokens;
-
-    if (savedTokens === null) {
-
-        tokens = 10000;
-
-        localStorage.setItem(
-            "convertx_tokens",
-            "10000"
-        );
-
-    } else {
-
-        tokens = Number(savedTokens);
-
-        if (
-            !Number.isFinite(tokens) ||
-            tokens < 0
-        ) {
-
-            tokens = 10000;
-
-            localStorage.setItem(
-                "convertx_tokens",
-                "10000"
-            );
-        }
-    }
-
-
-    function updateTokens() {
-
-        if (tokenCount) {
-            tokenCount.textContent =
-                tokens.toLocaleString();
-        }
-
-        if (bigTokenCount) {
-            bigTokenCount.textContent =
-                tokens.toLocaleString();
-        }
-
-        localStorage.setItem(
-            "convertx_tokens",
-            String(tokens)
-        );
-    }
+    let toastTimer = null;
 
 
     // =========================================
     // TOAST
     // =========================================
-
-    let toastTimer;
-
 
     function showToast(message) {
 
@@ -153,9 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
         clearTimeout(toastTimer);
 
         toastTimer = setTimeout(() => {
-
             toast.classList.remove("show");
-
         }, 2500);
     }
 
@@ -170,10 +98,9 @@ document.addEventListener("DOMContentLoaded", () => {
             return "Demo";
         }
 
-        let name =
-            email
-                .split("@")[0]
-                .trim();
+        const name = email
+            .split("@")[0]
+            .trim();
 
         if (!name) {
             return "Demo";
@@ -188,62 +115,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function login() {
 
-        let email =
-            loginName
-                ? loginName.value.trim()
-                : "";
-
+        let email = loginName
+            ? loginName.value.trim()
+            : "";
 
         if (!email) {
             email = "demo@gmail.com";
         }
 
-
-        const name =
-            getName(email);
-
+        const name = getName(email);
 
         localStorage.setItem(
             "convertx_fake_email",
             email
         );
 
-
         localStorage.setItem(
             "convertx_fake_name",
             name
         );
 
-
         if (userName) {
-            userName.textContent =
-                name;
+            userName.textContent = name;
         }
-
 
         if (avatar) {
             avatar.textContent =
-                name
-                    .charAt(0)
-                    .toUpperCase();
+                name.charAt(0).toUpperCase();
         }
-
 
         if (loginScreen) {
-            loginScreen.classList.add(
-                "hidden"
-            );
+            loginScreen.classList.add("hidden");
         }
-
 
         if (app) {
-            app.classList.remove(
-                "hidden"
-            );
+            app.classList.remove("hidden");
         }
-
-
-        updateTokens();
     }
 
 
@@ -277,33 +184,49 @@ document.addEventListener("DOMContentLoaded", () => {
     // AUTO LOGIN
     // =========================================
 
-    const savedEmail =
-        localStorage.getItem(
-            "convertx_fake_email"
-        );
+    const savedEmail = localStorage.getItem(
+        "convertx_fake_email"
+    );
 
+    const savedName = localStorage.getItem(
+        "convertx_fake_name"
+    );
 
     if (savedEmail) {
 
         if (loginName) {
-            loginName.value =
-                savedEmail;
+            loginName.value = savedEmail;
         }
 
-        login();
+        if (userName) {
+            userName.textContent =
+                savedName || getName(savedEmail);
+        }
+
+        if (avatar) {
+            const name =
+                savedName || getName(savedEmail);
+
+            avatar.textContent =
+                name.charAt(0).toUpperCase();
+        }
+
+        if (loginScreen) {
+            loginScreen.classList.add("hidden");
+        }
+
+        if (app) {
+            app.classList.remove("hidden");
+        }
 
     } else {
 
         if (loginScreen) {
-            loginScreen.classList.remove(
-                "hidden"
-            );
+            loginScreen.classList.remove("hidden");
         }
 
         if (app) {
-            app.classList.add(
-                "hidden"
-            );
+            app.classList.add("hidden");
         }
     }
 
@@ -326,13 +249,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     "convertx_fake_name"
                 );
 
-
                 if (app) {
-                    app.classList.add(
-                        "hidden"
-                    );
+                    app.classList.add("hidden");
                 }
-
 
                 if (loginScreen) {
                     loginScreen.classList.remove(
@@ -340,11 +259,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     );
                 }
 
-
                 if (loginName) {
                     loginName.value = "";
                 }
-
 
                 resetFile();
             }
@@ -366,25 +283,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     return;
                 }
 
+                modeButtons.forEach(item => {
+                    item.classList.remove(
+                        "active"
+                    );
+                });
 
-                modeButtons.forEach(
-                    item => {
-                        item.classList.remove(
-                            "active"
-                        );
-                    }
-                );
-
-
-                button.classList.add(
-                    "active"
-                );
-
+                button.classList.add("active");
 
                 currentMode =
                     button.dataset.mode ||
                     "photo";
-
 
                 resetFile();
 
@@ -405,29 +314,25 @@ document.addEventListener("DOMContentLoaded", () => {
             () => {
 
                 if (
+                    converting ||
                     currentMode !== "photo"
                 ) {
                     return;
                 }
 
+                formatButtons.forEach(item => {
+                    item.classList.remove(
+                        "active"
+                    );
+                });
 
-                formatButtons.forEach(
-                    item => {
-                        item.classList.remove(
-                            "active"
-                        );
-                    }
-                );
-
-
-                button.classList.add(
-                    "active"
-                );
-
+                button.classList.add("active");
 
                 currentFormat =
                     button.dataset.format ||
                     "png";
+
+                resetResult();
             }
         );
     });
@@ -439,24 +344,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function updateConverterUI() {
 
-        const cost =
-            COSTS[currentMode];
-
-
-        if (costLabel) {
-
-            costLabel.textContent =
-                `${cost} Tokens`;
-        }
-
-
-        if (buttonCost) {
-
-            buttonCost.textContent =
-                cost;
-        }
-
-
         if (currentMode === "photo") {
 
             if (formatArea) {
@@ -465,16 +352,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
             }
 
+            if (costLabel) {
+                costLabel.textContent =
+                    "Free";
+            }
+
+            if (buttonCost) {
+                buttonCost.textContent =
+                    "Free";
+            }
 
             if (supportedText) {
-
                 supportedText.textContent =
                     "JPG or PNG · Max 50MB";
             }
 
-
             if (fileInput) {
-
                 fileInput.accept =
                     "image/jpeg,image/png";
             }
@@ -487,16 +380,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
             }
 
+            if (costLabel) {
+                costLabel.textContent =
+                    "Free";
+            }
+
+            if (buttonCost) {
+                buttonCost.textContent =
+                    "Free";
+            }
 
             if (supportedText) {
-
                 supportedText.textContent =
                     "MP4, WebM or MOV · Max 200MB";
             }
 
-
             if (fileInput) {
-
                 fileInput.accept =
                     "video/*";
             }
@@ -516,8 +415,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 event.stopPropagation();
 
-                if (!converting) {
-
+                if (
+                    !converting &&
+                    fileInput
+                ) {
                     fileInput.click();
                 }
             }
@@ -539,9 +440,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     return;
                 }
 
-
-                if (!converting) {
-
+                if (
+                    !converting &&
+                    fileInput
+                ) {
                     fileInput.click();
                 }
             }
@@ -585,24 +487,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     "dragging"
                 );
 
-
                 if (converting) {
                     return;
                 }
 
-
                 const files =
                     event.dataTransfer.files;
-
 
                 if (
                     files &&
                     files.length > 0
                 ) {
-
-                    handleFile(
-                        files[0]
-                    );
+                    handleFile(files[0]);
                 }
             }
         );
@@ -623,7 +519,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     fileInput.files &&
                     fileInput.files.length > 0
                 ) {
-
                     handleFile(
                         fileInput.files[0]
                     );
@@ -642,7 +537,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!file) {
             return;
         }
-
 
         const maxSize =
             currentMode === "photo"
@@ -694,18 +588,9 @@ document.addEventListener("DOMContentLoaded", () => {
         selectedFile = file;
 
         convertedBlob = null;
-
         convertedName = "";
 
-
-        if (downloadURL) {
-
-            URL.revokeObjectURL(
-                downloadURL
-            );
-
-            downloadURL = null;
-        }
+        resetResult();
 
 
         if (fileName) {
@@ -740,13 +625,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        if (resultCard) {
-            resultCard.classList.add(
-                "hidden"
-            );
-        }
-
-
         if (
             currentMode === "photo"
         ) {
@@ -758,22 +636,29 @@ document.addEventListener("DOMContentLoaded", () => {
             reader.onload =
                 event => {
 
+                    if (!imagePreview) {
+                        return;
+                    }
+
                     imagePreview.src =
                         event.target.result;
 
-
-                    previewWrap.classList.remove(
-                        "hidden"
-                    );
+                    if (previewWrap) {
+                        previewWrap.classList.remove(
+                            "hidden"
+                        );
+                    }
                 };
 
 
             reader.onerror =
                 () => {
 
-                    previewWrap.classList.add(
-                        "hidden"
-                    );
+                    if (previewWrap) {
+                        previewWrap.classList.add(
+                            "hidden"
+                        );
+                    }
 
                     showToast(
                         "Could not preview image"
@@ -781,15 +666,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 };
 
 
-            reader.readAsDataURL(
-                file
-            );
+            reader.readAsDataURL(file);
 
         } else {
 
-            previewWrap.classList.add(
-                "hidden"
-            );
+            if (previewWrap) {
+                previewWrap.classList.add(
+                    "hidden"
+                );
+            }
         }
     }
 
@@ -807,7 +692,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 event.stopPropagation();
 
                 if (!converting) {
-
                     resetFile();
                 }
             }
@@ -815,13 +699,33 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    function resetResult() {
+
+        convertedBlob = null;
+        convertedName = "";
+
+        if (resultCard) {
+            resultCard.classList.add(
+                "hidden"
+            );
+        }
+
+        if (downloadURL) {
+
+            URL.revokeObjectURL(
+                downloadURL
+            );
+
+            downloadURL = null;
+        }
+    }
+
+
     function resetFile() {
 
         selectedFile = null;
 
-        convertedBlob = null;
-
-        convertedName = "";
+        resetResult();
 
 
         if (fileInput) {
@@ -850,25 +754,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        if (resultCard) {
-            resultCard.classList.add(
-                "hidden"
-            );
-        }
-
-
         if (convertBtn) {
             convertBtn.disabled = true;
-        }
-
-
-        if (downloadURL) {
-
-            URL.revokeObjectURL(
-                downloadURL
-            );
-
-            downloadURL = null;
         }
 
 
@@ -904,28 +791,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
 
-                const cost =
-                    COSTS[currentMode];
-
-
-                if (tokens < cost) {
-
-                    showToast(
-                        `Not enough tokens · Need ${cost}`
-                    );
-
-                    return;
-                }
-
-
                 converting = true;
 
                 convertBtn.disabled = true;
 
 
-                progressArea.classList.remove(
-                    "hidden"
-                );
+                if (progressArea) {
+                    progressArea.classList.remove(
+                        "hidden"
+                    );
+                }
 
 
                 setProgress(
@@ -962,32 +837,20 @@ document.addEventListener("DOMContentLoaded", () => {
                         !result ||
                         !result.blob
                     ) {
-
                         throw new Error(
                             "Conversion failed"
                         );
                     }
 
 
-                    // =================================
-                    // REAL LOCAL TOKEN CHARGE
-                    // =================================
-
-                    tokens -= cost;
-
-                    updateTokens();
-
-
                     convertedBlob =
                         result.blob;
-
 
                     convertedName =
                         result.name;
 
 
                     if (resultName) {
-
                         resultName.textContent =
                             convertedName;
                     }
@@ -1002,15 +865,73 @@ document.addEventListener("DOMContentLoaded", () => {
                     setTimeout(
                         () => {
 
-                            progressArea.classList.add(
-                                "hidden"
-                            );
+                            if (progressArea) {
+                                progressArea.classList.add(
+                                    "hidden"
+                                );
+                            }
 
-
-                            resultCard.classList.remove(
-                                "hidden"
-                            );
-
+                            if (resultCard) {
+                                resultCard.classList.remove(
+                                    "hidden"
+                                );
+                            }
 
                             showToast(
-                            
+                                "Conversion complete"
+                            );
+
+                        },
+                        400
+                    );
+
+
+                } catch (error) {
+
+                    console.error(
+                        "ConvertX error:",
+                        error
+                    );
+
+
+                    if (progressArea) {
+                        progressArea.classList.add(
+                            "hidden"
+                        );
+                    }
+
+
+                    showToast(
+                        error.message ||
+                        "Conversion failed"
+                    );
+
+                } finally {
+
+                    converting = false;
+
+                    convertBtn.disabled =
+                        !selectedFile;
+                }
+            }
+        );
+    }
+
+
+    // =========================================
+    // IMAGE CONVERSION
+    // =========================================
+
+    function convertImage(
+        file,
+        format
+    ) {
+
+        return new Promise(
+            (resolve, reject) => {
+
+                const img =
+                    new Image();
+
+                const objectURL =
+     
