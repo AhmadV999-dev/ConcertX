@@ -1,135 +1,67 @@
-/* =========================================
-   CONVERTX
-   LOCAL BROWSER CONVERTER
-   No Firebase
-   No real Google login
-========================================= */
-
 document.addEventListener("DOMContentLoaded", () => {
 
-    /* =====================================
+    /* ================================
        ELEMENTS
-    ====================================== */
+    ================================= */
 
-    const loginScreen =
-        document.getElementById("loginScreen");
+    const loginScreen = document.getElementById("loginScreen");
+    const app = document.getElementById("app");
 
-    const app =
-        document.getElementById("app");
+    const loginName = document.getElementById("loginName");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
 
-    const loginName =
-        document.getElementById("loginName");
+    const userName = document.getElementById("userName");
+    const avatar = document.getElementById("avatar");
 
-    const loginBtn =
-        document.getElementById("loginBtn");
+    const tokenCount = document.getElementById("tokenCount");
+    const bigTokenCount = document.getElementById("bigTokenCount");
 
-    const logoutBtn =
-        document.getElementById("logoutBtn");
+    const modeButtons = document.querySelectorAll(".mode");
+    const formatButtons = document.querySelectorAll(".format");
 
-    const userName =
-        document.getElementById("userName");
+    const formatArea = document.getElementById("formatArea");
+    const costLabel = document.getElementById("costLabel");
+    const buttonCost = document.getElementById("buttonCost");
 
-    const avatar =
-        document.getElementById("avatar");
+    const dropZone = document.getElementById("dropZone");
+    const browseBtn = document.getElementById("browseBtn");
+    const fileInput = document.getElementById("fileInput");
 
-    const tokenCount =
-        document.getElementById("tokenCount");
+    const fileCard = document.getElementById("fileCard");
+    const fileName = document.getElementById("fileName");
+    const fileSize = document.getElementById("fileSize");
+    const fileIcon = document.getElementById("fileIcon");
+    const removeFile = document.getElementById("removeFile");
 
-    const bigTokenCount =
-        document.getElementById("bigTokenCount");
+    const previewWrap = document.getElementById("previewWrap");
+    const imagePreview = document.getElementById("imagePreview");
 
-    const modeButtons =
-        document.querySelectorAll(".mode");
+    const convertBtn = document.getElementById("convertBtn");
 
-    const formatButtons =
-        document.querySelectorAll(".format");
+    const progressArea = document.getElementById("progressArea");
+    const progressBar = document.getElementById("progressBar");
+    const progressPercent = document.getElementById("progressPercent");
+    const progressText = document.getElementById("progressText");
 
-    const formatArea =
-        document.getElementById("formatArea");
+    const resultCard = document.getElementById("resultCard");
+    const resultName = document.getElementById("resultName");
+    const downloadBtn = document.getElementById("downloadBtn");
 
-    const costLabel =
-        document.getElementById("costLabel");
-
-    const buttonCost =
-        document.getElementById("buttonCost");
-
-    const dropZone =
-        document.getElementById("dropZone");
-
-    const fileInput =
-        document.getElementById("fileInput");
-
-    const browseBtn =
-        document.getElementById("browseBtn");
-
-    const fileCard =
-        document.getElementById("fileCard");
-
-    const fileName =
-        document.getElementById("fileName");
-
-    const fileSize =
-        document.getElementById("fileSize");
-
-    const fileIcon =
-        document.getElementById("fileIcon");
-
-    const removeFile =
-        document.getElementById("removeFile");
-
-    const previewWrap =
-        document.getElementById("previewWrap");
-
-    const imagePreview =
-        document.getElementById("imagePreview");
-
-    const convertBtn =
-        document.getElementById("convertBtn");
-
-    const progressArea =
-        document.getElementById("progressArea");
-
-    const progressBar =
-        document.getElementById("progressBar");
-
-    const progressPercent =
-        document.getElementById("progressPercent");
-
-    const progressText =
-        document.getElementById("progressText");
-
-    const resultCard =
-        document.getElementById("resultCard");
-
-    const resultName =
-        document.getElementById("resultName");
-
-    const downloadBtn =
-        document.getElementById("downloadBtn");
-
-    const supportedText =
-        document.getElementById("supportedText");
-
-    const toast =
-        document.getElementById("toast");
+    const supportedText = document.getElementById("supportedText");
+    const toast = document.getElementById("toast");
 
 
-    /* =====================================
+    /* ================================
        STATE
-    ====================================== */
+    ================================= */
 
     let currentMode = "photo";
-
     let currentFormat = "png";
-
     let selectedFile = null;
-
     let convertedBlob = null;
-
     let convertedName = "";
-
     let downloadURL = null;
-
     let converting = false;
 
 
@@ -139,24 +71,32 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
 
-    /* =====================================
+    /* ================================
        TOKENS
-    ====================================== */
+       NEW USERS START WITH 100
+    ================================= */
 
-let savedTokens = localStorage.getItem("convertx_tokens");
+    let savedTokens =
+        localStorage.getItem("convertx_tokens");
 
-let tokens = savedTokens === null
-    ? 100
-    : Number(savedTokens);
+    let tokens =
+        savedTokens === null
+            ? 100
+            : Number(savedTokens);
 
-if (!Number.isFinite(tokens) || tokens < 0) {
-    tokens = 100;
-}
 
-localStorage.setItem(
-    "convertx_tokens",
-    String(tokens)
-);
+    if (
+        !Number.isFinite(tokens) ||
+        tokens < 0
+    ) {
+        tokens = 100;
+    }
+
+
+    localStorage.setItem(
+        "convertx_tokens",
+        String(tokens)
+    );
 
 
     function updateTokens() {
@@ -178,102 +118,78 @@ localStorage.setItem(
     }
 
 
-    /* =====================================
+    /* ================================
        TOAST
-    ====================================== */
+    ================================= */
 
-    let toastTimer = null;
+    let toastTimer;
 
 
     function showToast(message) {
 
         if (!toast) return;
 
-        toast.textContent =
-            message;
+        toast.textContent = message;
 
-        toast.classList.add(
-            "show"
-        );
+        toast.classList.add("show");
 
-        clearTimeout(
-            toastTimer
-        );
+        clearTimeout(toastTimer);
 
-        toastTimer =
-            setTimeout(() => {
+        toastTimer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2500);
+    }
 
-                toast.classList.remove(
-                    "show"
+
+    /* ================================
+       PROFILE
+    ================================= */
+
+    function getDisplayName(email) {
+
+        if (!email) {
+            return "Demo";
+        }
+
+        let name =
+            email
+                .split("@")[0]
+                .replace(
+                    /[^a-zA-Z0-9._-]/g,
+                    ""
                 );
 
-            }, 2500);
-    }
-
-
-    /* =====================================
-       PROFILE
-    ====================================== */
-
-    function getDisplayName(value) {
-
-        value =
-            String(value || "")
-                .trim();
-
-
-        if (!value) {
+        if (!name) {
             return "Demo";
         }
-
-
-        if (value.includes("@")) {
-
-            value =
-                value.split("@")[0];
-        }
-
-
-        value =
-            value.replace(
-                /[^a-zA-Z0-9._-]/g,
-                ""
-            );
-
-
-        if (!value) {
-            return "Demo";
-        }
-
 
         return (
-            value.charAt(0).toUpperCase() +
-            value.slice(1)
+            name.charAt(0).toUpperCase() +
+            name.slice(1)
         );
     }
 
 
-    function openApp(value) {
+    function openApp(email) {
 
-        const email =
-            String(value || "")
-                .trim() ||
-            "demo@gmail.com";
+        email =
+            String(email || "").trim();
+
+
+        if (!email) {
+            email = "demo@gmail.com";
+        }
 
 
         const name =
             getDisplayName(email);
 
 
-        /*
-           This is only a local demo profile.
-           Nothing is sent to Google.
-        */
-
         localStorage.setItem(
             "convertx_fake_email",
             email
         );
+
 
         localStorage.setItem(
             "convertx_fake_name",
@@ -282,30 +198,23 @@ localStorage.setItem(
 
 
         if (userName) {
-            userName.textContent =
-                name;
+            userName.textContent = name;
         }
 
 
         if (avatar) {
             avatar.textContent =
-                name
-                    .charAt(0)
-                    .toUpperCase();
+                name.charAt(0).toUpperCase();
         }
 
 
         if (loginScreen) {
-            loginScreen.classList.add(
-                "hidden"
-            );
+            loginScreen.classList.add("hidden");
         }
 
 
         if (app) {
-            app.classList.remove(
-                "hidden"
-            );
+            app.classList.remove("hidden");
         }
 
 
@@ -313,24 +222,21 @@ localStorage.setItem(
     }
 
 
-    /* =====================================
+    /* ================================
        LOGIN
-    ====================================== */
+    ================================= */
 
     if (loginBtn) {
 
-        loginBtn.addEventListener(
-            "click",
-            () => {
+        loginBtn.onclick = () => {
 
-                openApp(
-                    loginName
-                        ? loginName.value
-                        : ""
-                );
+            openApp(
+                loginName
+                    ? loginName.value
+                    : ""
+            );
 
-            }
-        );
+        };
     }
 
 
@@ -340,9 +246,7 @@ localStorage.setItem(
             "keydown",
             event => {
 
-                if (
-                    event.key === "Enter"
-                ) {
+                if (event.key === "Enter") {
 
                     event.preventDefault();
 
@@ -356,9 +260,9 @@ localStorage.setItem(
     }
 
 
-    /* =====================================
+    /* ================================
        AUTO LOGIN
-    ====================================== */
+    ================================= */
 
     const savedEmail =
         localStorage.getItem(
@@ -368,9 +272,7 @@ localStorage.setItem(
 
     if (savedEmail) {
 
-        openApp(
-            savedEmail
-        );
+        openApp(savedEmail);
 
     } else {
 
@@ -381,62 +283,54 @@ localStorage.setItem(
         }
 
         if (app) {
-            app.classList.add(
-                "hidden"
-            );
+            app.classList.add("hidden");
         }
     }
 
 
-    /* =====================================
+    /* ================================
        LOGOUT
-    ====================================== */
+    ================================= */
 
     if (logoutBtn) {
 
-        logoutBtn.addEventListener(
-            "click",
-            () => {
+        logoutBtn.onclick = () => {
 
-                localStorage.removeItem(
-                    "convertx_fake_email"
-                );
+            localStorage.removeItem(
+                "convertx_fake_email"
+            );
 
-                localStorage.removeItem(
-                    "convertx_fake_name"
-                );
+            localStorage.removeItem(
+                "convertx_fake_name"
+            );
 
 
-                if (app) {
-                    app.classList.add(
-                        "hidden"
-                    );
-                }
-
-
-                if (loginScreen) {
-                    loginScreen.classList.remove(
-                        "hidden"
-                    );
-                }
-
-
-                if (loginName) {
-                    loginName.value = "";
-                    loginName.focus();
-                }
-
-
-                resetFile();
-
+            if (app) {
+                app.classList.add("hidden");
             }
-        );
+
+
+            if (loginScreen) {
+                loginScreen.classList.remove(
+                    "hidden"
+                );
+            }
+
+
+            if (loginName) {
+                loginName.value = "";
+                loginName.focus();
+            }
+
+
+            resetFile();
+        };
     }
 
 
-    /* =====================================
-       MODE BUTTONS
-    ====================================== */
+    /* ================================
+       MODE
+    ================================= */
 
     modeButtons.forEach(button => {
 
@@ -444,9 +338,7 @@ localStorage.setItem(
             "click",
             () => {
 
-                if (converting) {
-                    return;
-                }
+                if (converting) return;
 
 
                 modeButtons.forEach(
@@ -458,9 +350,7 @@ localStorage.setItem(
                 );
 
 
-                button.classList.add(
-                    "active"
-                );
+                button.classList.add("active");
 
 
                 currentMode =
@@ -473,86 +363,12 @@ localStorage.setItem(
                 updateConverterUI();
             }
         );
-
     });
 
 
-    /* =====================================
-       UPDATE UI
-    ====================================== */
-
-    function updateConverterUI() {
-
-        const cost =
-            COSTS[currentMode];
-
-
-        if (costLabel) {
-
-            costLabel.textContent =
-                `${cost} Tokens`;
-        }
-
-
-        if (buttonCost) {
-
-            buttonCost.textContent =
-                cost;
-        }
-
-
-        if (
-            currentMode === "photo"
-        ) {
-
-            if (formatArea) {
-                formatArea.classList.remove(
-                    "hidden"
-                );
-            }
-
-
-            if (supportedText) {
-
-                supportedText.textContent =
-                    "JPG or PNG · Max 50MB";
-            }
-
-
-            if (fileInput) {
-
-                fileInput.accept =
-                    "image/jpeg,image/png";
-            }
-
-        } else {
-
-            if (formatArea) {
-                formatArea.classList.add(
-                    "hidden"
-                );
-            }
-
-
-            if (supportedText) {
-
-                supportedText.textContent =
-                    "MP4, WebM or MOV · Max 200MB";
-            }
-
-
-            if (fileInput) {
-
-                fileInput.accept =
-                    "video/*";
-            }
-        }
-    }
-
-
-    /* =====================================
-       FORMAT BUTTONS
-    ====================================== */
+    /* ================================
+       FORMAT
+    ================================= */
 
     formatButtons.forEach(button => {
 
@@ -560,7 +376,9 @@ localStorage.setItem(
             "click",
             () => {
 
-                if (currentMode !== "photo") {
+                if (
+                    currentMode !== "photo"
+                ) {
                     return;
                 }
 
@@ -574,9 +392,7 @@ localStorage.setItem(
                 );
 
 
-                button.classList.add(
-                    "active"
-                );
+                button.classList.add("active");
 
 
                 currentFormat =
@@ -584,171 +400,182 @@ localStorage.setItem(
                     "png";
             }
         );
-
     });
 
 
-    /* =====================================
+    /* ================================
+       CONVERTER UI
+    ================================= */
+
+    function updateConverterUI() {
+
+        const cost =
+            COSTS[currentMode];
+
+
+        if (costLabel) {
+            costLabel.textContent =
+                `${cost} Tokens`;
+        }
+
+
+        if (buttonCost) {
+            buttonCost.textContent =
+                cost;
+        }
+
+
+        if (currentMode === "photo") {
+
+            formatArea.classList.remove(
+                "hidden"
+            );
+
+
+            supportedText.textContent =
+                "JPG or PNG · Max 50MB";
+
+
+            fileInput.accept =
+                "image/jpeg,image/png";
+
+        } else {
+
+            formatArea.classList.add(
+                "hidden"
+            );
+
+
+            supportedText.textContent =
+                "MP4, WebM or MOV · Max 200MB";
+
+
+            fileInput.accept =
+                "video/*";
+        }
+    }
+
+
+    /* ================================
        BROWSE
-    ====================================== */
+    ================================= */
 
-    if (browseBtn) {
+    browseBtn.addEventListener(
+        "click",
+        event => {
 
-        browseBtn.addEventListener(
-            "click",
-            event => {
+            event.stopPropagation();
 
-                event.stopPropagation();
-
-                if (!converting) {
-                    fileInput.click();
-                }
-
+            if (!converting) {
+                fileInput.click();
             }
-        );
-    }
+        }
+    );
 
 
-    if (dropZone) {
+    dropZone.addEventListener(
+        "click",
+        event => {
 
-        dropZone.addEventListener(
-            "click",
-            event => {
-
-                if (
-                    event.target === browseBtn ||
-                    event.target.closest(
-                        "#browseBtn"
-                    )
-                ) {
-                    return;
-                }
-
-
-                if (!converting) {
-                    fileInput.click();
-                }
-
+            if (
+                event.target.closest(
+                    "#browseBtn"
+                )
+            ) {
+                return;
             }
-        );
-    }
 
 
-    if (fileInput) {
-
-        fileInput.addEventListener(
-            "change",
-            () => {
-
-                if (
-                    fileInput.files &&
-                    fileInput.files.length
-                ) {
-
-                    handleFile(
-                        fileInput.files[0]
-                    );
-                }
-
+            if (!converting) {
+                fileInput.click();
             }
-        );
-    }
+        }
+    );
 
 
-    /* =====================================
-       DRAG & DROP
-    ====================================== */
+    fileInput.addEventListener(
+        "change",
+        () => {
 
-    if (dropZone) {
+            if (
+                fileInput.files &&
+                fileInput.files.length > 0
+            ) {
 
-        [
-            "dragenter",
-            "dragover"
-        ].forEach(
-            eventName => {
-
-                dropZone.addEventListener(
-                    eventName,
-                    event => {
-
-                        event.preventDefault();
-                        event.stopPropagation();
-
-                        if (!converting) {
-
-                            dropZone.classList.add(
-                                "dragging"
-                            );
-                        }
-
-                    }
+                handleFile(
+                    fileInput.files[0]
                 );
-
             }
-        );
+        }
+    );
 
 
-        [
-            "dragleave",
-            "drop"
-        ].forEach(
-            eventName => {
+    /* ================================
+       DRAG DROP
+    ================================= */
 
-                dropZone.addEventListener(
-                    eventName,
-                    event => {
+    dropZone.addEventListener(
+        "dragover",
+        event => {
 
-                        event.preventDefault();
-                        event.stopPropagation();
+            event.preventDefault();
 
-                        dropZone.classList.remove(
-                            "dragging"
-                        );
-
-                    }
+            if (!converting) {
+                dropZone.classList.add(
+                    "dragging"
                 );
-
             }
-        );
+        }
+    );
 
 
-        dropZone.addEventListener(
-            "drop",
-            event => {
+    dropZone.addEventListener(
+        "dragleave",
+        () => {
 
-                if (converting) {
-                    return;
-                }
-
-
-                const files =
-                    event.dataTransfer.files;
+            dropZone.classList.remove(
+                "dragging"
+            );
+        }
+    );
 
 
-                if (
-                    files &&
-                    files.length
-                ) {
+    dropZone.addEventListener(
+        "drop",
+        event => {
 
-                    handleFile(
-                        files[0]
-                    );
-                }
+            event.preventDefault();
 
+            dropZone.classList.remove(
+                "dragging"
+            );
+
+
+            if (converting) return;
+
+
+            const files =
+                event.dataTransfer.files;
+
+
+            if (
+                files &&
+                files.length > 0
+            ) {
+
+                handleFile(files[0]);
             }
-        );
-    }
+        }
+    );
 
 
-    /* =====================================
+    /* ================================
        HANDLE FILE
-    ====================================== */
+    ================================= */
 
     function handleFile(file) {
 
-        if (!file) {
-            return;
-        }
+        if (!file) return;
 
 
         const maxSize =
@@ -761,8 +588,8 @@ localStorage.setItem(
 
             showToast(
                 currentMode === "photo"
-                    ? "Photo is bigger than 50MB."
-                    : "Video is bigger than 200MB."
+                    ? "Photo is bigger than 50MB"
+                    : "Video is bigger than 200MB"
             );
 
             return;
@@ -778,7 +605,7 @@ localStorage.setItem(
         ) {
 
             showToast(
-                "Please choose a JPG or PNG image."
+                "Choose a JPG or PNG file"
             );
 
             return;
@@ -787,13 +614,11 @@ localStorage.setItem(
 
         if (
             currentMode === "video" &&
-            !file.type.startsWith(
-                "video/"
-            )
+            !file.type.startsWith("video/")
         ) {
 
             showToast(
-                "Please choose a video file."
+                "Choose a video file"
             );
 
             return;
@@ -822,9 +647,7 @@ localStorage.setItem(
 
 
         fileSize.textContent =
-            formatBytes(
-                file.size
-            );
+            formatBytes(file.size);
 
 
         fileIcon.textContent =
@@ -838,8 +661,7 @@ localStorage.setItem(
         );
 
 
-        convertBtn.disabled =
-            false;
+        convertBtn.disabled = false;
 
 
         resultCard.classList.add(
@@ -847,47 +669,25 @@ localStorage.setItem(
         );
 
 
-        progressArea.classList.add(
-            "hidden"
-        );
-
-
-        if (
-            currentMode === "photo"
-        ) {
+        if (currentMode === "photo") {
 
             const reader =
                 new FileReader();
 
 
-            reader.onload =
-                event => {
+            reader.onload = event => {
 
-                    imagePreview.src =
-                        event.target.result;
-
-                    previewWrap.classList.remove(
-                        "hidden"
-                    );
-                };
+                imagePreview.src =
+                    event.target.result;
 
 
-            reader.onerror =
-                () => {
-
-                    previewWrap.classList.add(
-                        "hidden"
-                    );
-
-                    showToast(
-                        "Could not preview image."
-                    );
-                };
+                previewWrap.classList.remove(
+                    "hidden"
+                );
+            };
 
 
-            reader.readAsDataURL(
-                file
-            );
+            reader.readAsDataURL(file);
 
         } else {
 
@@ -898,25 +698,21 @@ localStorage.setItem(
     }
 
 
-    /* =====================================
+    /* ================================
        REMOVE FILE
-    ====================================== */
+    ================================= */
 
-    if (removeFile) {
+    removeFile.addEventListener(
+        "click",
+        event => {
 
-        removeFile.addEventListener(
-            "click",
-            event => {
+            event.stopPropagation();
 
-                event.stopPropagation();
-
-                if (!converting) {
-                    resetFile();
-                }
-
+            if (!converting) {
+                resetFile();
             }
-        );
-    }
+        }
+    );
 
 
     function resetFile() {
@@ -928,42 +724,30 @@ localStorage.setItem(
         convertedName = "";
 
 
-        if (fileInput) {
-            fileInput.value = "";
-        }
+        fileInput.value = "";
 
 
-        if (fileCard) {
-            fileCard.classList.add(
-                "hidden"
-            );
-        }
+        fileCard.classList.add(
+            "hidden"
+        );
 
 
-        if (previewWrap) {
-            previewWrap.classList.add(
-                "hidden"
-            );
-        }
+        previewWrap.classList.add(
+            "hidden"
+        );
 
 
-        if (resultCard) {
-            resultCard.classList.add(
-                "hidden"
-            );
-        }
+        progressArea.classList.add(
+            "hidden"
+        );
 
 
-        if (progressArea) {
-            progressArea.classList.add(
-                "hidden"
-            );
-        }
+        resultCard.classList.add(
+            "hidden"
+        );
 
 
-        if (convertBtn) {
-            convertBtn.disabled = true;
-        }
+        convertBtn.disabled = true;
 
 
         setProgress(
@@ -983,90 +767,838 @@ localStorage.setItem(
     }
 
 
-    /* =====================================
-       CONVERT BUTTON
-    ====================================== */
+    /* ================================
+       CONVERT
+    ================================= */
 
-    if (convertBtn) {
+    convertBtn.addEventListener(
+        "click",
+        async () => {
 
-        convertBtn.addEventListener(
-            "click",
-            async () => {
+            if (converting) return;
 
-                if (converting) {
-                    return;
+
+            if (!selectedFile) {
+
+                showToast(
+                    "Choose a file first"
+                );
+
+                return;
+            }
+
+
+            const cost =
+                COSTS[currentMode];
+
+
+            if (tokens < cost) {
+
+                showToast(
+                    `Not enough tokens · Need ${cost}`
+                );
+
+                return;
+            }
+
+
+            converting = true;
+
+            convertBtn.disabled = true;
+
+
+            progressArea.classList.remove(
+                "hidden"
+            );
+
+
+            setProgress(
+                5,
+                "Preparing..."
+            );
+
+
+            try {
+
+                let result;
+
+
+                if (
+                    currentMode === "photo"
+                ) {
+
+                    result =
+                        await convertImage(
+                            selectedFile,
+                            currentFormat
+                        );
+
+                } else {
+
+                    result =
+                        await videoToAudio(
+                            selectedFile
+                        );
                 }
 
 
-                if (!selectedFile) {
+                if (
+                    !result ||
+                    !result.blob
+                ) {
 
-                    showToast(
-                        "Choose a file first."
+                    throw new Error(
+                        "Conversion failed"
                     );
-
-                    return;
                 }
 
 
-                const cost =
-                    COSTS[currentMode];
+                /* REAL TOKEN CHARGE */
+
+                tokens =
+                    tokens - cost;
 
 
-                if (tokens < cost) {
-
-                    showToast(
-                        `You need ${cost} tokens.`
-                    );
-
-                    return;
-                }
+                updateTokens();
 
 
-                converting = true;
-
-                convertBtn.disabled =
-                    true;
+                convertedBlob =
+                    result.blob;
 
 
-                progressArea.classList.remove(
+                convertedName =
+                    result.name;
+
+
+                resultName.textContent =
+                    convertedName;
+
+
+                setProgress(
+                    100,
+                    "Complete"
+                );
+
+
+                setTimeout(
+                    () => {
+
+                        progressArea.classList.add(
+                            "hidden"
+                        );
+
+
+                        resultCard.classList.remove(
+                            "hidden"
+                        );
+
+
+                        showToast(
+                            `Success · ${cost} tokens charged`
+                        );
+
+                    },
+                    400
+                );
+
+
+            } catch (error) {
+
+                console.error(error);
+
+
+                progressArea.classList.add(
                     "hidden"
                 );
 
 
-                setProgress(
-                    5,
-                    "Preparing..."
+                showToast(
+                    error.message ||
+                    "Conversion failed"
+                );
+
+            } finally {
+
+                converting = false;
+
+
+                convertBtn.disabled =
+                    !selectedFile;
+            }
+
+        }
+    );
+
+
+    /* ================================
+       IMAGE CONVERTER
+    ================================= */
+
+    function convertImage(
+        file,
+        format
+    ) {
+
+        return new Promise(
+            (resolve, reject) => {
+
+                const img =
+                    new Image();
+
+
+                const url =
+                    URL.createObjectURL(file);
+
+
+                img.onload = () => {
+
+                    try {
+
+                        URL.revokeObjectURL(
+                            url
+                        );
+
+
+                        setProgress(
+                            30,
+                            "Reading image..."
+                        );
+
+
+                        const canvas =
+                            document.createElement(
+                                "canvas"
+                            );
+
+
+                        canvas.width =
+                            img.naturalWidth;
+
+
+                        canvas.height =
+                            img.naturalHeight;
+
+
+                        const ctx =
+                            canvas.getContext(
+                                "2d"
+                            );
+
+
+                        if (!ctx) {
+
+                            throw new Error(
+                                "Canvas unavailable"
+                            );
+                        }
+
+
+                        if (format === "jpg") {
+
+                            ctx.fillStyle =
+                                "#ffffff";
+
+
+                            ctx.fillRect(
+                                0,
+                                0,
+                                canvas.width,
+                                canvas.height
+                            );
+                        }
+
+
+                        ctx.drawImage(
+                            img,
+                            0,
+                            0
+                        );
+
+
+                        setProgress(
+                            65,
+                            "Converting..."
+                        );
+
+
+                        const type =
+                            format === "jpg"
+                                ? "image/jpeg"
+                                : "image/png";
+
+
+                        canvas.toBlob(
+                            blob => {
+
+                                if (!blob) {
+
+                                    reject(
+                                        new Error(
+                                            "Could not create image"
+                                        )
+                                    );
+
+                                    return;
+                                }
+
+
+                                setProgress(
+                                    90,
+                                    "Finishing..."
+                                );
+
+
+                                resolve({
+
+                                    blob: blob,
+
+                                    name:
+                                        `${cleanName(file.name)}.${format}`
+
+                                });
+
+                            },
+                            type,
+                            format === "jpg"
+                                ? 0.92
+                                : undefined
+                        );
+
+
+                    } catch (error) {
+
+                        URL.revokeObjectURL(
+                            url
+                        );
+
+                        reject(error);
+                    }
+                };
+
+
+                img.onerror = () => {
+
+                    URL.revokeObjectURL(
+                        url
+                    );
+
+
+                    reject(
+                        new Error(
+                            "Could not read image"
+                        )
+                    );
+                };
+
+
+                img.src = url;
+            }
+        );
+    }
+
+
+    /* ================================
+       VIDEO → VOICE
+    ================================= */
+
+    async function videoToAudio(file) {
+
+        if (
+            typeof MediaRecorder ===
+            "undefined"
+        ) {
+
+            throw new Error(
+                "Your browser does not support audio export"
+            );
+        }
+
+
+        const AudioContext =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+
+        if (!AudioContext) {
+
+            throw new Error(
+                "Audio conversion is not supported"
+            );
+        }
+
+
+        setProgress(
+            10,
+            "Loading video..."
+        );
+
+
+        const video =
+            document.createElement("video");
+
+
+        video.preload = "auto";
+        video.playsInline = true;
+        video.muted = false;
+
+
+        const videoURL =
+            URL.createObjectURL(file);
+
+
+        video.src = videoURL;
+
+
+        try {
+
+            await waitForVideo(video);
+
+
+            setProgress(
+                25,
+                "Preparing audio..."
+            );
+
+
+            const audioContext =
+                new AudioContext();
+
+
+            if (
+                audioContext.state ===
+                "suspended"
+            ) {
+
+                await audioContext.resume();
+            }
+
+
+            const source =
+                audioContext
+                    .createMediaElementSource(
+                        video
+                    );
+
+
+            const destination =
+                audioContext
+                    .createMediaStreamDestination();
+
+
+            source.connect(destination);
+
+            source.connect(
+                audioContext.destination
+            );
+
+
+            const mime =
+                MediaRecorder.isTypeSupported(
+                    "audio/webm;codecs=opus"
+                )
+                    ? "audio/webm;codecs=opus"
+                    : "audio/webm";
+
+
+            const recorder =
+                new MediaRecorder(
+                    destination.stream,
+                    {
+                        mimeType: mime
+                    }
                 );
 
 
-                try {
+            const chunks = [];
 
-                    let result;
 
+            recorder.ondataavailable =
+                event => {
 
                     if (
-                        currentMode === "photo"
+                        event.data &&
+                        event.data.size
                     ) {
 
-                        result =
-                            await convertImage(
-                                selectedFile,
-                                currentFormat
-                            );
-
-                    } else {
-
-                        result =
-                            await videoToAudio(
-                                selectedFile
-                            );
+                        chunks.push(
+                            event.data
+                        );
                     }
+                };
 
 
-                    if (
-                        !result ||
-                        !result.blob
-                    ) {
+            const finished =
+                new Promise(
+                    (resolve, reject) => {
 
-                        throw new Error(
-                           
+                        recorder.onstop =
+                            () => {
+
+                                resolve(
+                                    new Blob(
+                                        chunks,
+                                        {
+                                            type: mime
+                                        }
+                                    )
+                                );
+                            };
+
+
+                        recorder.onerror =
+                            () => {
+
+                                reject(
+                                    new Error(
+                                        "Audio recording failed"
+                                    )
+                                );
+                            };
+                    }
+                );
+
+
+            const duration =
+                Number.isFinite(
+                    video.duration
+                )
+                    ? video.duration
+                    : 0;
+
+
+            await video.play();
+
+
+            recorder.start();
+
+
+            setProgress(
+                30,
+                "Extracting audio..."
+            );
+
+
+            const timer =
+                setInterval(
+                    () => {
+
+                        if (duration > 0) {
+
+                            const percent =
+                                30 +
+                                (
+                                    video.currentTime /
+                                    duration
+                                ) * 60;
+
+
+                            setProgress(
+                                Math.min(
+                                    90,
+                                    percent
+                                ),
+                                "Extracting audio..."
+                            );
+                        }
+
+                    },
+                    250
+                );
+
+
+            await new Promise(
+                (resolve, reject) => {
+
+                    video.onended =
+                        resolve;
+
+
+                    video.onerror =
+                        () => {
+
+                            reject(
+                                new Error(
+                                    "Video playback failed"
+                                )
+                            );
+                        };
+                }
+            );
+
+
+            clearInterval(timer);
+
+
+            if (
+                recorder.state !==
+                "inactive"
+            ) {
+
+                recorder.stop();
+            }
+
+
+            const blob =
+                await finished;
+
+
+            source.disconnect();
+
+
+            try {
+                await audioContext.close();
+            } catch (e) {}
+
+
+            setProgress(
+                95,
+                "Creating voice file..."
+            );
+
+
+            return {
+
+                blob: blob,
+
+                name:
+                    `${cleanName(file.name)}-voice.webm`
+            };
+
+
+        } finally {
+
+            video.pause();
+
+            video.removeAttribute("src");
+
+            video.load();
+
+            URL.revokeObjectURL(
+                videoURL
+            );
+        }
+    }
+
+
+    /* ================================
+       WAIT VIDEO
+    ================================= */
+
+    function waitForVideo(video) {
+
+        return new Promise(
+            (resolve, reject) => {
+
+                if (
+                    video.readyState >= 1
+                ) {
+
+                    resolve();
+
+                    return;
+                }
+
+
+                const timeout =
+                    setTimeout(
+                        () => {
+
+                            reject(
+                                new Error(
+                                    "Video loading timed out"
+                                )
+                            );
+
+                        },
+                        15000
+                    );
+
+
+                video.onloadedmetadata =
+                    () => {
+
+                        clearTimeout(timeout);
+
+                        resolve();
+                    };
+
+
+                video.onerror =
+                    () => {
+
+                        clearTimeout(timeout);
+
+                        reject(
+                            new Error(
+                                "Could not load video"
+                            )
+                        );
+                    };
+            }
+        );
+    }
+
+
+    /* ================================
+       DOWNLOAD
+    ================================= */
+
+    downloadBtn.addEventListener(
+        "click",
+        () => {
+
+            if (!convertedBlob) {
+
+                showToast(
+                    "No converted file"
+                );
+
+                return;
+            }
+
+
+            if (downloadURL) {
+
+                URL.revokeObjectURL(
+                    downloadURL
+                );
+            }
+
+
+            downloadURL =
+                URL.createObjectURL(
+                    convertedBlob
+                );
+
+
+            const link =
+                document.createElement("a");
+
+
+            link.href =
+                downloadURL;
+
+
+            link.download =
+                convertedName ||
+                "converted-file";
+
+
+            document.body.appendChild(
+                link
+            );
+
+
+            link.click();
+
+
+            link.remove();
+
+
+            showToast(
+                "Download started"
+            );
+        }
+    );
+
+
+    /* ================================
+       HELPERS
+    ================================= */
+
+    function cleanName(name) {
+
+        return String(name || "")
+            .replace(
+                /\.[^/.]+$/,
+                ""
+            )
+            .replace(
+                /[^a-zA-Z0-9._ -]/g,
+                ""
+            )
+            .trim() ||
+            "converted";
+    }
+
+
+    function formatBytes(bytes) {
+
+        if (!bytes) {
+            return "0 Bytes";
+        }
+
+
+        const units = [
+            "Bytes",
+            "KB",
+            "MB",
+            "GB"
+        ];
+
+
+        const index =
+            Math.min(
+                Math.floor(
+                    Math.log(bytes) /
+                    Math.log(1024)
+                ),
+                units.length - 1
+            );
+
+
+        return (
+            parseFloat(
+                (
+                    bytes /
+                    Math.pow(
+                        1024,
+                        index
+                    )
+                ).toFixed(2)
+            ) +
+            " " +
+            units[index]
+        );
+    }
+
+
+    function setProgress(
+        percent,
+        text
+    ) {
+
+        percent =
+            Math.round(
+                Math.max(
+                    0,
+                    Math.min(
+                        100,
+                        percent
+                    )
+                )
+            );
+
+
+        progressBar.style.width =
+            `${percent}%`;
+
+
+        progressPercent.textContent =
+            `${percent}%`;
+
+
+        progressText.textContent =
+            text;
+    }
+
+
+    /* ================================
+       START
+    ================================= */
+
+    updateConverterUI();
+
+    updateTokens();
+
+});
