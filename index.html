@@ -1,40 +1,288 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <meta name="theme-color" content="#08090d">
-  <title>ConvertX</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ConvertX</title>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <!-- LOGIN -->
-  <section id="loginScreen" class="screen">
-    <div class="login-card">
-      <div class="brand-big">Convert<span>X</span></div>
-      <p class="muted">Fast browser file converter</p>
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
 
-      <button id="googleLogin" class="google-btn">
-        <span class="google-logo">G</span>
-        Continue with Google
+    <div class="google-logo">G</div>
+
+    <h1>Sign in</h1>
+    <p>Continue to ConvertX</p>
+
+    <input
+      id="gmailInput"
+      type="email"
+      placeholder="Enter Gmail address"
+      autocomplete="off"
+    >
+
+    <button id="continueBtn" class="google-btn">
+      <b>G</b> Continue with Google
+    </button>
+
+    <small>Demo login · No real Google account</small>
+
+  </div>
+</div>
+
+
+<div id="app" class="hidden">
+
+  <nav class="navbar">
+
+    <div class="brand">
+      ConvertX
+    </div>
+
+    <div class="user-area">
+
+      <div id="avatar" class="avatar">
+        U
+      </div>
+
+      <div class="user-details">
+        <b id="profileName">User</b>
+        <small id="profileEmail">user@gmail.com</small>
+      </div>
+
+      <div id="tokenDisplay" class="tokens">
+        0 Tokens
+      </div>
+
+      <button id="logoutBtn" class="logout">
+        Logout
       </button>
 
-      <p id="loginError" class="error"></p>
-      <p class="tiny">Google login is required</p>
     </div>
-  </section>
 
-  <!-- APP -->
-  <section id="appScreen" class="hidden">
+  </nav>
 
-    <nav class="navbar">
-      <div class="brand">Convert<span>X</span></div>
 
-      <div class="nav-right">
-        <div class="token-pill">
-          <span>🪙</span>
+  <main>
+
+    <section class="hero">
+      <h1>Convert your files</h1>
+      <p>Fast and simple browser-based file conversion</p>
+    </section>
+
+
+    <section class="panel">
+
+      <h2>Choose converter</h2>
+
+      <div class="formats">
+
+        <button class="format active" data-type="image">
+          <span>🖼️</span>
+          <b>Photo Converter</b>
+          <small>JPG ↔ PNG · 5 Tokens</small>
+        </button>
+
+        <button class="format" data-type="video-audio">
+          <span>🎥</span>
+          <b>Video → Voice</b>
+          <small>10 Tokens</small>
+        </button>
+
+        <button class="format" data-type="audio-video">
+          <span>🎵</span>
+          <b>Voice → Video</b>
+          <small>10 Tokens</small>
+        </button>
+
+      </div>
+
+
+      <div id="uploadBox" class="upload-box">
+
+        <input id="fileInput" type="file" hidden>
+
+        <div class="plus">+</div>
+
+        <h3>Upload file here</h3>
+
+        <p>Click or drag a file</p>
+
+      </div>
+
+
+      <div id="fileInfo" class="file-info hidden">
+
+        <b id="fileName"></b>
+
+        <span id="fileSize"></span>
+
+        <button id="removeFile">×</button>
+
+      </div>
+
+
+      <div id="previewBox" class="preview hidden">
+
+        <img id="imagePreview">
+
+        <video id="videoPreview" controls></video>
+
+        <audio id="audioPreview" controls></audio>
+
+      </div>
+
+
+      <button id="convertBtn" class="convert">
+        Convert
+      </button>
+
+
+      <div id="progressBox" class="hidden">
+
+        <div class="progress">
+          <div id="progressFill"></div>
+        </div>
+
+        <p id="progressText">
+          Converting...
+        </p>
+
+      </div>
+
+
+      <div id="resultBox" class="result hidden">
+
+        <h3>Conversion complete ✓</h3>
+
+        <p id="resultName"></p>
+
+        <a id="downloadBtn">
+          Download
+        </a>
+
+      </div>
+
+    </section>
+
+
+    <section class="panel redeem-panel">
+
+      <h2>Redeem Tokens</h2>
+
+      <p>Enter a token code</p>
+
+      <div class="redeem-row">
+
+        <input
+          id="redeemInput"
+          placeholder="Enter token code"
+          autocomplete="off"
+        >
+
+        <button id="redeemBtn">
+          Redeem
+        </button>
+
+      </div>
+
+      <div id="redeemMessage"></div>
+
+    </section>
+
+
+    <section id="adminPanel" class="panel admin hidden">
+
+      <div class="admin-header">
+
+        <div>
+          <h2>Admin Panel</h2>
+          <p>Manage ConvertX demo accounts</p>
+        </div>
+
+        <span>ADMIN</span>
+
+      </div>
+
+
+      <div class="admin-card">
+
+        <h3>Create Token Code</h3>
+
+        <input
+          id="codeInput"
+          placeholder="Code: e.g. FREE100"
+        >
+
+        <input
+          id="tokenInput"
+          type="number"
+          min="1"
+          placeholder="Token: e.g. 100"
+        >
+
+        <input
+          id="expireInput"
+          type="datetime-local"
+        >
+
+        <button id="createCodeBtn">
+          Create Token Code
+        </button>
+
+        <p id="codeMessage"></p>
+
+      </div>
+
+
+      <div class="admin-card">
+
+        <div class="admin-title">
+          <h3>Token Codes</h3>
+
+          <button id="refreshCodesBtn">
+            Refresh
+          </button>
+        </div>
+
+        <div id="codeList"></div>
+
+      </div>
+
+
+      <div class="admin-card">
+
+        <div class="admin-title">
+          <h3>Users</h3>
+
+          <button id="refreshUsersBtn">
+            Refresh
+          </button>
+        </div>
+
+        <div id="userList"></div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <footer>
+    ConvertX • Demo File Converter
+  </footer>
+
+</div>
+
+
+<script src="script.js"></script>
+
+</body>
+  </html>          <span>🪙</span>
           <b id="tokenCount">0</b>
           <span>Tokens</span>
         </div>
