@@ -1,40 +1,1113 @@
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
+import { initializeApp } from
+  "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithRedirect,
+  getRedirectResult,
+  onAuthStateChanged,
+  signOut
+} from
+  "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  collection,
+  getDocs,
+  runTransaction,
+  serverTimestamp,
+  query,
+  orderBy
+} from
+  "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+/*
+===========================================================
+  FIREBASE CONFIG
+===========================================================
+
+Go to:
+
+Firebase Console
+→ Project settings
+→ Your apps
+→ Web app
+→ Firebase SDK setup
+→ Config
+
+Paste YOUR config below.
+
+Do NOT put a Firebase service-account private key here.
+===========================================================
+*/
+
+const firebaseConfig = {
+  apiKey: "PASTE_YOUR_API_KEY",
+  authDomain: "PASTE_YOUR_AUTH_DOMAIN",
+  projectId: "PASTE_YOUR_PROJECT_ID",
+  storageBucket: "PASTE_YOUR_STORAGE_BUCKET",
+  messagingSenderId: "PASTE_YOUR_MESSAGING_SENDER_ID",
+  appId: "PASTE_YOUR_APP_ID"
+};
+
+const ADMIN_EMAIL = "ffbbchfg@gmail.com";
+
+const STARTING_TOKENS = 100;
+
+const COSTS = {
+  image: 5,
+  "video-audio": 10,
+  "audio-video": 10
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const provider = new GoogleAuthProvider();
+
+let currentUser = null;
+let currentUserData = null;
+let selectedFile = null;
+let conversionType = "image";
+let outputBlob = null;
+let outputName = "";
+let outputUrl = null;
+
+/* =========================================================
+   ELEMENTS
+========================================================= */
+
+const loginScreen = document.getElementById("loginScreen");
+const appScreen = document.getElementById("appScreen");
+
+const googleLogin = document.getElementById("googleLogin");
+const loginError = document.getElementById("loginError");
+
+const userPhoto = document.getElementById("userPhoto");
+const userName = document.getElementById("userName");
+const userEmail = document.getElementById("userEmail");
+
+const tokenCount = document.getElementById("tokenCount");
+
+const logoutBtn = document.getElementById("logoutBtn");
+
+const dropZone = document.getElementById("dropZone");
+const fileInput = document.getElementById("fileInput");
+const chooseBtn = document.getElementById("chooseBtn");
+
+const fileInfo = document.getElementById("fileInfo");
+const fileName = document.getElementById("fileName");
+const fileSize = document.getElementById("fileSize");
+
+const removeFile = document.getElementById("removeFile");
+
+const previewBox = document.getElementById("previewBox");
+
+const convertBtn = document.getElementById("convertBtn");
+const conversionCost = document.getElementById("conversionCost");
+
+const progressBox = document.getElementById("progressBox");
+const progressBar = document.getElementById("progressBar");
+const progressPercent = document.getElementById("progressPercent");
+const progressText = document.getElementById("progressText");
+
+const resultBox = document.getElementById("resultBox");
+const resultName = document.getElementById("resultName");
+const downloadBtn = document.getElementById("downloadBtn");
+
+const convertError = document.getElementById("convertError");
+
+const redeemOpen = document.getElementById("redeemOpen");
+const redeemPanel = document.getElementById("redeemPanel");
+const redeemInput = document.getElementById("redeemInput");
+const redeemBtn = document.getElementById("redeemBtn");
+const redeemMessage = document.getElementById("redeemMessage");
+
+const adminPanel = document.getElementById("adminPanel");
+
+const codeInput = document.getElementById("codeInput");
+const codeTokens = document.getElementById("codeTokens");
+const codeExpire = document.getElementById("codeExpire");
+const createCodeBtn = document.getElementById("createCodeBtn");
+const adminCodeMessage = document.getElementById("adminCodeMessage");
+
+const usersList = document.getElementById("usersList");
+const refreshUsers = document.getElementById("refreshUsers");
+
+/* =========================================================
+   GOOGLE LOGIN
+========================================================= */
+
+googleLogin.addEventListener("click", async () => {
+
+  loginError.textContent = "";
+
+  try {
+
+    googleLogin.disabled = true;
+    googleLogin.textContent = "Opening Google...";
+
+    /*
+      Redirect is used because it works better on mobile browsers.
+    */
+
+    await signInWithRedirect(auth, provider);
+
+  } catch (error) {
+
+    console.error(error);
+
+    loginError.textContent =
+      error.message || "Google login failed.";
+
+    googleLogin.disabled = false;
+    googleLogin.innerHTML =
+      `<span class="google-logo">G</span>
+       Continue with Google`;
+  }
+
+});
+
+/*
+  Handles the return from Google OAuth.
+*/
+
+getRedirectResult(auth).catch(error => {
+
+  console.error(error);
+
+  loginError.textContent =
+    error.message || "Google authentication failed.";
+
+});
+
+/* =========================================================
+   AUTH STATE
+========================================================= */
+
+onAuthStateChanged(auth, async user => {
+
+  if (!user) {
+
+    currentUser = null;
+    currentUserData = null;
+
+    loginScreen.classList.remove("hidden");
+    appScreen.classList.add("hidden");
+
+    return;
+  }
+
+  currentUser = user;
+
+  loginScreen.classList.add("hidden");
+  appScreen.classList.remove("hidden");
+
+  await loadUser();
+
+});
+
+/* =========================================================
+   USER INITIALIZATION
+========================================================= */
+
+async function loadUser() {
+
+  if (!currentUser) return;
+
+  const userRef =
+    doc(db, "users", currentUser.uid);
+
+  const snap =
+    await getDoc(userRef);
+
+  if (!snap.exists()) {
+
+    const isAdmin =
+      currentUser.email?.toLowerCase() ===
+      ADMIN_EMAIL.toLowerCase();
+
+    currentUserData = {
+
+      uid: currentUser.uid,
+
+      name: currentUser.displayName || "User",
+
+      email: currentUser.email || "",
+
+      photo: currentUser.photoURL || "",
+
+      tokens: isAdmin ? 0 : STARTING_TOKENS,
+
+      admin: isAdmin,
+
+      permissions: {
+
+        converter: true,
+
+        redeem: true,
+
+        adminPanel: isAdmin,
+
+        tokenManagement: isAdmin
+
+      },
+
+      createdAt: serverTimestamp()
+
+    };
+
+    await setDoc(
+      userRef,
+      currentUserData
+    );
+
+  } else {
+
+    currentUserData = snap.data();
+
+    /*
+      Make sure the special admin email is recognized
+      on the frontend too.
+    */
+
+    if (
+      currentUser.email?.toLowerCase() ===
+      ADMIN_EMAIL.toLowerCase()
+    ) {
+
+      currentUserData.admin = true;
+
+      currentUserData.permissions = {
+
+        ...(currentUserData.permissions || {}),
+
+        converter: true,
+
+        redeem: true,
+
+        adminPanel: true,
+
+        tokenManagement: true
+
+      };
+
+      await updateDoc(userRef, {
+
+        admin: true,
+
+        "permissions.converter": true,
+
+        "permissions.redeem": true,
+
+        "permissions.adminPanel": true,
+
+        "permissions.tokenManagement": true
+
+      });
+
+    }
+
+  }
+
+  updateUserUI();
+
 }
 
-html,
-body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
+/* =========================================================
+   USER UI
+========================================================= */
+
+function updateUserUI() {
+
+  userName.textContent =
+    currentUser.displayName || "User";
+
+  userEmail.textContent =
+    currentUser.email || "";
+
+  userPhoto.src =
+    currentUser.photoURL ||
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='100%25' height='100%25' fill='%23202027'/%3E%3C/svg%3E";
+
+  if (currentUserData?.admin) {
+
+    tokenCount.textContent = "∞";
+
+    adminPanel.classList.remove("hidden");
+
+  } else {
+
+    tokenCount.textContent =
+      Number(currentUserData?.tokens || 0);
+
+    adminPanel.classList.add("hidden");
+
+  }
+
+  const canRedeem =
+    currentUserData?.permissions?.redeem !== false;
+
+  redeemOpen.classList.toggle(
+    "hidden",
+    !canRedeem
+  );
+
 }
 
-body {
-    overflow: hidden;
+/* =========================================================
+   LOGOUT
+========================================================= */
 
-    font-family:
-        "Noto Sans Khmer",
-        "Khmer OS",
-        "Khmer OS System",
-        Arial,
-        sans-serif;
+logoutBtn.addEventListener("click", async () => {
 
-    background:
-        radial-gradient(
-            circle at 20% 20%,
-            rgba(255, 255, 255, 0.45),
-            transparent 30%
-        ),
-        radial-gradient(
-            circle at 80% 80%,
-            rgba(255, 255, 255, 0.3),
-            transparent 30%
-        ),
-        linear-gradient(
-            135deg,
-            #ff9a9e,
+  try {
+
+    await signOut(auth);
+
+  } catch (error) {
+
+    console.error(error);
+
+  }
+
+});
+
+/* =========================================================
+   FORMAT SELECTOR
+========================================================= */
+
+document.querySelectorAll(".format").forEach(button => {
+
+  button.addEventListener("click", () => {
+
+    document
+      .querySelectorAll(".format")
+      .forEach(x => x.classList.remove("active"));
+
+    button.classList.add("active");
+
+    conversionType =
+      button.dataset.type;
+
+    conversionCost.textContent =
+      `−${COSTS[conversionType]} Tokens`;
+
+    resetFile();
+
+  });
+
+});
+
+/* =========================================================
+   FILE INPUT
+========================================================= */
+
+chooseBtn.addEventListener("click", () => {
+
+  fileInput.click();
+
+});
+
+fileInput.addEventListener("change", event => {
+
+  const file =
+    event.target.files?.[0];
+
+  if (file) {
+
+    handleFile(file);
+
+  }
+
+});
+
+/* =========================================================
+   DRAG AND DROP
+========================================================= */
+
+dropZone.addEventListener("dragover", event => {
+
+  event.preventDefault();
+
+  dropZone.classList.add("drag");
+
+});
+
+dropZone.addEventListener("dragleave", () => {
+
+  dropZone.classList.remove("drag");
+
+});
+
+dropZone.addEventListener("drop", event => {
+
+  event.preventDefault();
+
+  dropZone.classList.remove("drag");
+
+  const file =
+    event.dataTransfer.files?.[0];
+
+  if (file) {
+
+    handleFile(file);
+
+  }
+
+});
+
+/* =========================================================
+   FILE VALIDATION
+========================================================= */
+
+function handleFile(file) {
+
+  convertError.textContent = "";
+
+  resultBox.classList.add("hidden");
+
+  const valid =
+    validateFile(file);
+
+  if (!valid) return;
+
+  selectedFile = file;
+
+  fileName.textContent =
+    file.name;
+
+  fileSize.textContent =
+    formatBytes(file.size);
+
+  fileInfo.classList.remove("hidden");
+
+  convertBtn.disabled = false;
+
+  showPreview(file);
+
+}
+
+function validateFile(file) {
+
+  if (conversionType === "image") {
+
+    if (
+      ![
+        "image/jpeg",
+        "image/png"
+      ].includes(file.type)
+    ) {
+
+      convertError.textContent =
+        "Photo Converter only accepts JPG or PNG.";
+
+      return false;
+    }
+
+  }
+
+  if (conversionType === "video-audio") {
+
+    if (!file.type.startsWith("video/")) {
+
+      convertError.textContent =
+        "Video → Voice requires a video file.";
+
+      return false;
+    }
+
+  }
+
+  if (conversionType === "audio-video") {
+
+    if (!file.type.startsWith("audio/")) {
+
+      convertError.textContent =
+        "Voice → Video requires an audio file.";
+
+      return false;
+    }
+
+  }
+
+  return true;
+
+}
+
+/* =========================================================
+   PREVIEW
+========================================================= */
+
+function showPreview(file) {
+
+  previewBox.innerHTML = "";
+
+  if (conversionType === "image") {
+
+    const img =
+      document.createElement("img");
+
+    img.src =
+      URL.createObjectURL(file);
+
+    previewBox.appendChild(img);
+
+    previewBox.classList.remove("hidden");
+
+    return;
+  }
+
+  if (conversionType === "video-audio") {
+
+    const video =
+      document.createElement("video");
+
+    video.src =
+      URL.createObjectURL(file);
+
+    video.controls = true;
+
+    previewBox.appendChild(video);
+
+    previewBox.classList.remove("hidden");
+
+    return;
+  }
+
+  if (conversionType === "audio-video") {
+
+    const audio =
+      document.createElement("audio");
+
+    audio.src =
+      URL.createObjectURL(file);
+
+    audio.controls = true;
+
+    previewBox.appendChild(audio);
+
+    previewBox.classList.remove("hidden");
+
+  }
+
+}
+
+/* =========================================================
+   REMOVE
+========================================================= */
+
+removeFile.addEventListener("click", resetFile);
+
+function resetFile() {
+
+  selectedFile = null;
+
+  fileInput.value = "";
+
+  fileInfo.classList.add("hidden");
+
+  previewBox.classList.add("hidden");
+
+  previewBox.innerHTML = "";
+
+  convertBtn.disabled = true;
+
+  resultBox.classList.add("hidden");
+
+  convertError.textContent = "";
+
+}
+
+/* =========================================================
+   TOKEN CHECK
+========================================================= */
+
+function hasEnoughTokens(cost) {
+
+  if (currentUserData?.admin) {
+
+    return true;
+
+  }
+
+  return Number(currentUserData?.tokens || 0) >= cost;
+
+}
+
+/* =========================================================
+   CONVERT
+========================================================= */
+
+convertBtn.addEventListener("click", async () => {
+
+  if (!selectedFile || !currentUser) return;
+
+  convertError.textContent = "";
+
+  const cost =
+    COSTS[conversionType];
+
+  if (!hasEnoughTokens(cost)) {
+
+    convertError.textContent =
+      `Not enough tokens. You need ${cost} tokens.`;
+
+    return;
+
+  }
+
+  convertBtn.disabled = true;
+
+  progressBox.classList.remove("hidden");
+
+  resultBox.classList.add("hidden");
+
+  setProgress(5, "Preparing...");
+
+  try {
+
+    let result;
+
+    if (conversionType === "image") {
+
+      result =
+        await convertImage(selectedFile);
+
+    }
+
+    if (conversionType === "video-audio") {
+
+      result =
+        await videoToAudio(selectedFile);
+
+    }
+
+    if (conversionType === "audio-video") {
+
+      result =
+        await audioToVideo(selectedFile);
+
+    }
+
+    outputBlob =
+      result.blob;
+
+    outputName =
+      result.name;
+
+    /*
+      Charge only AFTER conversion succeeds.
+    */
+
+    await chargeTokens(cost);
+
+    outputUrl =
+      URL.createObjectURL(outputBlob);
+
+    downloadBtn.href =
+      outputUrl;
+
+    downloadBtn.download =
+      outputName;
+
+    resultName.textContent =
+      outputName;
+
+    resultBox.classList.remove("hidden");
+
+    setProgress(100, "Complete");
+
+  } catch (error) {
+
+    console.error(error);
+
+    convertError.textContent =
+      error.message ||
+      "Conversion failed.";
+
+    setProgress(0, "Failed");
+
+  } finally {
+
+    convertBtn.disabled = false;
+
+  }
+
+});
+
+/* =========================================================
+   SECURE TOKEN DECREMENT TRANSACTION
+========================================================= */
+
+async function chargeTokens(cost) {
+
+  if (currentUserData?.admin) {
+
+    return;
+
+  }
+
+  const userRef =
+    doc(db, "users", currentUser.uid);
+
+  await runTransaction(db, async transaction => {
+
+    const snap =
+      await transaction.get(userRef);
+
+    if (!snap.exists()) {
+
+      throw new Error("User account not found.");
+
+    }
+
+    const data =
+      snap.data();
+
+    const currentTokens =
+      Number(data.tokens || 0);
+
+    if (currentTokens < cost) {
+
+      throw new Error("Not enough tokens.");
+
+    }
+
+    transaction.update(
+      userRef,
+      {
+        tokens: currentTokens - cost
+      }
+    );
+
+  });
+
+  const snap =
+    await getDoc(userRef);
+
+  currentUserData =
+    snap.data();
+
+  updateUserUI();
+
+}
+
+/* =========================================================
+   IMAGE CONVERTER
+========================================================= */
+
+function convertImage(file) {
+
+  return new Promise((resolve, reject) => {
+
+    const img =
+      new Image();
+
+    const url =
+      URL.createObjectURL(file);
+
+    img.onload = () => {
+
+      const canvas =
+        document.createElement("canvas");
+
+      canvas.width =
+        img.naturalWidth;
+
+      canvas.height =
+        img.naturalHeight;
+
+      const ctx =
+        canvas.getContext("2d");
+
+      ctx.drawImage(
+        img,
+        0,
+        0
+      );
+
+      const targetType =
+        file.type === "image/jpeg"
+          ? "image/png"
+          : "image/jpeg";
+
+      const extension =
+        targetType === "image/png"
+          ? "png"
+          : "jpg";
+
+      canvas.toBlob(blob => {
+
+        URL.revokeObjectURL(url);
+
+        if (!blob) {
+
+          reject(
+            new Error("Image conversion failed.")
+          );
+
+          return;
+
+        }
+
+        const base =
+          file.name
+            .replace(/\.[^/.]+$/, "");
+
+        resolve({
+
+          blob,
+
+          name:
+            `${base}_converted.${extension}`
+
+        });
+
+      }, targetType, .92);
+
+    };
+
+    img.onerror = () => {
+
+      URL.revokeObjectURL(url);
+
+      reject(
+        new Error("Could not read image.")
+      );
+
+    };
+
+    img.src = url;
+
+  });
+
+}
+
+/* =========================================================
+   VIDEO → AUDIO
+========================================================= */
+
+async function videoToAudio(file) {
+
+  setProgress(20, "Loading video...");
+
+  const video =
+    document.createElement("video");
+
+  video.src =
+    URL.createObjectURL(file);
+
+  video.muted = false;
+
+  video.playsInline = true;
+
+  await waitForEvent(video, "loadedmetadata");
+
+  setProgress(40, "Capturing audio...");
+
+  if (!video.captureStream) {
+
+    throw new Error(
+      "This browser does not support video capture."
+    );
+
+  }
+
+  const stream =
+    video.captureStream();
+
+  const audioTracks =
+    stream.getAudioTracks();
+
+  if (!audioTracks.length) {
+
+    throw new Error(
+      "This video does not contain an audio track."
+    );
+
+  }
+
+  const audioStream =
+    new MediaStream(audioTracks);
+
+  const mime =
+    getSupportedMime([
+      "audio/webm;codecs=opus",
+      "audio/webm"
+    ]);
+
+  if (!mime) {
+
+    throw new Error(
+      "This browser cannot create WebM audio."
+    );
+
+  }
+
+  const recorder =
+    new MediaRecorder(
+      audioStream,
+      { mimeType: mime }
+    );
+
+  const chunks = [];
+
+  recorder.ondataavailable =
+    event => {
+
+      if (event.data.size) {
+
+        chunks.push(event.data);
+
+      }
+
+    };
+
+  const finished =
+    new Promise((resolve, reject) => {
+
+      recorder.onstop = () => {
+
+        resolve(
+          new Blob(
+            chunks,
+            { type: mime }
+          )
+        );
+
+      };
+
+      recorder.onerror =
+        () => reject(
+          new Error("Audio recording failed.")
+        );
+
+    });
+
+  recorder.start();
+
+  video.currentTime = 0;
+
+  await video.play();
+
+  await new Promise(resolve => {
+
+    video.addEventListener(
+      "ended",
+      resolve,
+      { once: true }
+    );
+
+  });
+
+  recorder.stop();
+
+  setProgress(90, "Finalizing audio...");
+
+  const blob =
+    await finished;
+
+  URL.revokeObjectURL(video.src);
+
+  const base =
+    file.name.replace(/\.[^/.]+$/, "");
+
+  return {
+
+    blob,
+
+    name:
+      `${base}_audio.webm`
+
+  };
+
+}
+
+/* =========================================================
+   AUDIO → DARK VIDEO
+========================================================= */
+
+async function audioToVideo(file) {
+
+  setProgress(15, "Loading audio...");
+
+  const audio =
+    document.createElement("audio");
+
+  audio.src =
+    URL.createObjectURL(file);
+
+  audio.crossOrigin = "anonymous";
+
+  await waitForEvent(
+    audio,
+    "loadedmetadata"
+  );
+
+  if (!audio.captureStream) {
+
+    throw new Error(
+      "This browser does not support audio capture."
+    );
+
+  }
+
+  const audioStream =
+    audio.captureStream();
+
+  const canvas =
+    document.createElement("canvas");
+
+  canvas.width = 1280;
+  canvas.height = 720;
+
+  const ctx =
+    canvas.getContext("2d");
+
+  ctx.fillStyle = "#050507";
+  ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  const videoStream =
+    canvas.captureStream(30);
+
+  audioStream
+    .getAudioTracks()
+    .forEach(track => {
+
+      videoStream.addTrack(track);
+
+    });
+
+  const mime =
+    getSupportedMime([
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp8,opus",
+      "video/webm"
+    ]);
+
+  if (!mime) {
+
+    throw new Error(
+      "This browser cannot create WebM video."
+    );
+
+  }
+
+  const recorder =
+    new MediaRecorder(
+      videoSt            #ff9a9e,
             #fad0c4,
             #fbc2eb
         );
