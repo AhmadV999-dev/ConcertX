@@ -2,40 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <meta
-        name="theme-color"
-        content="#08090d"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#08090d">
     <title>ConvertX</title>
-
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <!-- ==============================
-         LOGIN / DEMO PROFILE
-    =============================== -->
+    <!-- LOGIN -->
 
     <section id="loginScreen" class="login-screen">
 
-        <div class="login-glow glow-one"></div>
-        <div class="login-glow glow-two"></div>
+        <div class="glow glow-one"></div>
+        <div class="glow glow-two"></div>
 
         <div class="login-card">
 
-            <div class="login-brand">
-                <div class="logo-mark">C</div>
+            <div class="brand">
+                <div class="logo">C</div>
 
                 <div>
                     <strong>ConvertX</strong>
@@ -43,27 +28,24 @@
                 </div>
             </div>
 
-            <div class="login-title">
-                <span class="eyebrow">WELCOME</span>
+            <div class="welcome">
+                <span>WELCOME</span>
 
                 <h1>
-                    Convert anything.
+                    Convert your files.
                     <br>
-                    <span>Keep it simple.</span>
+                    <b>Simple. Fast. Private.</b>
                 </h1>
 
                 <p>
-                    Enter a demo email to open your
-                    personal converter workspace.
+                    Everything runs directly in your browser.
+                    Your files stay on your device.
                 </p>
             </div>
 
-            <div class="input-label">
-                Demo email
-            </div>
+            <label>Email</label>
 
-            <div class="email-input">
-
+            <div class="input-box">
                 <span>✉</span>
 
                 <input
@@ -73,80 +55,53 @@
                     autocomplete="off"
                     spellcheck="false"
                 >
-
             </div>
 
-            <button
-                id="loginBtn"
-                class="continue-btn"
-                type="button"
-            >
-                <span>Continue</span>
+            <button id="loginBtn" class="primary-btn">
+                Continue
                 <span>→</span>
             </button>
 
-            <div class="demo-note">
-                <span>●</span>
-                Demo account only · No real Google login
+            <div class="demo-info">
+                ● Demo account · No real login required
             </div>
 
         </div>
-
     </section>
 
 
-    <!-- ==============================
-         MAIN APP
-    =============================== -->
+    <!-- APP -->
 
-    <main
-        id="app"
-        class="app hidden"
-    >
+    <main id="app" class="app hidden">
 
-        <!-- TOP NAV -->
+        <!-- NAVBAR -->
 
-        <header class="top-nav">
+        <header class="navbar">
 
-            <div class="nav-left">
+            <div class="brand">
+                <div class="logo small">C</div>
 
-                <div class="logo-mark small">
-                    C
-                </div>
-
-                <div class="brand-text">
+                <div>
                     <strong>ConvertX</strong>
                     <span>Workspace</span>
                 </div>
-
             </div>
 
+            <div class="nav-user">
 
-            <div class="nav-right">
-
-                <div class="token-pill">
-
-                    <span class="coin">✦</span>
-
-                    <strong id="tokenCount">
-                        100
-                    </strong>
-
-                    <span>tokens</span>
-
+                <div class="users">
+                    <span>●</span>
+                    <strong id="userCount">1</strong>
+                    <small>user</small>
                 </div>
 
+                <div class="profile">
 
-                <div class="profile-chip">
-
-                    <div
-                        id="avatar"
-                        class="avatar"
-                    >
+                    <div id="avatar" class="avatar">
                         D
                     </div>
 
-                    <div class="profile-name">
+                    <div>
                         <strong id="userName">
                             Demo
                         </strong>
@@ -158,12 +113,9 @@
 
                 </div>
 
-
                 <button
                     id="logoutBtn"
-                    class="icon-btn"
-                    type="button"
-                    aria-label="Logout"
+                    class="logout"
                     title="Logout"
                 >
                     ↪
@@ -178,9 +130,9 @@
 
         <section class="hero">
 
-            <div class="hero-main">
+            <div class="hero-content">
 
-                <div class="status-badge">
+                <div class="status">
                     <span></span>
                     BROWSER POWERED
                 </div>
@@ -188,47 +140,35 @@
                 <h1>
                     Your files.
                     <br>
-                    <span>Converted instantly.</span>
+                    <b>Converted instantly.</b>
                 </h1>
 
                 <p>
-                    Fast, private file conversion
+                    Fast and private file conversion
                     directly on your device.
                 </p>
 
             </div>
 
 
-            <div class="balance-card">
+            <div class="stats-card">
 
-                <div class="balance-top">
+                <span>ACTIVE USERS</span>
 
-                    <span>
-                        AVAILABLE BALANCE
-                    </span>
+                <strong id="heroUserCount">
+                    1
+                </strong>
 
-                    <div class="balance-icon">
-                        ✦
-                    </div>
+                <p>
+                    Using ConvertX
+                </p>
 
-                </div>
-
-                <div class="balance-number">
-                    <strong id="bigTokenCount">
-                        100
-                    </strong>
-
-                    <span>
-                        tokens
-                    </span>
-                </div>
-
-                <div class="balance-line">
+                <div class="stat-line">
                     <span></span>
                 </div>
 
                 <small>
-                    Stored locally on this device
+                    Local browser workspace
                 </small>
 
             </div>
@@ -236,16 +176,14 @@
         </section>
 
 
-        <!-- CONVERTER CARD -->
+        <!-- CONVERTER -->
 
         <section class="converter">
 
-            <div class="converter-header">
+            <div class="section-heading">
 
                 <div>
-                    <span class="section-label">
-                        CONVERTER
-                    </span>
+                    <span>CONVERTER</span>
 
                     <h2>
                         What do you want to convert?
@@ -259,7 +197,7 @@
             </div>
 
 
-            <!-- MODE CARDS -->
+            <!-- MODES -->
 
             <div class="mode-grid">
 
@@ -269,12 +207,11 @@
                     type="button"
                 >
 
-                    <div class="mode-icon image-icon">
+                    <div class="mode-icon">
                         ◇
                     </div>
 
-                    <div class="mode-content">
-
+                    <div class="mode-text">
                         <strong>
                             Photo Converter
                         </strong>
@@ -282,11 +219,10 @@
                         <span>
                             JPG ↔ PNG
                         </span>
-
                     </div>
 
-                    <div class="mode-cost">
-                        5 ✦
+                    <div class="arrow">
+                        →
                     </div>
 
                 </button>
@@ -298,12 +234,11 @@
                     type="button"
                 >
 
-                    <div class="mode-icon audio-icon">
+                    <div class="mode-icon">
                         ♪
                     </div>
 
-                    <div class="mode-content">
-
+                    <div class="mode-text">
                         <strong>
                             Video → Voice
                         </strong>
@@ -311,11 +246,10 @@
                         <span>
                             Extract audio
                         </span>
-
                     </div>
 
-                    <div class="mode-cost">
-                        10 ✦
+                    <div class="arrow">
+                        →
                     </div>
 
                 </button>
@@ -342,11 +276,8 @@
                         </span>
                     </div>
 
-                    <div
-                        id="costLabel"
-                        class="cost-label"
-                    >
-                        5 Tokens
+                    <div class="free-label">
+                        FREE
                     </div>
 
                 </div>
@@ -359,8 +290,8 @@
                         data-format="png"
                         type="button"
                     >
-                        <span>PNG</span>
-                        <small>Lossless</small>
+                        <strong>PNG</strong>
+                        <span>Lossless</span>
                     </button>
 
                     <button
@@ -368,8 +299,8 @@
                         data-format="jpg"
                         type="button"
                     >
-                        <span>JPG</span>
-                        <small>Compact</small>
+                        <strong>JPG</strong>
+                        <span>Compact</span>
                     </button>
 
                 </div>
@@ -377,14 +308,11 @@
             </div>
 
 
-            <!-- UPLOAD -->
+            <!-- DROP ZONE -->
 
-            <div
-                id="dropZone"
-                class="drop-zone"
-            >
+            <div id="dropZone" class="drop-zone">
 
-                <div class="upload-circle">
+                <div class="upload-icon">
                     ↑
                 </div>
 
@@ -420,7 +348,7 @@
             </div>
 
 
-            <!-- SELECTED FILE -->
+            <!-- FILE -->
 
             <div
                 id="fileCard"
@@ -429,12 +357,12 @@
 
                 <div
                     id="fileIcon"
-                    class="file-type"
+                    class="file-icon"
                 >
                     IMG
                 </div>
 
-                <div class="file-details">
+                <div class="file-info">
 
                     <strong id="fileName">
                         image.jpg
@@ -448,9 +376,8 @@
 
                 <button
                     id="removeFile"
-                    class="remove-btn"
+                    class="remove"
                     type="button"
-                    aria-label="Remove file"
                 >
                     ×
                 </button>
@@ -458,7 +385,7 @@
             </div>
 
 
-            <!-- IMAGE PREVIEW -->
+            <!-- PREVIEW -->
 
             <div
                 id="previewWrap"
@@ -469,19 +396,17 @@
                     Preview
                 </div>
 
-                <div class="preview-image-box">
-
+                <div class="preview-box">
                     <img
                         id="imagePreview"
-                        alt="Selected image preview"
+                        alt="Image preview"
                     >
-
                 </div>
 
             </div>
 
 
-            <!-- CONVERT BUTTON -->
+            <!-- CONVERT -->
 
             <button
                 id="convertBtn"
@@ -490,17 +415,14 @@
                 disabled
             >
 
-                <span class="convert-symbol">
-                    ✦
-                </span>
+                <span>✦</span>
+
+                <strong>
+                    Convert file
+                </strong>
 
                 <span>
-                    Convert file
-                </span>
-
-                <span class="convert-cost">
-                    <span id="buttonCost">5</span>
-                    ✦
+                    →
                 </span>
 
             </button>
@@ -510,10 +432,10 @@
 
             <div
                 id="progressArea"
-                class="progress-area hidden"
+                class="progress hidden"
             >
 
-                <div class="progress-info">
+                <div class="progress-top">
 
                     <span id="progressText">
                         Preparing...
@@ -541,14 +463,14 @@
 
             <div
                 id="resultCard"
-                class="result-card hidden"
+                class="result hidden"
             >
 
-                <div class="success-icon">
+                <div class="success">
                     ✓
                 </div>
 
-                <div class="result-details">
+                <div class="result-info">
 
                     <span>
                         CONVERSION COMPLETE
@@ -562,7 +484,7 @@
 
                 <button
                     id="downloadBtn"
-                    class="download-btn"
+                    class="download"
                     type="button"
                 >
                     Download
@@ -576,20 +498,16 @@
 
         <!-- QUICK TOOLS -->
 
-        <section class="quick-section">
+        <section class="quick">
 
-            <div class="quick-header">
+            <div class="section-heading">
 
                 <div>
-
-                    <span class="section-label">
-                        QUICK TOOLS
-                    </span>
+                    <span>QUICK TOOLS</span>
 
                     <h2>
                         Simple conversions
                     </h2>
-
                 </div>
 
             </div>
@@ -609,7 +527,7 @@
                         </strong>
 
                         <span>
-                            5 tokens
+                            Free conversion
                         </span>
                     </div>
 
@@ -628,7 +546,7 @@
                         </strong>
 
                         <span>
-                            5 tokens
+                            Free conversion
                         </span>
                     </div>
 
@@ -647,7 +565,7 @@
                         </strong>
 
                         <span>
-                            10 tokens
+                            Extract audio
                         </span>
                     </div>
 
@@ -660,11 +578,16 @@
 
         <!-- FOOTER -->
 
-        <footer class="footer">
+        <footer>
 
             <div>
-                <strong>ConvertX</strong>
-                <span>Local browser converter</span>
+                <strong>
+                    ConvertX
+                </strong>
+
+                <span>
+                    Local browser converter
+                </span>
             </div>
 
             <span>
@@ -676,17 +599,9 @@
     </main>
 
 
-    <!-- TOAST -->
+    <div id="toast" class="toast"></div>
 
-    <div
-        id="toast"
-        class="toast"
-    ></div>
-
-
-    <!-- JAVASCRIPT -->
-
-    <script src="./script.js"></script>
+    <script src="script.js"></script>
 
 </body>
     </html>
