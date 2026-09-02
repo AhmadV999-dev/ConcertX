@@ -1,290 +1,614 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ConvertX</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, user-scalable=no"
+    >
+
+    <title>ConvertX</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
 </head>
 
 <body>
 
-  <!-- LOGIN -->
-  <section id="loginScreen" class="login-screen">
-    <div class="login-card">
-      <div class="brand-logo">C</div>
+    <!-- =====================================
+         FAKE DEMO LOGIN
+         NO REAL GOOGLE LOGIN
+    ====================================== -->
 
-      <h1>ConvertX</h1>
-      <p>Simple. Fast. Private.</p>
+    <section id="loginScreen">
 
-      <div class="fake-google">
-        <div class="google-icon">G</div>
-        <div>
-          <strong>Demo Google Account</strong>
-          <span>Sign in to continue</span>
-        </div>
-      </div>
+        <div class="login-box">
 
-      <input id="loginName" type="text" placeholder="Enter your name">
-
-      <button id="loginBtn" class="primary-btn">
-        Continue
-      </button>
-
-      <small>
-        Demo login • No real Google account required
-      </small>
-    </div>
-  </section>
-
-
-  <!-- APP -->
-  <section id="app" class="app hidden">
-
-    <!-- TOP BAR -->
-    <header class="topbar">
-
-      <div class="brand">
-        <div class="mini-logo">C</div>
-        <div>
-          <strong>ConvertX</strong>
-          <span>File Converter</span>
-        </div>
-      </div>
-
-      <div class="top-actions">
-
-        <div class="token-pill">
-          <span class="coin">◆</span>
-          <strong id="tokenCount">100</strong>
-          <span>Tokens</span>
-        </div>
-
-        <div class="profile">
-          <div id="avatar" class="avatar">U</div>
-
-          <div class="profile-info">
-            <strong id="userName">User</strong>
-            <span>Demo Account</span>
-          </div>
-
-          <button id="logoutBtn" class="logout">
-            ×
-          </button>
-        </div>
-
-      </div>
-
-    </header>
-
-
-    <!-- MAIN -->
-    <main class="main">
-
-      <div class="welcome">
-        <div>
-          <span class="eyebrow">FILE TOOLS</span>
-          <h1>Convert anything.<br><span>Keep it simple.</span></h1>
-          <p>Fast browser-based conversion with no upload server.</p>
-        </div>
-
-        <div class="balance-card">
-          <span>Your balance</span>
-          <strong><b id="bigTokenCount">100</b> Tokens</strong>
-        </div>
-      </div>
-
-
-      <!-- CONVERTER -->
-      <section class="converter-card">
-
-        <div class="converter-head">
-          <div>
-            <h2>Converter</h2>
-            <p>Choose what you want to convert</p>
-          </div>
-
-          <div class="cost-badge">
-            <span id="costLabel">5 Tokens</span>
-          </div>
-        </div>
-
-
-        <!-- MODE -->
-        <div class="mode-grid">
-
-          <button class="mode active" data-mode="photo">
-            <div class="mode-icon">▣</div>
-            <div>
-              <strong>Photo</strong>
-              <span>JPG ↔ PNG</span>
+            <div class="login-logo">
+                CX
             </div>
-            <b>5</b>
-          </button>
 
-          <button class="mode" data-mode="video">
-            <div class="mode-icon">♫</div>
-            <div>
-              <strong>Video → Voice</strong>
-              <span>Extract audio</span>
+            <h1>
+                Welcome to ConvertX
+            </h1>
+
+            <p>
+                Enter a fake Gmail to continue
+            </p>
+
+            <input
+                id="loginName"
+                type="text"
+                placeholder="demo@gmail.com"
+                autocomplete="off"
+                spellcheck="false"
+            >
+
+            <button
+                id="loginBtn"
+                type="button"
+            >
+                Continue
+            </button>
+
+            <small>
+                Demo mode • No real Google login
+            </small>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================
+         MAIN APP
+    ====================================== -->
+
+    <main
+        id="app"
+        class="hidden"
+    >
+
+        <!-- TOP BAR -->
+
+        <header class="topbar">
+
+            <div class="brand">
+
+                <div class="brand-icon">
+                    CX
+                </div>
+
+                <div>
+                    <strong>
+                        ConvertX
+                    </strong>
+
+                    <span>
+                        File Converter
+                    </span>
+                </div>
+
             </div>
-            <b>10</b>
-          </button>
-
-        </div>
 
 
-        <!-- FORMAT -->
-        <div id="formatArea" class="format-area">
+            <div class="top-actions">
 
-          <label>OUTPUT FORMAT</label>
+                <div class="token-pill">
 
-          <div class="format-buttons">
-            <button class="format active" data-format="png">PNG</button>
-            <button class="format" data-format="jpg">JPG</button>
-          </div>
+                    <span>
+                        🪙
+                    </span>
 
-        </div>
+                    <strong id="tokenCount">
+                        100
+                    </strong>
 
+                    <span>
+                        Tokens
+                    </span>
 
-        <!-- DROP ZONE -->
-        <div id="dropZone" class="drop-zone">
-
-          <input id="fileInput" type="file" hidden>
-
-          <div class="upload-icon">↑</div>
-
-          <h3>Drop your file here</h3>
-
-          <p>
-            or <button id="browseBtn">browse files</button>
-          </p>
-
-          <span id="supportedText">
-            JPG or PNG • Max 50MB
-          </span>
-
-        </div>
+                </div>
 
 
-        <!-- FILE -->
-        <div id="fileCard" class="file-card hidden">
+                <div class="profile">
 
-          <div class="file-icon" id="fileIcon">IMG</div>
+                    <div
+                        id="avatar"
+                        class="avatar"
+                    >
+                        D
+                    </div>
 
-          <div class="file-info">
-            <strong id="fileName">file.jpg</strong>
-            <span id="fileSize">0 MB</span>
-          </div>
+                    <span id="userName">
+                        Demo
+                    </span>
 
-          <button id="removeFile" class="remove">
-            ×
-          </button>
-
-        </div>
-
-
-        <!-- PREVIEW -->
-        <div id="previewWrap" class="preview-wrap hidden">
-          <img id="imagePreview" alt="Preview">
-        </div>
+                </div>
 
 
-        <!-- CONVERT -->
-        <button id="convertBtn" class="convert-btn" disabled>
+                <button
+                    id="logoutBtn"
+                    type="button"
+                    class="logout-btn"
+                >
+                    Logout
+                </button>
 
-          <span>Convert</span>
+            </div>
 
-          <div class="convert-cost">
-            −<span id="buttonCost">5</span> ◆
-          </div>
-
-        </button>
-
-
-        <!-- PROGRESS -->
-        <div id="progressArea" class="progress-area hidden">
-
-          <div class="progress-top">
-            <span id="progressText">Converting...</span>
-            <strong id="progressPercent">0%</strong>
-          </div>
-
-          <div class="progress-track">
-            <div id="progressBar"></div>
-          </div>
-
-        </div>
+        </header>
 
 
-        <!-- RESULT -->
-        <div id="resultCard" class="result-card hidden">
+        <!-- =====================================
+             HERO
+        ====================================== -->
 
-          <div class="success-icon">✓</div>
+        <section class="hero">
 
-          <div>
-            <strong id="resultName">Converted file</strong>
-            <span>Ready to download</span>
-          </div>
+            <div class="hero-content">
 
-          <button id="downloadBtn">
-            Download
-          </button>
+                <span class="badge">
+                    ✦ FAST & LOCAL
+                </span>
 
-        </div>
+                <h1>
+                    Convert your files
+                    <span>instantly.</span>
+                </h1>
 
-      </section>
+                <p>
+                    Convert images and extract audio
+                    directly in your browser.
+                </p>
+
+            </div>
 
 
-      <!-- QUICK TOOLS -->
-      <section class="quick-section">
+            <div class="hero-token-card">
 
-        <div class="section-title">
-          <div>
-            <h2>Quick tools</h2>
-            <p>More conversion tools</p>
-          </div>
-        </div>
+                <span>
+                    Your balance
+                </span>
 
-        <div class="quick-grid">
+                <strong id="bigTokenCount">
+                    100
+                </strong>
 
-          <div class="quick-card">
-            <div class="quick-icon">▧</div>
-            <strong>PNG → JPG</strong>
-            <span>Image conversion</span>
-            <b>5 Tokens</b>
-          </div>
+                <small>
+                    Tokens available
+                </small>
 
-          <div class="quick-card">
-            <div class="quick-icon">♫</div>
-            <strong>Video → Voice</strong>
-            <span>Extract audio</span>
-            <b>10 Tokens</b>
-          </div>
+            </div>
 
-          <div class="quick-card">
-            <div class="quick-icon">▣</div>
-            <strong>JPG → PNG</strong>
-            <span>High quality</span>
-            <b>5 Tokens</b>
-          </div>
+        </section>
 
-        </div>
 
-      </section>
+        <!-- =====================================
+             CONVERTER
+        ====================================== -->
 
-      <footer>
-        <span>ConvertX</span>
-        <span>•</span>
-        <span>Files stay in your browser</span>
-      </footer>
+        <section class="converter-card">
+
+            <!-- MODE SELECTOR -->
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        Converter
+                    </h2>
+
+                    <p>
+                        Choose what you want to convert
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="mode-selector">
+
+                <button
+                    class="mode active"
+                    data-mode="photo"
+                    type="button"
+                >
+
+                    <span class="mode-icon">
+                        🖼️
+                    </span>
+
+                    <span>
+
+                        <strong>
+                            Photo Converter
+                        </strong>
+
+                        <small>
+                            JPG ↔ PNG
+                        </small>
+
+                    </span>
+
+                </button>
+
+
+                <button
+                    class="mode"
+                    data-mode="video"
+                    type="button"
+                >
+
+                    <span class="mode-icon">
+                        🎵
+                    </span>
+
+                    <span>
+
+                        <strong>
+                            Video → Voice
+                        </strong>
+
+                        <small>
+                            Extract audio
+                        </small>
+
+                    </span>
+
+                </button>
+
+            </div>
+
+
+            <!-- FORMAT -->
+
+            <div
+                id="formatArea"
+                class="format-area"
+            >
+
+                <div class="label-row">
+
+                    <span>
+                        Output format
+                    </span>
+
+                    <span id="costLabel">
+                        5 Tokens
+                    </span>
+
+                </div>
+
+
+                <div class="format-buttons">
+
+                    <button
+                        class="format active"
+                        data-format="png"
+                        type="button"
+                    >
+                        PNG
+                    </button>
+
+                    <button
+                        class="format"
+                        data-format="jpg"
+                        type="button"
+                    >
+                        JPG
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- UPLOAD -->
+
+            <div
+                id="dropZone"
+                class="drop-zone"
+            >
+
+                <div class="upload-icon">
+                    ↑
+                </div>
+
+                <h3>
+                    Drop your file here
+                </h3>
+
+                <p>
+                    or choose a file from your device
+                </p>
+
+                <button
+                    id="browseBtn"
+                    type="button"
+                >
+                    Browse Files
+                </button>
+
+                <span id="supportedText">
+                    JPG or PNG • Max 50MB
+                </span>
+
+                <input
+                    id="fileInput"
+                    type="file"
+                    hidden
+                >
+
+            </div>
+
+
+            <!-- FILE -->
+
+            <div
+                id="fileCard"
+                class="file-card hidden"
+            >
+
+                <div
+                    id="fileIcon"
+                    class="file-icon"
+                >
+                    IMG
+                </div>
+
+                <div class="file-info">
+
+                    <strong id="fileName">
+                        file.jpg
+                    </strong>
+
+                    <span id="fileSize">
+                        0 KB
+                    </span>
+
+                </div>
+
+                <button
+                    id="removeFile"
+                    type="button"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <!-- IMAGE PREVIEW -->
+
+            <div
+                id="previewWrap"
+                class="preview-wrap hidden"
+            >
+
+                <img
+                    id="imagePreview"
+                    alt="Image preview"
+                >
+
+            </div>
+
+
+            <!-- CONVERT BUTTON -->
+
+            <button
+                id="convertBtn"
+                class="convert-btn"
+                type="button"
+                disabled
+            >
+
+                <span>
+                    Convert File
+                </span>
+
+                <span>
+                    •
+                </span>
+
+                <span id="buttonCost">
+                    5
+                </span>
+
+                <span>
+                    🪙
+                </span>
+
+            </button>
+
+
+            <!-- PROGRESS -->
+
+            <div
+                id="progressArea"
+                class="progress-area hidden"
+            >
+
+                <div class="progress-top">
+
+                    <span id="progressText">
+                        Preparing...
+                    </span>
+
+                    <span id="progressPercent">
+                        0%
+                    </span>
+
+                </div>
+
+                <div class="progress-track">
+
+                    <div
+                        id="progressBar"
+                        class="progress-bar"
+                    ></div>
+
+                </div>
+
+            </div>
+
+
+            <!-- RESULT -->
+
+            <div
+                id="resultCard"
+                class="result-card hidden"
+            >
+
+                <div class="result-icon">
+                    ✓
+                </div>
+
+                <div class="result-info">
+
+                    <strong>
+                        Ready to download
+                    </strong>
+
+                    <span id="resultName">
+                        converted.png
+                    </span>
+
+                </div>
+
+                <button
+                    id="downloadBtn"
+                    type="button"
+                >
+                    Download
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================
+             QUICK TOOLS
+        ====================================== -->
+
+        <section class="quick-tools">
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        Quick Tools
+                    </h2>
+
+                    <p>
+                        Simple browser-based conversions
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="tool-grid">
+
+                <div class="tool-card">
+
+                    <div>
+                        🖼️
+                    </div>
+
+                    <strong>
+                        JPG → PNG
+                    </strong>
+
+                    <span>
+                        5 Tokens
+                    </span>
+
+                </div>
+
+
+                <div class="tool-card">
+
+                    <div>
+                        📷
+                    </div>
+
+                    <strong>
+                        PNG → JPG
+                    </strong>
+
+                    <span>
+                        5 Tokens
+                    </span>
+
+                </div>
+
+
+                <div class="tool-card">
+
+                    <div>
+                        🎧
+                    </div>
+
+                    <strong>
+                        Video → Voice
+                    </strong>
+
+                    <span>
+                        10 Tokens
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================
+             FOOTER
+        ====================================== -->
+
+        <footer>
+
+            <span>
+                ConvertX
+            </span>
+
+            <span>
+                Everything runs locally in your browser
+            </span>
+
+        </footer>
 
     </main>
 
-  </section>
 
-  <div id="toast"></div>
+    <!-- =====================================
+         TOAST
+    ====================================== -->
 
-  <script src="script.js"></script>
+    <div
+        id="toast"
+        class="toast"
+    ></div>
+
+
+    <!-- IMPORTANT:
+         script.js must be in the same folder
+    -->
+
+    <script src="script.js"></script>
+
 </body>
-  </html>
+
+                      </html>
