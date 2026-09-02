@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
 
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1.0, user-scalable=no"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#08090d"
     >
 
     <title>ConvertX</title>
@@ -19,103 +23,121 @@
 
 <body>
 
-    <!-- =====================================
-         FAKE DEMO LOGIN
-         NO REAL GOOGLE LOGIN
-    ====================================== -->
+    <!-- ==============================
+         LOGIN / DEMO PROFILE
+    =============================== -->
 
-    <section id="loginScreen">
+    <section id="loginScreen" class="login-screen">
 
-        <div class="login-box">
+        <div class="login-glow glow-one"></div>
+        <div class="login-glow glow-two"></div>
 
-            <div class="login-logo">
-                CX
+        <div class="login-card">
+
+            <div class="login-brand">
+                <div class="logo-mark">C</div>
+
+                <div>
+                    <strong>ConvertX</strong>
+                    <span>File converter</span>
+                </div>
             </div>
 
-            <h1>
-                Welcome to ConvertX
-            </h1>
+            <div class="login-title">
+                <span class="eyebrow">WELCOME</span>
 
-            <p>
-                Enter a fake Gmail to continue
-            </p>
+                <h1>
+                    Convert anything.
+                    <br>
+                    <span>Keep it simple.</span>
+                </h1>
 
-            <input
-                id="loginName"
-                type="text"
-                placeholder="demo@gmail.com"
-                autocomplete="off"
-                spellcheck="false"
-            >
+                <p>
+                    Enter a demo email to open your
+                    personal converter workspace.
+                </p>
+            </div>
+
+            <div class="input-label">
+                Demo email
+            </div>
+
+            <div class="email-input">
+
+                <span>✉</span>
+
+                <input
+                    id="loginName"
+                    type="text"
+                    placeholder="demo@gmail.com"
+                    autocomplete="off"
+                    spellcheck="false"
+                >
+
+            </div>
 
             <button
                 id="loginBtn"
+                class="continue-btn"
                 type="button"
             >
-                Continue
+                <span>Continue</span>
+                <span>→</span>
             </button>
 
-            <small>
-                Demo mode • No real Google login
-            </small>
+            <div class="demo-note">
+                <span>●</span>
+                Demo account only · No real Google login
+            </div>
 
         </div>
 
     </section>
 
 
-    <!-- =====================================
+    <!-- ==============================
          MAIN APP
-    ====================================== -->
+    =============================== -->
 
     <main
         id="app"
-        class="hidden"
+        class="app hidden"
     >
 
-        <!-- TOP BAR -->
+        <!-- TOP NAV -->
 
-        <header class="topbar">
+        <header class="top-nav">
 
-            <div class="brand">
+            <div class="nav-left">
 
-                <div class="brand-icon">
-                    CX
+                <div class="logo-mark small">
+                    C
                 </div>
 
-                <div>
-                    <strong>
-                        ConvertX
-                    </strong>
-
-                    <span>
-                        File Converter
-                    </span>
+                <div class="brand-text">
+                    <strong>ConvertX</strong>
+                    <span>Workspace</span>
                 </div>
 
             </div>
 
 
-            <div class="top-actions">
+            <div class="nav-right">
 
                 <div class="token-pill">
 
-                    <span>
-                        🪙
-                    </span>
+                    <span class="coin">✦</span>
 
                     <strong id="tokenCount">
                         100
                     </strong>
 
-                    <span>
-                        Tokens
-                    </span>
+                    <span>tokens</span>
 
                 </div>
 
 
-                <div class="profile">
+                <div class="profile-chip">
 
                     <div
                         id="avatar"
@@ -124,19 +146,27 @@
                         D
                     </div>
 
-                    <span id="userName">
-                        Demo
-                    </span>
+                    <div class="profile-name">
+                        <strong id="userName">
+                            Demo
+                        </strong>
+
+                        <span>
+                            Demo account
+                        </span>
+                    </div>
 
                 </div>
 
 
                 <button
                     id="logoutBtn"
+                    class="icon-btn"
                     type="button"
-                    class="logout-btn"
+                    aria-label="Logout"
+                    title="Logout"
                 >
-                    Logout
+                    ↪
                 </button>
 
             </div>
@@ -144,43 +174,61 @@
         </header>
 
 
-        <!-- =====================================
-             HERO
-        ====================================== -->
+        <!-- HERO -->
 
         <section class="hero">
 
-            <div class="hero-content">
+            <div class="hero-main">
 
-                <span class="badge">
-                    ✦ FAST & LOCAL
-                </span>
+                <div class="status-badge">
+                    <span></span>
+                    BROWSER POWERED
+                </div>
 
                 <h1>
-                    Convert your files
-                    <span>instantly.</span>
+                    Your files.
+                    <br>
+                    <span>Converted instantly.</span>
                 </h1>
 
                 <p>
-                    Convert images and extract audio
-                    directly in your browser.
+                    Fast, private file conversion
+                    directly on your device.
                 </p>
 
             </div>
 
 
-            <div class="hero-token-card">
+            <div class="balance-card">
 
-                <span>
-                    Your balance
-                </span>
+                <div class="balance-top">
 
-                <strong id="bigTokenCount">
-                    100
-                </strong>
+                    <span>
+                        AVAILABLE BALANCE
+                    </span>
+
+                    <div class="balance-icon">
+                        ✦
+                    </div>
+
+                </div>
+
+                <div class="balance-number">
+                    <strong id="bigTokenCount">
+                        100
+                    </strong>
+
+                    <span>
+                        tokens
+                    </span>
+                </div>
+
+                <div class="balance-line">
+                    <span></span>
+                </div>
 
                 <small>
-                    Tokens available
+                    Stored locally on this device
                 </small>
 
             </div>
@@ -188,32 +236,32 @@
         </section>
 
 
-        <!-- =====================================
-             CONVERTER
-        ====================================== -->
+        <!-- CONVERTER CARD -->
 
-        <section class="converter-card">
+        <section class="converter">
 
-            <!-- MODE SELECTOR -->
-
-            <div class="section-header">
+            <div class="converter-header">
 
                 <div>
+                    <span class="section-label">
+                        CONVERTER
+                    </span>
 
                     <h2>
-                        Converter
+                        What do you want to convert?
                     </h2>
 
                     <p>
-                        Choose what you want to convert
+                        Choose a tool and upload your file.
                     </p>
-
                 </div>
 
             </div>
 
 
-            <div class="mode-selector">
+            <!-- MODE CARDS -->
+
+            <div class="mode-grid">
 
                 <button
                     class="mode active"
@@ -221,21 +269,25 @@
                     type="button"
                 >
 
-                    <span class="mode-icon">
-                        🖼️
-                    </span>
+                    <div class="mode-icon image-icon">
+                        ◇
+                    </div>
 
-                    <span>
+                    <div class="mode-content">
 
                         <strong>
                             Photo Converter
                         </strong>
 
-                        <small>
+                        <span>
                             JPG ↔ PNG
-                        </small>
+                        </span>
 
-                    </span>
+                    </div>
+
+                    <div class="mode-cost">
+                        5 ✦
+                    </div>
 
                 </button>
 
@@ -246,21 +298,25 @@
                     type="button"
                 >
 
-                    <span class="mode-icon">
-                        🎵
-                    </span>
+                    <div class="mode-icon audio-icon">
+                        ♪
+                    </div>
 
-                    <span>
+                    <div class="mode-content">
 
                         <strong>
                             Video → Voice
                         </strong>
 
-                        <small>
+                        <span>
                             Extract audio
-                        </small>
+                        </span>
 
-                    </span>
+                    </div>
+
+                    <div class="mode-cost">
+                        10 ✦
+                    </div>
 
                 </button>
 
@@ -274,15 +330,24 @@
                 class="format-area"
             >
 
-                <div class="label-row">
+                <div class="control-heading">
 
-                    <span>
-                        Output format
-                    </span>
+                    <div>
+                        <strong>
+                            Output format
+                        </strong>
 
-                    <span id="costLabel">
+                        <span>
+                            Select your target format
+                        </span>
+                    </div>
+
+                    <div
+                        id="costLabel"
+                        class="cost-label"
+                    >
                         5 Tokens
-                    </span>
+                    </div>
 
                 </div>
 
@@ -294,7 +359,8 @@
                         data-format="png"
                         type="button"
                     >
-                        PNG
+                        <span>PNG</span>
+                        <small>Lossless</small>
                     </button>
 
                     <button
@@ -302,7 +368,8 @@
                         data-format="jpg"
                         type="button"
                     >
-                        JPG
+                        <span>JPG</span>
+                        <small>Compact</small>
                     </button>
 
                 </div>
@@ -317,7 +384,7 @@
                 class="drop-zone"
             >
 
-                <div class="upload-icon">
+                <div class="upload-circle">
                     ↑
                 </div>
 
@@ -326,19 +393,23 @@
                 </h3>
 
                 <p>
-                    or choose a file from your device
+                    or browse files from your device
                 </p>
 
                 <button
                     id="browseBtn"
+                    class="browse-btn"
                     type="button"
                 >
-                    Browse Files
+                    Browse files
                 </button>
 
-                <span id="supportedText">
-                    JPG or PNG • Max 50MB
-                </span>
+                <div
+                    id="supportedText"
+                    class="supported"
+                >
+                    JPG or PNG · Max 50MB
+                </div>
 
                 <input
                     id="fileInput"
@@ -349,7 +420,7 @@
             </div>
 
 
-            <!-- FILE -->
+            <!-- SELECTED FILE -->
 
             <div
                 id="fileCard"
@@ -358,15 +429,15 @@
 
                 <div
                     id="fileIcon"
-                    class="file-icon"
+                    class="file-type"
                 >
                     IMG
                 </div>
 
-                <div class="file-info">
+                <div class="file-details">
 
                     <strong id="fileName">
-                        file.jpg
+                        image.jpg
                     </strong>
 
                     <span id="fileSize">
@@ -377,7 +448,9 @@
 
                 <button
                     id="removeFile"
+                    class="remove-btn"
                     type="button"
+                    aria-label="Remove file"
                 >
                     ×
                 </button>
@@ -389,13 +462,21 @@
 
             <div
                 id="previewWrap"
-                class="preview-wrap hidden"
+                class="preview hidden"
             >
 
-                <img
-                    id="imagePreview"
-                    alt="Image preview"
-                >
+                <div class="preview-title">
+                    Preview
+                </div>
+
+                <div class="preview-image-box">
+
+                    <img
+                        id="imagePreview"
+                        alt="Selected image preview"
+                    >
+
+                </div>
 
             </div>
 
@@ -409,20 +490,17 @@
                 disabled
             >
 
-                <span>
-                    Convert File
+                <span class="convert-symbol">
+                    ✦
                 </span>
 
                 <span>
-                    •
+                    Convert file
                 </span>
 
-                <span id="buttonCost">
-                    5
-                </span>
-
-                <span>
-                    🪙
+                <span class="convert-cost">
+                    <span id="buttonCost">5</span>
+                    ✦
                 </span>
 
             </button>
@@ -435,15 +513,15 @@
                 class="progress-area hidden"
             >
 
-                <div class="progress-top">
+                <div class="progress-info">
 
                     <span id="progressText">
                         Preparing...
                     </span>
 
-                    <span id="progressPercent">
+                    <strong id="progressPercent">
                         0%
-                    </span>
+                    </strong>
 
                 </div>
 
@@ -466,27 +544,29 @@
                 class="result-card hidden"
             >
 
-                <div class="result-icon">
+                <div class="success-icon">
                     ✓
                 </div>
 
-                <div class="result-info">
+                <div class="result-details">
 
-                    <strong>
-                        Ready to download
-                    </strong>
-
-                    <span id="resultName">
-                        converted.png
+                    <span>
+                        CONVERSION COMPLETE
                     </span>
+
+                    <strong id="resultName">
+                        converted.png
+                    </strong>
 
                 </div>
 
                 <button
                     id="downloadBtn"
+                    class="download-btn"
                     type="button"
                 >
                     Download
+                    <span>↓</span>
                 </button>
 
             </div>
@@ -494,78 +574,82 @@
         </section>
 
 
-        <!-- =====================================
-             QUICK TOOLS
-        ====================================== -->
+        <!-- QUICK TOOLS -->
 
-        <section class="quick-tools">
+        <section class="quick-section">
 
-            <div class="section-header">
+            <div class="quick-header">
 
                 <div>
 
-                    <h2>
-                        Quick Tools
-                    </h2>
+                    <span class="section-label">
+                        QUICK TOOLS
+                    </span>
 
-                    <p>
-                        Simple browser-based conversions
-                    </p>
+                    <h2>
+                        Simple conversions
+                    </h2>
 
                 </div>
 
             </div>
 
 
-            <div class="tool-grid">
+            <div class="quick-grid">
 
-                <div class="tool-card">
+                <div class="quick-card">
 
-                    <div>
-                        🖼️
+                    <div class="quick-icon">
+                        IMG
                     </div>
 
-                    <strong>
-                        JPG → PNG
-                    </strong>
+                    <div>
+                        <strong>
+                            JPG → PNG
+                        </strong>
 
-                    <span>
-                        5 Tokens
-                    </span>
+                        <span>
+                            5 tokens
+                        </span>
+                    </div>
 
                 </div>
 
 
-                <div class="tool-card">
+                <div class="quick-card">
 
-                    <div>
-                        📷
+                    <div class="quick-icon">
+                        PNG
                     </div>
 
-                    <strong>
-                        PNG → JPG
-                    </strong>
+                    <div>
+                        <strong>
+                            PNG → JPG
+                        </strong>
 
-                    <span>
-                        5 Tokens
-                    </span>
+                        <span>
+                            5 tokens
+                        </span>
+                    </div>
 
                 </div>
 
 
-                <div class="tool-card">
+                <div class="quick-card">
 
-                    <div>
-                        🎧
+                    <div class="quick-icon">
+                        ♪
                     </div>
 
-                    <strong>
-                        Video → Voice
-                    </strong>
+                    <div>
+                        <strong>
+                            Video → Voice
+                        </strong>
 
-                    <span>
-                        10 Tokens
-                    </span>
+                        <span>
+                            10 tokens
+                        </span>
+                    </div>
 
                 </div>
 
@@ -574,18 +658,17 @@
         </section>
 
 
-        <!-- =====================================
-             FOOTER
-        ====================================== -->
+        <!-- FOOTER -->
 
-        <footer>
+        <footer class="footer">
+
+            <div>
+                <strong>ConvertX</strong>
+                <span>Local browser converter</span>
+            </div>
 
             <span>
-                ConvertX
-            </span>
-
-            <span>
-                Everything runs locally in your browser
+                Your files stay on your device
             </span>
 
         </footer>
@@ -593,9 +676,7 @@
     </main>
 
 
-    <!-- =====================================
-         TOAST
-    ====================================== -->
+    <!-- TOAST -->
 
     <div
         id="toast"
@@ -603,12 +684,9 @@
     ></div>
 
 
-    <!-- IMPORTANT:
-         script.js must be in the same folder
-    -->
+    <!-- JAVASCRIPT -->
 
-    <script src="script.js"></script>
+    <script src="./script.js"></script>
 
 </body>
-
-                      </html>
+    </html>
