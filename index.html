@@ -1,118 +1,251 @@
 <!DOCTYPE html>
-<html lang="km">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    >
-
-    <title>Love ❤️</title>
-
-    <!-- Connect CSS -->
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="theme-color" content="#08090d">
+  <title>ConvertX</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <!-- Background floating hearts -->
-    <div class="background-hearts" aria-hidden="true">
-        <span>♥</span>
-        <span>♡</span>
-        <span>♥</span>
-        <span>♡</span>
-        <span>♥</span>
-        <span>♡</span>
-        <span>♥</span>
-        <span>♡</span>
+  <!-- LOGIN -->
+  <section id="loginScreen" class="screen">
+    <div class="login-card">
+      <div class="brand-big">Convert<span>X</span></div>
+      <p class="muted">Fast browser file converter</p>
+
+      <button id="googleLogin" class="google-btn">
+        <span class="google-logo">G</span>
+        Continue with Google
+      </button>
+
+      <p id="loginError" class="error"></p>
+      <p class="tiny">Google login is required</p>
     </div>
+  </section>
 
+  <!-- APP -->
+  <section id="appScreen" class="hidden">
 
-    <!-- Main GUI -->
-    <main id="mainScreen" class="screen">
+    <nav class="navbar">
+      <div class="brand">Convert<span>X</span></div>
 
-        <section class="love-card">
+      <div class="nav-right">
+        <div class="token-pill">
+          <span>🪙</span>
+          <b id="tokenCount">0</b>
+          <span>Tokens</span>
+        </div>
 
-            <div class="small-heart">♥</div>
+        <div class="user-box">
+          <img id="userPhoto" src="" alt="">
+          <div>
+            <strong id="userName">User</strong>
+            <small id="userEmail"></small>
+          </div>
+        </div>
 
-            <h1 id="question">
-                តើអ្នកអាចធ្វើសង្សារខ្ញុំបានទេ
-            </h1>
+        <button id="logoutBtn" class="small-btn">Logout</button>
+      </div>
+    </nav>
 
-            <!-- Khmer message appears here -->
-            <div
-                id="message"
-                class="message"
-                aria-live="polite"
-            ></div>
+    <main class="container">
 
-            <!-- Buttons -->
-            <div id="buttonArea" class="button-area">
+      <header class="hero">
+        <div>
+          <div class="badge">FILE CONVERTER</div>
+          <h1>Convert your files<br><span>without the mess.</span></h1>
+          <p>Simple browser-based conversions with token costs.</p>
+        </div>
 
-                <button
-                    id="noButton"
-                    class="choice-button no-button"
-                    type="button"
-                >
-                    No
-                </button>
+        <button id="redeemOpen" class="outline-btn">
+          Redeem Code
+        </button>
+      </header>
 
-                <button
-                    id="yesButton"
-                    class="choice-button yes-button"
-                    type="button"
-                >
-                    Yes
-                </button>
+      <!-- CONVERTER -->
+      <section class="panel">
 
+        <div class="panel-head">
+          <div>
+            <h2>Converter</h2>
+            <p>Select a conversion and upload your file.</p>
+          </div>
+
+          <div class="cost" id="conversionCost">−5 Tokens</div>
+        </div>
+
+        <div class="formats">
+
+          <button class="format active" data-type="image">
+            <div class="format-icon">🖼️</div>
+            <div>
+              <b>Photo Converter</b>
+              <small>JPG ↔ PNG</small>
+            </div>
+            <strong>−5</strong>
+          </button>
+
+          <button class="format" data-type="video-audio">
+            <div class="format-icon">🎥</div>
+            <div>
+              <b>Video → Voice</b>
+              <small>Video → WebM audio</small>
+            </div>
+            <strong>−10</strong>
+          </button>
+
+          <button class="format" data-type="audio-video">
+            <div class="format-icon">🔊</div>
+            <div>
+              <b>Voice → Video</b>
+              <small>Audio → dark video</small>
+            </div>
+            <strong>−10</strong>
+          </button>
+
+        </div>
+
+        <div id="dropZone" class="drop-zone">
+          <div class="upload-icon">＋</div>
+          <h3>Upload file here</h3>
+          <p>Drag & drop or choose a file</p>
+
+          <input id="fileInput" type="file" hidden>
+
+          <button id="chooseBtn" class="primary-btn">
+            Choose File
+          </button>
+        </div>
+
+        <div id="fileInfo" class="file-info hidden">
+          <div class="file-symbol">FILE</div>
+
+          <div class="file-details">
+            <b id="fileName">file</b>
+            <span id="fileSize">0 KB</span>
+          </div>
+
+          <button id="removeFile" class="remove-btn">×</button>
+        </div>
+
+        <div id="previewBox" class="preview hidden"></div>
+
+        <button id="convertBtn" class="convert-btn" disabled>
+          Convert
+        </button>
+
+        <div id="progressBox" class="progress-box hidden">
+          <div class="progress-top">
+            <span id="progressText">Converting...</span>
+            <span id="progressPercent">0%</span>
+          </div>
+
+          <div class="progress">
+            <div id="progressBar"></div>
+          </div>
+        </div>
+
+        <div id="resultBox" class="result hidden">
+          <div>
+            <b>Conversion complete</b>
+            <span id="resultName"></span>
+          </div>
+
+          <a id="downloadBtn" class="download-btn" download>
+            Download
+          </a>
+        </div>
+
+        <p id="convertError" class="error"></p>
+
+      </section>
+
+      <!-- REDEEM -->
+      <section id="redeemPanel" class="panel redeem-panel hidden">
+        <div class="panel-head">
+          <div>
+            <h2>Redeem Token Code</h2>
+            <p>Enter a code given to you by the admin.</p>
+          </div>
+        </div>
+
+        <div class="redeem-row">
+          <input id="redeemInput" class="text-input" placeholder="Enter code">
+          <button id="redeemBtn" class="primary-btn">Redeem</button>
+        </div>
+
+        <p id="redeemMessage" class="message"></p>
+      </section>
+
+      <!-- ADMIN -->
+      <section id="adminPanel" class="panel admin-panel hidden">
+
+        <div class="admin-title">
+          <div>
+            <div class="admin-badge">ADMIN</div>
+            <h2>Admin Control Center</h2>
+            <p>Manage users, permissions and token codes.</p>
+          </div>
+        </div>
+
+        <!-- CREATE CODE -->
+        <div class="admin-card">
+          <h3>Create Token Code</h3>
+
+          <div class="admin-grid">
+
+            <label>
+              <span>Code</span>
+              <input id="codeInput" class="text-input" placeholder="VIP100">
+            </label>
+
+            <label>
+              <span>Token</span>
+              <input id="codeTokens" class="text-input"
+                     type="number" min="1" value="100">
+            </label>
+
+            <label>
+              <span>Expire</span>
+              <input id="codeExpire" class="text-input" type="datetime-local">
+            </label>
+
+          </div>
+
+          <button id="createCodeBtn" class="primary-btn">
+            Create Code
+          </button>
+
+          <p id="adminCodeMessage" class="message"></p>
+        </div>
+
+        <!-- USERS -->
+        <div class="admin-card">
+          <div class="admin-card-head">
+            <div>
+              <h3>User Management</h3>
+              <p>Customize permissions for each account.</p>
             </div>
 
-        </section>
+            <button id="refreshUsers" class="small-btn">
+              Refresh
+            </button>
+          </div>
+
+          <div id="usersList" class="users-list">
+            Loading users...
+          </div>
+        </div>
+
+      </section>
 
     </main>
 
+  </section>
 
-    <!-- Final GUI -->
-    <main
-        id="finalScreen"
-        class="screen final-screen hidden"
-    >
-
-        <section class="final-card">
-
-            <!-- Big animated heart -->
-            <div
-                class="big-heart"
-                aria-hidden="true"
-            >
-                ❤️
-            </div>
-
-            <h2>
-                I love you too♥️
-            </h2>
-
-            <!-- Floating hearts -->
-            <div
-                class="final-hearts"
-                aria-hidden="true"
-            >
-                <span>❤️</span>
-                <span>💗</span>
-                <span>💕</span>
-                <span>💖</span>
-                <span>❤️</span>
-                <span>💞</span>
-            </div>
-
-        </section>
-
-    </main>
-
-
-    <!-- Connect JavaScript -->
-    <script src="script.js"></script>
-
+  <script type="module" src="script.js"></script>
 </body>
-              </html>
+    </html>
