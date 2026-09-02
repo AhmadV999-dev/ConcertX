@@ -1,853 +1,372 @@
-/* =========================================================
-   CONVERTX - FULL STYLE
-   ========================================================= */
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  min-height: 100vh;
-  background: #070707;
-  color: #f5f5f5;
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Arial,
-    sans-serif;
-  line-height: 1.5;
-}
-
-button,
-input {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-a {
-  color: inherit;
-}
-
-img,
-video {
-  max-width: 100%;
-}
-
-::selection {
-  background: #fff;
-  color: #000;
-}
-
-/* =========================================================
-   LOGIN
-   ========================================================= */
-
-#loginPage {
-  min-height: 100vh;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background:
-    radial-gradient(
-      circle at 50% 20%,
-      #181818 0,
-      #0b0b0b 35%,
-      #070707 70%
-    );
-}
-
-.login-box {
-  width: 100%;
-  max-width: 430px;
-  text-align: center;
-  padding: 38px 30px;
-  border: 1px solid #242424;
-  border-radius: 24px;
-  background: rgba(15, 15, 15, 0.9);
-  box-shadow:
-    0 25px 80px rgba(0, 0, 0, 0.45);
-}
-
-.login-box h1 {
-  font-size: 46px;
-  line-height: 1;
-  font-weight: 900;
-  letter-spacing: -3px;
-  margin-bottom: 14px;
-}
-
-.login-box p {
-  color: #888;
-  font-size: 14px;
-  margin-bottom: 28px;
-}
-
-.login-box input {
-  width: 100%;
-  height: 52px;
-  padding: 0 16px;
-  border: 1px solid #292929;
-  border-radius: 13px;
-  outline: none;
-  background: #0a0a0a;
-  color: #fff;
-  transition: 0.2s ease;
-}
-
-.login-box input::placeholder {
-  color: #555;
-}
-
-.login-box input:focus {
-  border-color: #777;
-  background: #0d0d0d;
-}
-
-.login-box button {
-  width: 100%;
-  height: 52px;
-  margin-top: 10px;
-  border: 0;
-  border-radius: 13px;
-  background: #fff;
-  color: #000;
-  font-weight: 800;
-  transition:
-    transform 0.15s ease,
-    opacity 0.15s ease;
-}
-
-.login-box button:hover {
-  opacity: 0.9;
-}
-
-.login-box button:active {
-  transform: scale(0.98);
-}
-
-/* =========================================================
-   APP
-   ========================================================= */
-
-#app {
-  display: none;
-  min-height: 100vh;
-}
-
-.container {
-  width: min(940px, calc(100% - 32px));
-  margin: 0 auto;
-}
-
-/* =========================================================
-   NAVIGATION
-   ========================================================= */
-
-nav {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  height: 72px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  border-bottom: 1px solid #202020;
-  background: rgba(7, 7, 7, 0.88);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-}
-
-.logo {
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: -1.2px;
-}
-
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.token-count {
-  display: inline-flex;
-  align-items: center;
-  min-height: 34px;
-  padding: 7px 12px;
-  border: 1px solid #292929;
-  border-radius: 999px;
-  background: #101010;
-  color: #ddd;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.avatar {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: #fff;
-  color: #000;
-  font-size: 13px;
-  font-weight: 900;
-}
-
-/* =========================================================
-   MAIN
-   ========================================================= */
-
-main {
-  padding: 65px 0 100px;
-}
-
-.hero {
-  text-align: center;
-  margin-bottom: 38px;
-}
-
-.hero h2 {
-  font-size: clamp(38px, 8vw, 68px);
-  line-height: 0.98;
-  letter-spacing: -4px;
-  font-weight: 900;
-  margin-bottom: 15px;
-}
-
-.hero p {
-  color: #777;
-  font-size: 15px;
-}
-
-/* =========================================================
-   GENERAL SECTION
-   ========================================================= */
-
-.section {
-  margin-top: 22px;
-  padding: 22px;
-  border: 1px solid #222;
-  border-radius: 20px;
-  background: #101010;
-  box-shadow:
-    0 15px 45px rgba(0, 0, 0, 0.15);
-}
-
-.section h3 {
-  font-size: 19px;
-  letter-spacing: -0.4px;
-  margin-bottom: 6px;
-}
-
-.section-description {
-  color: #777;
-  font-size: 13px;
-  margin-bottom: 17px;
-}
-
-/* =========================================================
-   CONVERTER
-   ========================================================= */
-
-.converter {
-  padding: 20px;
-  border: 1px solid #222;
-  border-radius: 20px;
-  background: #101010;
-  box-shadow:
-    0 15px 50px rgba(0, 0, 0, 0.2);
-}
-
-/* =========================================================
-   TYPE BUTTONS
-   ========================================================= */
-
-.types {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 18px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.types::-webkit-scrollbar {
-  display: none;
-}
-
-.types button {
-  flex: 0 0 auto;
-  min-height: 40px;
-  padding: 9px 14px;
-  border: 1px solid #292929;
-  border-radius: 11px;
-  background: #0b0b0b;
-  color: #858585;
-  font-size: 13px;
-  font-weight: 700;
-  transition:
-    background 0.18s ease,
-    color 0.18s ease,
-    border-color 0.18s ease,
-    transform 0.15s ease;
-}
-
-.types button:hover {
-  color: #fff;
-  border-color: #444;
-}
-
-.types button:active {
-  transform: scale(0.97);
-}
-
-.types button.active {
-  background: #fff;
-  color: #000;
-  border-color: #fff;
-}
-
-/* =========================================================
-   UPLOAD AREA
-   ========================================================= */
-
-#uploadBox {
-  position: relative;
-  min-height: 270px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-  text-align: center;
-  border: 1px dashed #3a3a3a;
-  border-radius: 16px;
-  background:
-    linear-gradient(
-      135deg,
-      #0d0d0d,
-      #0a0a0a
-    );
-  transition:
-    border-color 0.2s ease,
-    background 0.2s ease,
-    transform 0.2s ease;
-}
-
-#uploadBox:hover {
-  border-color: #666;
-  background: #0e0e0e;
-}
-
-#uploadBox.dragging {
-  border-color: #fff;
-  background: #151515;
-  transform: scale(1.005);
-}
-
-#uploadBox h3 {
-  font-size: 19px;
-  margin-bottom: 7px;
-}
-
-#uploadBox p {
-  color: #777;
-  font-size: 13px;
-}
-
-/* Optional upload icon */
-
-.upload-icon {
-  width: 55px;
-  height: 55px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 15px;
-  border: 1px solid #292929;
-  border-radius: 16px;
-  background: #111;
-  color: #fff;
-  font-size: 25px;
-}
-
-/* =========================================================
-   FILE INFO
-   ========================================================= */
-
-#fileInfo {
-  display: none;
-  margin-top: 14px;
-  padding: 15px;
-  border: 1px solid #252525;
-  border-radius: 14px;
-  background: #0c0c0c;
-}
-
-.file-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-}
-
-#fileName {
-  max-width: 75%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-#fileSize {
-  color: #666;
-  font-size: 11px;
-  text-align: right;
-}
-
-/* =========================================================
-   PREVIEW
-   ========================================================= */
-
-#preview {
-  width: 100%;
-  margin-top: 14px;
-}
-
-#preview img,
-#preview video {
-  width: 100%;
-  max-height: 430px;
-  display: block;
-  object-fit: contain;
-  border: 1px solid #222;
-  border-radius: 14px;
-  background: #000;
-}
-
-#preview audio {
-  width: 100%;
-  display: block;
-  margin-top: 5px;
-}
-
-/* =========================================================
-   CONVERT BUTTON
-   ========================================================= */
-
-#convertButton {
-  width: 100%;
-  min-height: 52px;
-  margin-top: 15px;
-  border: 0;
-  border-radius: 13px;
-  background: #fff;
-  color: #000;
-  font-size: 14px;
-  font-weight: 900;
-  transition:
-    opacity 0.2s ease,
-    transform 0.15s ease;
-}
-
-#convertButton:hover {
-  opacity: 0.9;
-}
-
-#convertButton:active {
-  transform: scale(0.99);
-}
-
-#convertButton:disabled {
-  opacity: 0.45;
-  cursor: wait;
-}
-
-/* =========================================================
-   PROGRESS
-   ========================================================= */
-
-#progress {
-  display: none;
-  margin-top: 13px;
-  padding: 13px;
-  border-radius: 11px;
-  background: #0b0b0b;
-  color: #888;
-  text-align: center;
-  font-size: 12px;
-}
-
-/* =========================================================
-   RESULT
-   ========================================================= */
-
-#result {
-  display: none;
-  margin-top: 14px;
-  padding: 15px;
-  border: 1px solid #263d2c;
-  border-radius: 14px;
-  background: #0b110d;
-}
-
-#downloadButton {
-  width: 100%;
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px;
-  border-radius: 11px;
-  background: #fff;
-  color: #000;
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 900;
-  transition: opacity 0.2s ease;
-}
-
-#downloadButton:hover {
-  opacity: 0.9;
-}
-
-/* =========================================================
-   REDEEM
-   ========================================================= */
-
-.redeem-row {
-  display: flex;
-  gap: 9px;
-}
-
-.redeem-row input {
-  flex: 1;
-  min-width: 0;
-  height: 48px;
-  padding: 0 14px;
-  border: 1px solid #282828;
-  border-radius: 11px;
-  outline: none;
-  background: #090909;
-  color: #fff;
-}
-
-.redeem-row input::placeholder {
-  color: #555;
-}
-
-.redeem-row input:focus {
-  border-color: #555;
-}
-
-.redeem-row button {
-  min-width: 100px;
-  height: 48px;
-  padding: 0 15px;
-  border: 0;
-  border-radius: 11px;
-  background: #fff;
-  color: #000;
-  font-weight: 900;
-}
-
-/* =========================================================
-   ADMIN
-   ========================================================= */
-
-#adminPanel {
-  display: none;
-}
-
-.admin-form {
-  display: grid;
-  gap: 9px;
-}
-
-.admin-form input {
-  width: 100%;
-  height: 47px;
-  padding: 0 13px;
-  border: 1px solid #282828;
-  border-radius: 10px;
-  outline: none;
-  background: #090909;
-  color: #fff;
-}
-
-.admin-form input:focus {
-  border-color: #555;
-}
-
-.admin-form button {
-  min-height: 48px;
-  border: 0;
-  border-radius: 11px;
-  background: #fff;
-  color: #000;
-  font-weight: 900;
-}
-
-.admin-list {
-  display: grid;
-  gap: 9px;
-  margin-top: 16px;
-}
-
-.admin-item {
-  padding: 15px;
-  border: 1px solid #242424;
-  border-radius: 13px;
-  background: #0b0b0b;
-}
-
-.admin-item strong {
-  display: block;
-  font-size: 14px;
-  margin-bottom: 4px;
-  word-break: break-word;
-}
-
-.admin-item span {
-  display: block;
-  color: #ddd;
-  font-size: 13px;
-}
-
-.admin-item small {
-  display: block;
-  margin-top: 4px;
-  color: #666;
-  font-size: 11px;
-}
-
-.admin-item label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 12px;
-  margin-right: 12px;
-  color: #aaa;
-  font-size: 12px;
-}
-
-.admin-item input[type="checkbox"] {
-  accent-color: #fff;
-}
-
-.admin-item button {
-  margin-top: 11px;
-  margin-right: 7px;
-  padding: 8px 11px;
-  border: 1px solid #292929;
-  border-radius: 8px;
-  background: #111;
-  color: #ddd;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.admin-item button:hover {
-  border-color: #555;
-  color: #fff;
-}
-
-/* =========================================================
-   LOGOUT
-   ========================================================= */
-
-#logoutButton {
-  min-height: 34px;
-  padding: 7px 11px;
-  border: 1px solid #292929;
-  border-radius: 9px;
-  background: transparent;
-  color: #777;
-  font-size: 11px;
-  font-weight: 700;
-  transition:
-    color 0.2s ease,
-    border-color 0.2s ease;
-}
-
-#logoutButton:hover {
-  color: #fff;
-  border-color: #555;
-}
-
-/* =========================================================
-   CUSTOM MESSAGE
-   ========================================================= */
-
-#convertxMessage {
-  animation:
-    messageIn 0.25s ease;
-}
-
-@keyframes messageIn {
-  from {
-    opacity: 0;
-    transform:
-      translate(-50%, 15px);
-  }
-
-  to {
-    opacity: 1;
-    transform:
-      translate(-50%, 0);
-  }
-}
-
-/* =========================================================
-   SCROLLBAR
-   ========================================================= */
-
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #070707;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #292929;
-  border-radius: 99px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #444;
-}
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
-
-@media (max-width: 650px) {
-
-  .container {
-    width:
-      calc(100% - 20px);
-  }
-
-  nav {
-    height: 62px;
-  }
-
-  .logo {
-    font-size: 19px;
-  }
-
-  main {
-    padding:
-      40px 0 70px;
-  }
-
-  .hero {
-    margin-bottom: 28px;
-  }
-
-  .hero h2 {
-    font-size: 40px;
-    letter-spacing: -2.5px;
-  }
-
-  .hero p {
-    font-size: 13px;
-  }
-
-  .converter,
-  .section {
-    padding: 14px;
-    border-radius: 16px;
-  }
-
-  #uploadBox {
-    min-height: 205px;
-    padding: 20px;
-  }
-
-  #uploadBox h3 {
-    font-size: 17px;
-  }
-
-  .redeem-row {
-    flex-direction: column;
-  }
-
-  .redeem-row button {
-    width: 100%;
-  }
-
-  .nav-right {
-    gap: 5px;
-  }
-
-  .token-count {
-    padding:
-      6px 9px;
-    font-size: 10px;
-  }
-
-  .avatar {
-    width: 33px;
-    height: 33px;
-  }
-
-  #logoutButton {
-    padding:
-      6px 8px;
-    font-size: 10px;
-  }
-
-  .login-box {
-    padding:
-      30px 20px;
-    border-radius: 20px;
-  }
-
-  .login-box h1 {
-    font-size: 40px;
-  }
-}
-
-/* =========================================================
-   VERY SMALL PHONES
-   ========================================================= */
-
-@media (max-width: 380px) {
-
-  .hero h2 {
-    font-size: 34px;
-  }
-
-  .types button {
-    padding:
-      8px 11px;
-    font-size: 11px;
-  }
-
-  #uploadBox {
-    min-height: 180px;
-  }
-
-  .section h3 {
-    font-size: 17px;
-  }
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ConvertX</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- LOGIN -->
+  <section id="loginPage" class="login-page">
+    <div class="login-box">
+      <div class="logo">ConvertX</div>
+      <h1>Welcome to ConvertX</h1>
+      <p>Simple file conversion</p>
+
+      <button id="googleLoginButton" class="google-button">
+        <span>G</span>
+        Continue with Google
+      </button>
+
+      <small>Demo login • No password required</small>
+    </div>
+  </section>
+
+
+  <!-- GMAIL GUI -->
+  <section id="gmailModal" class="modal hidden">
+    <div class="modal-box">
+      <div class="google-logo">G</div>
+
+      <h2>Sign in</h2>
+      <p>Use your Gmail account to continue to ConvertX</p>
+
+      <input
+        id="gmailInput"
+        type="email"
+        placeholder="Enter Gmail address"
+        autocomplete="off"
+      >
+
+      <button id="gmailContinueButton">
+        Continue
+      </button>
+
+      <button id="gmailCancelButton" class="secondary-button">
+        Cancel
+      </button>
+
+      <small>This is a demo login. No Google password is collected.</small>
+    </div>
+  </section>
+
+
+  <!-- MAIN APP -->
+  <main id="app" class="app hidden">
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+      <div class="brand">ConvertX</div>
+
+      <div class="nav-right">
+
+        <div class="token-display">
+          🪙 <span id="tokenCount">0</span>
+        </div>
+
+        <button id="profileButton" class="profile-button">
+          <span id="profileName">User</span>
+        </button>
+
+        <button id="logoutButton" class="logout-button">
+          Logout
+        </button>
+
+      </div>
+    </nav>
+
+
+    <div class="container">
+
+      <!-- ACCOUNT -->
+      <section class="account-card">
+        <div>
+          <span class="label">Account</span>
+          <strong id="accountEmail">Not logged in</strong>
+        </div>
+
+        <div>
+          <span class="label">Tokens</span>
+          <strong id="tokenDisplay">0</strong>
+        </div>
+      </section>
+
+
+      <!-- CONVERTER -->
+      <section id="converterSection">
+
+        <div class="page-heading">
+          <h1>File Converter</h1>
+          <p>Convert your files quickly and easily.</p>
+        </div>
+
+
+        <!-- CONVERTER TYPES -->
+        <div class="converter-types">
+
+          <button
+            class="converter-type active"
+            data-converter-type="image"
+          >
+            <strong>JPG ↔ PNG</strong>
+            <span>5 tokens</span>
+          </button>
+
+          <button
+            class="converter-type"
+            data-converter-type="video-audio"
+          >
+            <strong>Video → Audio</strong>
+            <span>10 tokens</span>
+          </button>
+
+          <button
+            class="converter-type"
+            data-converter-type="audio-video"
+          >
+            <strong>Audio → Video</strong>
+            <span>10 tokens</span>
+          </button>
+
+        </div>
+
+
+        <!-- UPLOAD -->
+        <div id="uploadArea" class="upload-area">
+
+          <input
+            id="fileInput"
+            type="file"
+            hidden
+          >
+
+          <div class="upload-icon">↑</div>
+
+          <h2 id="uploadTitle">
+            Upload JPG or PNG
+          </h2>
+
+          <p id="uploadDescription">
+            Convert JPG to PNG or PNG to JPG
+          </p>
+
+          <button
+            id="chooseFileButton"
+            type="button"
+          >
+            Choose File
+          </button>
+
+          <div class="conversion-cost">
+            Cost: <strong id="conversionCost">5 tokens</strong>
+          </div>
+
+        </div>
+
+
+        <!-- FILE INFO -->
+        <div
+          id="fileInfo"
+          class="file-info hidden"
+        >
+
+          <div class="file-details">
+            <strong id="fileName">File</strong>
+            <span id="fileSize">0 B</span>
+          </div>
+
+          <button
+            id="clearButton"
+            type="button"
+          >
+            Remove
+          </button>
+
+        </div>
+
+
+        <!-- PREVIEW -->
+        <div
+          id="filePreview"
+          class="preview"
+          style="display:none;"
+        ></div>
+
+
+        <!-- PROGRESS -->
+        <div
+          id="progressContainer"
+          class="progress-container"
+          style="display:none;"
+        >
+          <progress
+            id="progress"
+            value="0"
+            max="100"
+          ></progress>
+
+          <span id="progressText">0%</span>
+        </div>
+
+
+        <!-- CONVERT -->
+        <button
+          id="convertButton"
+          class="convert-button"
+          disabled
+        >
+          Convert
+        </button>
+
+
+        <!-- RESULT -->
+        <div
+          id="result"
+          class="result-card"
+          style="display:none;"
+        >
+
+          <h2>Conversion Complete</h2>
+
+          <div id="resultPreview"></div>
+
+          <div class="result-info">
+            <strong id="resultName">output</strong>
+            <span id="resultSize">0 B</span>
+          </div>
+
+          <a
+            id="downloadButton"
+            class="download-button"
+            href="#"
+            download
+          >
+            Download
+          </a>
+
+        </div>
+
+      </section>
+
+
+      <!-- REDEEM -->
+      <section
+        id="redeemSection"
+        class="redeem-section"
+      >
+
+        <div class="section-heading">
+          <h2>Redeem Tokens</h2>
+          <p>Enter a token code to add tokens to your account.</p>
+        </div>
+
+        <div class="redeem-box">
+
+          <input
+            id="redeemCodeInput"
+            type="text"
+            placeholder="Enter token code"
+            autocomplete="off"
+          >
+
+          <button id="redeemButton">
+            Redeem
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- ADMIN -->
+      <section
+        id="adminPanel"
+        class="admin-panel"
+        style="display:none;"
+      >
+
+        <div class="admin-header">
+          <div>
+            <h2>Admin Panel</h2>
+            <p>Manage ConvertX demo accounts and token codes.</p>
+          </div>
+
+          <span class="admin-badge">ADMIN</span>
+        </div>
+
+
+        <!-- CREATE CODE -->
+        <div class="admin-card">
+
+          <h3>Create Redeem Code</h3>
+
+          <div class="admin-form">
+
+            <input
+              id="codeInput"
+              type="text"
+              placeholder="Code (optional)"
+            >
+
+            <input
+              id="tokenInput"
+              type="number"
+              min="1"
+              placeholder="Token"
+            >
+
+            <input
+              id="expireInput"
+              type="datetime-local"
+            >
+
+            <button id="createCodeButton">
+              Create Code
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- CODES -->
+        <div class="admin-card">
+
+          <h3>Redeem Codes</h3>
+
+          <div id="adminCodes">
+            No token codes yet.
+          </div>
+
+        </div>
+
+
+        <!-- USERS -->
+        <div class="admin-card">
+
+          <h3>Users</h3>
+
+          <div id="adminUsers">
+            No users yet.
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+
+  <!-- NOTIFICATIONS -->
+  <div id="messageContainer"></div>
+
+
+  <script src="script.js"></script>
+
+</body>
+</html>
