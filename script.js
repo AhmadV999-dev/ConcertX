@@ -143,25 +143,20 @@ document.addEventListener("DOMContentLoaded", () => {
        TOKENS
     ====================================== */
 
-    let tokens =
-        Number(
-            localStorage.getItem(
-                "convertx_tokens"
-            )
-        );
+let savedTokens = localStorage.getItem("convertx_tokens");
 
+let tokens = savedTokens === null
+    ? 100
+    : Number(savedTokens);
 
-    if (
-        !Number.isFinite(tokens) ||
-        tokens < 0
-    ) {
-        tokens = 100;
+if (!Number.isFinite(tokens) || tokens < 0) {
+    tokens = 100;
+}
 
-        localStorage.setItem(
-            "convertx_tokens",
-            "100"
-        );
-    }
+localStorage.setItem(
+    "convertx_tokens",
+    String(tokens)
+);
 
 
     function updateTokens() {
