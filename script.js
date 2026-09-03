@@ -1,547 +1,621 @@
-const typeCards = document.querySelectorAll(".type-card");
-
-const toolSection = document.getElementById("toolSection");
-const selectedTypeText = document.getElementById("selectedTypeText");
-
-const fileBox = document.getElementById("fileBox");
-const fileInput = document.getElementById("fileInput");
-
-const emptyFile = document.getElementById("emptyFile");
-const selectedFile = document.getElementById("selectedFile");
-const removeFile = document.getElementById("removeFile");
-
-const preview = document.getElementById("preview");
-const fileName = document.getElementById("fileName");
-const fileSize = document.getElementById("fileSize");
-
-const convertSection = document.getElementById("convertSection");
-const formatGrid = document.getElementById("formatGrid");
-const conversionText = document.getElementById("conversionText");
-const convertButton = document.getElementById("convertButton");
-
-const progressSection = document.getElementById("progressSection");
-const progressBar = document.getElementById("progressBar");
-const progressText = document.getElementById("progressText");
-const progressNumber = document.getElementById("progressNumber");
-
-const resultSection = document.getElementById("resultSection");
-const resultName = document.getElementById("resultName");
-const downloadButton = document.getElementById("downloadButton");
-
-const modeButton = document.getElementById("modeButton");
-const toast = document.getElementById("toast");
-const typingText = document.getElementById("typingText");
-
-let selectedType = "";
-let selectedFormat = "";
-let currentFile = null;
-let outputBlob = null;
-let outputName = "";
-let imageObjectURL = null;
-
-const formats = {
-    picture: ["PNG", "JPG", "WEBP"],
-    sound: ["MP4", "MP2", "WAV", "OGG"],
-    video: ["MP4", "MP2", "WAV", "OGG"]
-};
-
-function showToast(message) {
-    toast.textContent = message;
-    toast.classList.add("show");
-
-    clearTimeout(showToast.timer);
-
-    showToast.timer = setTimeout(() => {
-        toast.classList.remove("show");
-    }, 2500);
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
-function resetResult() {
-    outputBlob = null;
-    outputName = "";
-
-    resultSection.hidden = true;
-    progressSection.hidden = true;
-
-    progressBar.style.width = "0%";
-    progressNumber.textContent = "0%";
-    progressText.textContent = "Preparing...";
+html {
+    scroll-behavior: smooth;
 }
 
-function setProgress(number, text) {
-    const value = Math.max(0, Math.min(100, number));
-
-    progressBar.style.width = value + "%";
-    progressNumber.textContent = value + "%";
-    progressText.textContent = text;
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #080808;
+    color: #ffffff;
+    transition: background 0.3s, color 0.3s;
+    overflow-x: hidden;
 }
 
-function formatBytes(bytes) {
-    if (!bytes) return "0 B";
-
-    const units = ["B", "KB", "MB", "GB"];
-    const index = Math.floor(Math.log(bytes) / Math.log(1024));
-
-    return (
-        (bytes / Math.pow(1024, index)).toFixed(index === 0 ? 0 : 2) +
-        " " +
-        units[index]
-    );
+button,
+a,
+input {
+    font: inherit;
 }
 
-function clearFile() {
-    currentFile = null;
-    selectedFormat = "";
-
-    fileInput.value = "";
-
-    emptyFile.hidden = false;
-    selectedFile.hidden = true;
-    convertSection.hidden = true;
-
-    preview.innerHTML = "";
-
-    resetResult();
+button {
+    cursor: pointer;
 }
 
-function createFormats() {
-    formatGrid.innerHTML = "";
-
-    formats[selectedType].forEach(format => {
-        const button = document.createElement("button");
-
-        button.type = "button";
-        button.className = "format-option";
-        button.textContent = format;
-
-        button.addEventListener("click", () => {
-            document.querySelectorAll(".format-option").forEach(item => {
-                item.classList.remove("active");
-            });
-
-            button.classList.add("active");
-
-            selectedFormat = format;
-
-            conversionText.textContent =
-                "Convert " + selectedType + " to " + format;
-
-            convertButton.disabled = false;
-        });
-
-        formatGrid.appendChild(button);
-    });
+.background-name {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+    user-select: none;
+    font-size: clamp(60px, 15vw, 180px);
+    font-weight: 900;
+    color: rgba(255,255,255,0.025);
+    white-space: nowrap;
 }
 
-function setType(type) {
-    selectedType = type;
-
-    typeCards.forEach(card => {
-        card.classList.toggle(
-            "active",
-            card.dataset.type === type
-        );
-    });
-
-    const names = {
-        picture: "Picture",
-        sound: "Sound",
-        video: "Video"
-    };
-
-    selectedTypeText.textContent =
-        "Choose your " + names[type].toLowerCase() + " file";
-
-    toolSection.hidden = false;
-
-    fileInput.accept =
-        type === "picture"
-            ? "image/*"
-            : type === "sound"
-            ? "audio/*"
-            : "video/mp4,video/mpeg,video/quicktime";
-
-    clearFile();
-
-    toolSection.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-    });
+.cursor {
+    opacity: 0.5;
+    animation: blink 0.8s infinite;
 }
 
-typeCards.forEach(card => {
-    card.addEventListener("click", () => {
-        setType(card.dataset.type);
-    });
-});
-
-fileBox.addEventListener("click", event => {
-    if (event.target === removeFile) return;
-
-    fileInput.click();
-});
-
-fileInput.addEventListener("click", event => {
-    event.stopPropagation();
-});
-
-fileInput.addEventListener("change", () => {
-    const file = fileInput.files[0];
-
-    if (!file) return;
-
-    currentFile = file;
-
-    resetResult();
-
-    fileName.textContent = file.name;
-    fileSize.textContent = formatBytes(file.size);
-
-    emptyFile.hidden = true;
-    selectedFile.hidden = false;
-
-    preview.innerHTML = "";
-
-    if (selectedType === "picture") {
-        const img = document.createElement("img");
-
-        imageObjectURL = URL.createObjectURL(file);
-        img.src = imageObjectURL;
-
-        preview.appendChild(img);
-    } else {
-        const icons = {
-            sound: "🎵",
-            video: "🎬"
-        };
-
-        preview.textContent = icons[selectedType];
+@keyframes blink {
+    50% {
+        opacity: 0;
     }
-
-    convertSection.hidden = false;
-
-    selectedFormat = "";
-    convertButton.disabled = true;
-
-    createFormats();
-    conversionText.textContent = "Choose an output format";
-});
-
-removeFile.addEventListener("click", event => {
-    event.stopPropagation();
-
-    if (imageObjectURL) {
-        URL.revokeObjectURL(imageObjectURL);
-        imageObjectURL = null;
-    }
-
-    clearFile();
-});
-
-async function pictureConvert() {
-    if (!currentFile) {
-        throw new Error("Choose a picture first.");
-    }
-
-    const image = new Image();
-
-    const url = URL.createObjectURL(currentFile);
-
-    image.src = url;
-
-    await new Promise((resolve, reject) => {
-        image.onload = resolve;
-        image.onerror = reject;
-    });
-
-    const canvas = document.createElement("canvas");
-
-    canvas.width = image.naturalWidth;
-    canvas.height = image.naturalHeight;
-
-    const ctx = canvas.getContext("2d");
-
-    if (selectedFormat === "JPG") {
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    ctx.drawImage(image, 0, 0);
-
-    URL.revokeObjectURL(url);
-
-    let mime = "image/png";
-
-    if (selectedFormat === "JPG") {
-        mime = "image/jpeg";
-    }
-
-    if (selectedFormat === "WEBP") {
-        mime = "image/webp";
-    }
-
-    const blob = await new Promise(resolve => {
-        canvas.toBlob(resolve, mime, 0.92);
-    });
-
-    if (!blob) {
-        throw new Error("Picture conversion failed.");
-    }
-
-    return blob;
 }
 
-async function audioToWav() {
-    const arrayBuffer = await currentFile.arrayBuffer();
-
-    const AudioContext =
-        window.AudioContext || window.webkitAudioContext;
-
-    if (!AudioContext) {
-        throw new Error("Your browser does not support audio conversion.");
-    }
-
-    const context = new AudioContext();
-
-    const audioBuffer =
-        await context.decodeAudioData(arrayBuffer);
-
-    const channels = audioBuffer.numberOfChannels;
-    const sampleRate = audioBuffer.sampleRate;
-    const length = audioBuffer.length;
-
-    const buffer = new ArrayBuffer(44 + length * channels * 2);
-    const view = new DataView(buffer);
-
-    function writeString(offset, text) {
-        for (let i = 0; i < text.length; i++) {
-            view.setUint8(offset + i, text.charCodeAt(i));
-        }
-    }
-
-    writeString(0, "RIFF");
-    view.setUint32(4, 36 + length * channels * 2, true);
-    writeString(8, "WAVE");
-    writeString(12, "fmt ");
-
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true);
-    view.setUint16(22, channels, true);
-    view.setUint32(24, sampleRate, true);
-    view.setUint32(
-        28,
-        sampleRate * channels * 2,
-        true
-    );
-    view.setUint16(32, channels * 2, true);
-    view.setUint16(34, 16, true);
-
-    writeString(36, "data");
-    view.setUint32(40, length * channels * 2, true);
-
-    let offset = 44;
-
-    for (let i = 0; i < length; i++) {
-        for (let channel = 0; channel < channels; channel++) {
-            let sample =
-                audioBuffer.getChannelData(channel)[i];
-
-            sample = Math.max(-1, Math.min(1, sample));
-
-            const value =
-                sample < 0
-                    ? sample * 0x8000
-                    : sample * 0x7fff;
-
-            view.setInt16(offset, value, true);
-
-            offset += 2;
-        }
-    }
-
-    await context.close();
-
-    return new Blob([buffer], {
-        type: "audio/wav"
-    });
+.top-controls {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    z-index: 1000;
+    display: flex;
+    gap: 7px;
 }
 
-async function soundConvert() {
-    if (selectedFormat === "WAV") {
-        return await audioToWav();
-    }
-
-    if (
-        currentFile.type === "audio/wav" &&
-        selectedFormat === "WAV"
-    ) {
-        return currentFile;
-    }
-
-    throw new Error(
-        "This browser cannot create that audio format without a codec engine."
-    );
+.top-controls button {
+    border: 1px solid #333;
+    background: rgba(20,20,20,0.95);
+    color: white;
+    border-radius: 10px;
+    min-width: 42px;
+    height: 40px;
+    padding: 0 10px;
 }
 
-async function videoConvert() {
-    if (
-        selectedFormat === "MP4" &&
-        currentFile.type === "video/mp4"
-    ) {
-        return currentFile;
-    }
-
-    throw new Error(
-        "Video transcoding needs a codec engine. MP4 files can only be kept as MP4 here."
-    );
+.top-controls button:hover,
+.top-controls button.active {
+    background: white;
+    color: black;
 }
 
-async function convertFile() {
-    if (!currentFile) {
-        showToast("Choose a file first.");
-        return;
-    }
-
-    if (!selectedFormat) {
-        showToast("Choose an output format.");
-        return;
-    }
-
-    convertButton.disabled = true;
-
-    progressSection.hidden = false;
-    resultSection.hidden = true;
-
-    setProgress(0, "Preparing...");
-
-    try {
-        for (let i = 10; i <= 30; i += 10) {
-            await new Promise(resolve =>
-                setTimeout(resolve, 120)
-            );
-
-            setProgress(i, "Processing...");
-        }
-
-        if (selectedType === "picture") {
-            outputBlob = await pictureConvert();
-        }
-
-        if (selectedType === "sound") {
-            outputBlob = await soundConvert();
-        }
-
-        if (selectedType === "video") {
-            outputBlob = await videoConvert();
-        }
-
-        setProgress(70, "Creating file...");
-
-        await new Promise(resolve =>
-            setTimeout(resolve, 250)
-        );
-
-        setProgress(90, "Finishing...");
-
-        await new Promise(resolve =>
-            setTimeout(resolve, 250)
-        );
-
-        const extension = selectedFormat.toLowerCase();
-
-        const originalName =
-            currentFile.name.replace(/\.[^/.]+$/, "");
-
-        outputName =
-            originalName + "." + extension;
-
-        resultName.textContent = outputName;
-
-        setProgress(100, "Complete");
-
-        await new Promise(resolve =>
-            setTimeout(resolve, 300)
-        );
-
-        resultSection.hidden = false;
-
-    } catch (error) {
-        progressSection.hidden = true;
-        showToast(error.message || "Conversion failed.");
-    }
-
-    convertButton.disabled = false;
+.container {
+    position: relative;
+    z-index: 10;
+    width: min(900px, calc(100% - 30px));
+    margin: auto;
+    padding-top: 100px;
 }
 
-convertButton.addEventListener("click", convertFile);
-
-downloadButton.addEventListener("click", () => {
-    if (!outputBlob) {
-        showToast("No converted file.");
-        return;
-    }
-
-    const url = URL.createObjectURL(outputBlob);
-
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = outputName;
-
-    document.body.appendChild(link);
-
-    link.click();
-
-    link.remove();
-
-    setTimeout(() => {
-        URL.revokeObjectURL(url);
-    }, 1000);
-});
-
-modeButton.addEventListener("click", () => {
-    document.body.classList.toggle("light");
-
-    if (document.body.classList.contains("light")) {
-        modeButton.textContent = "☀ Light";
-    } else {
-        modeButton.textContent = "☾ Dark";
-    }
-});
-
-let typingIndex = 0;
-let deleting = false;
-
-function typeAnimation() {
-    const text = "ConvertX";
-
-    if (!deleting) {
-        typingText.textContent =
-            text.substring(0, typingIndex + 1);
-
-        typingIndex++;
-
-        if (typingIndex === text.length) {
-            deleting = true;
-
-            setTimeout(typeAnimation, 1200);
-            return;
-        }
-    } else {
-        typingText.textContent =
-            text.substring(0, typingIndex - 1);
-
-        typingIndex--;
-
-        if (typingIndex === 0) {
-            deleting = false;
-        }
-    }
-
-    setTimeout(
-        typeAnimation,
-        deleting ? 90 : 180
-    );
+.header {
+    text-align: center;
+    margin-bottom: 60px;
 }
 
-typeAnimation();
+.logo {
+    width: 72px;
+    height: 72px;
+    margin: auto;
+    display: grid;
+    place-items: center;
+    border-radius: 20px;
+    background: white;
+    color: black;
+    font-size: 40px;
+    font-weight: 900;
+    animation: logoFloat 2.5s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+    50% {
+        transform: translateY(-7px) rotate(2deg);
+    }
+}
+
+.header h1 {
+    margin: 20px 0 8px;
+    font-size: 45px;
+}
+
+.header p {
+    color: #999;
+}
+
+.type-section {
+    text-align: center;
+}
+
+.type-section h2,
+.convert-section h2 {
+    font-size: 24px;
+}
+
+.type-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-top: 25px;
+}
+
+.type-card {
+    min-height: 180px;
+    border: 1px solid #292929;
+    border-radius: 20px;
+    background: #111;
+    color: white;
+    padding: 25px 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    transition: 0.2s;
+}
+
+.type-card:hover {
+    transform: translateY(-4px);
+    border-color: white;
+}
+
+.type-card.active {
+    background: white;
+    color: black;
+}
+
+.type-icon {
+    font-size: 42px;
+}
+
+.type-card small {
+    color: #999;
+}
+
+.type-card.active small {
+    color: #555;
+}
+
+.tool-section {
+    margin-top: 70px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.tool-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.tool-title span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #00ff88;
+}
+
+.file-box {
+    position: relative;
+    min-height: 230px;
+    border: 2px dashed #333;
+    border-radius: 22px;
+    background: #101010;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    overflow: hidden;
+}
+
+.file-box:hover {
+    border-color: #777;
+}
+
+#fileInput {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 5;
+}
+
+#emptyFile {
+    position: relative;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.upload-icon {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background: white;
+    color: black;
+    display: grid;
+    place-items: center;
+    margin: auto;
+    font-size: 30px;
+}
+
+#emptyFile h3 {
+    margin-bottom: 5px;
+}
+
+#emptyFile p {
+    color: #aaa;
+}
+
+#emptyFile small {
+    color: #666;
+}
+
+.selected-file {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    min-height: 210px;
+    padding: 30px 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 25px;
+}
+
+.remove-file {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 20;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 50%;
+    background: #222;
+    color: white;
+    font-size: 25px;
+}
+
+.remove-file:hover {
+    background: #fff;
+    color: #000;
+}
+
+.preview {
+    width: 110px;
+    height: 110px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #181818;
+    display: grid;
+    place-items: center;
+    font-size: 50px;
+    flex-shrink: 0;
+}
+
+.preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.file-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+    overflow: hidden;
+}
+
+.file-info strong {
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-info span {
+    color: #888;
+}
+
+.convert-section {
+    margin-top: 35px;
+}
+
+.format-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.format-option {
+    height: 55px;
+    border: 1px solid #333;
+    border-radius: 12px;
+    background: #111;
+    color: white;
+}
+
+.format-option:hover,
+.format-option.active {
+    background: white;
+    color: black;
+}
+
+#conversionText {
+    color: #888;
+    text-align: center;
+}
+
+.convert-button {
+    width: 100%;
+    height: 58px;
+    border: 0;
+    border-radius: 15px;
+    background: white;
+    color: black;
+    font-weight: 800;
+    margin-top: 10px;
+}
+
+.convert-button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.progress-section {
+    margin-top: 30px;
+    padding: 20px;
+    border-radius: 17px;
+    background: #111;
+}
+
+.progress-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.progress-top span {
+    color: #aaa;
+}
+
+.progress-track {
+    width: 100%;
+    height: 10px;
+    border-radius: 10px;
+    background: #292929;
+    overflow: hidden;
+}
+
+#progressBar {
+    width: 0%;
+    height: 100%;
+    background: white;
+    transition: width 0.15s;
+}
+
+.result-section {
+    margin-top: 30px;
+    padding: 35px;
+    text-align: center;
+    border: 1px solid #292929;
+    border-radius: 20px;
+    background: #101010;
+}
+
+.success {
+    width: 60px;
+    height: 60px;
+    margin: auto;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #00ff88;
+    color: black;
+    font-size: 35px;
+    font-weight: bold;
+}
+
+.result-section p {
+    color: #888;
+}
+
+#downloadButton {
+    width: 100%;
+    height: 55px;
+    border: 0;
+    border-radius: 13px;
+    background: white;
+    color: black;
+    font-weight: bold;
+}
+
+.big-space {
+    height: 600px;
+}
+
+footer {
+    text-align: center;
+    padding: 50px 10px;
+    border-top: 1px solid #222;
+    color: #777;
+}
+
+footer a {
+    color: white;
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+#toast {
+    position: fixed;
+    left: 50%;
+    bottom: 25px;
+    transform: translate(-50%, 100px);
+    z-index: 2000;
+    background: white;
+    color: black;
+    padding: 13px 20px;
+    border-radius: 12px;
+    opacity: 0;
+    transition: 0.25s;
+    pointer-events: none;
+}
+
+#toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+/* PHONE */
+
+body.phone-mode .container {
+    width: calc(100% - 24px);
+    padding-top: 85px;
+}
+
+body.phone-mode .header {
+    margin-bottom: 40px;
+}
+
+body.phone-mode .header h1 {
+    font-size: 34px;
+}
+
+body.phone-mode .logo {
+    width: 62px;
+    height: 62px;
+    font-size: 34px;
+}
+
+body.phone-mode .type-grid {
+    grid-template-columns: 1fr;
+}
+
+body.phone-mode .type-card {
+    min-height: 115px;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 15px 20px;
+}
+
+body.phone-mode .type-icon {
+    font-size: 32px;
+}
+
+body.phone-mode .selected-file {
+    flex-direction: column;
+    padding: 45px 20px 25px;
+}
+
+body.phone-mode .file-info {
+    text-align: center;
+    max-width: 100%;
+}
+
+body.phone-mode .file-info strong {
+    max-width: 250px;
+}
+
+body.phone-mode .format-grid {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+body.phone-mode .big-space {
+    height: 400px;
+}
+
+/* DESKTOP */
+
+body.desktop-mode .container {
+    max-width: 1050px;
+}
+
+body.desktop-mode .type-card {
+    min-height: 200px;
+}
+
+/* LIGHT */
+
+body.light {
+    background: #f4f4f4;
+    color: #111;
+}
+
+body.light .background-name {
+    color: rgba(0,0,0,0.035);
+}
+
+body.light .top-controls button {
+    background: white;
+    color: black;
+    border-color: #ddd;
+}
+
+body.light .type-card,
+body.light .file-box,
+body.light .progress-section,
+body.light .result-section {
+    background: white;
+    color: #111;
+    border-color: #ddd;
+}
+
+body.light .type-card small,
+body.light #emptyFile p,
+body.light .file-info span,
+body.light #conversionText,
+body.light .progress-top span {
+    color: #777;
+}
+
+body.light .format-option {
+    background: white;
+    color: #111;
+    border-color: #ddd;
+}
+
+body.light .format-option:hover,
+body.light .format-option.active {
+    background: #111;
+    color: white;
+}
+
+body.light .progress-track {
+    background: #ddd;
+}
+
+body.light #progressBar {
+    background: #111;
+}
+
+body.light .remove-file {
+    background: #eee;
+    color: #111;
+}
+
+body.light footer {
+    border-color: #ddd;
+}
+
+body.light footer a {
+    color: #111;
+}
+
+@media (max-width: 650px) {
+    .top-controls {
+        top: 10px;
+        right: 10px;
+    }
+
+    .top-controls button {
+        min-width: 38px;
+        height: 36px;
+        padding: 0 8px;
+    }
+}
