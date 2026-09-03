@@ -28,17 +28,16 @@ const resultSection = document.getElementById("resultSection");
 const resultName = document.getElementById("resultName");
 const downloadButton = document.getElementById("downloadButton");
 
-const phoneMode = document.getElementById("phoneMode");
-const desktopMode = document.getElementById("desktopMode");
 const modeButton = document.getElementById("modeButton");
-
 const toast = document.getElementById("toast");
+const typingText = document.getElementById("typingText");
 
 let selectedType = "";
 let selectedFormat = "";
 let currentFile = null;
 let outputBlob = null;
 let outputName = "";
+let imageObjectURL = null;
 
 const formats = {
     picture: ["PNG", "JPG", "WEBP"],
@@ -46,66 +45,95 @@ const formats = {
     video: ["MP4", "MP2", "WAV", "OGG"]
 };
 
-function toastMessage(message) {
+function showToast(message) {
     toast.textContent = message;
     toast.classList.add("show");
 
-    clearTimeout(toast.timer);
+    clearTimeout(showToast.timer);
 
-    toast.timer = setTimeout(() => {
+    showToast.timer = setTimeout(() => {
         toast.classList.remove("show");
-    }, 2200);
-}
-
-function bytes(size) {
-    if (size < 1024) return size + " B";
-
-    if (size < 1024 * 1024) {
-        return (size / 1024).toFixed(1) + " KB";
-    }
-
-    return (size / 1024 / 1024).toFixed(2) + " MB";
-}
-
-function setProgress(value, text) {
-    progressBar.style.width = value + "%";
-    progressNumber.textContent = value + "%";
-    progressText.textContent = text;
+    }, 2500);
 }
 
 function resetResult() {
     outputBlob = null;
     outputName = "";
 
-    resultSection.classList.add("hidden");
-    progressSection.classList.add("hidden");
+    resultSection.hidden = true;
+    progressSection.hidden = true;
 
-    setProgress(0, "Preparing...");
+    progressBar.style.width = "0%";
+    progressNumber.textContent = "0%";
+    progressText.textContent = "Preparing...";
+}
+
+function setProgress(number, text) {
+    const value = Math.max(0, Math.min(100, number));
+
+    progressBar.style.width = value + "%";
+    progressNumber.textContent = value + "%";
+    progressText.textContent = text;
+}
+
+function formatBytes(bytes) {
+    if (!bytes) return "0 B";
+
+    const units = ["B", "KB", "MB", "GB"];
+    const index = Math.floor(Math.log(bytes) / Math.log(1024));
+
+    return (
+        (bytes / Math.pow(1024, index)).toFixed(index === 0 ? 0 : 2) +
+        " " +
+        units[index]
+    );
 }
 
 function clearFile() {
     currentFile = null;
     selectedFormat = "";
-    outputBlob = null;
-    outputName = "";
 
     fileInput.value = "";
 
-    emptyFile.classList.remove("hidden");
-    selectedFile.classList.add("hidden");
-
-    convertSection.classList.add("hidden");
-    progressSection.classList.add("hidden");
-    resultSection.classList.add("hidden");
+    emptyFile.hidden = false;
+    selectedFile.hidden = true;
+    convertSection.hidden = true;
 
     preview.innerHTML = "";
-    formatGrid.innerHTML = "";
 
-    convertButton.disabled = true;
-    conversionText.textContent = "Choose an output format";
+    resetResult();
 }
 
-function chooseType(type) {
+function createFormats() {
+    formatGrid.innerHTML = "";
+
+    formats[selectedType].forEach(format => {
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.className = "format-option";
+        button.textContent = format;
+
+        button.addEventListener("click", () => {
+            document.querySelectorAll(".format-option").forEach(item => {
+                item.classList.remove("active");
+            });
+
+            button.classList.add("active");
+
+            selectedFormat = format;
+
+            conversionText.textContent =
+                "Convert " + selectedType + " to " + format;
+
+            convertButton.disabled = false;
+        });
+
+        formatGrid.appendChild(button);
+    });
+}
+
+function setType(type) {
     selectedType = type;
 
     typeCards.forEach(card => {
@@ -116,60 +144,41 @@ function chooseType(type) {
     });
 
     const names = {
-        picture: "picture",
-        sound: "sound",
-        video: "video"
+        picture: "Picture",
+        sound: "Sound",
+        video: "Video"
     };
 
     selectedTypeText.textContent =
-        "Choose your " + names[type] + " file";
+        "Choose your " + names[type].toLowerCase() + " file";
 
-    if (type === "picture") {
-        fileInput.accept = "image/*";
-    }
+    toolSection.hidden = false;
 
-    if (type === "sound") {
-        fileInput.accept = "audio/*";
-    }
-
-    if (type === "video") {
-        fileInput.accept =
-            "video/mp4,video/mpeg,video/quicktime";
-    }
+    fileInput.accept =
+        type === "picture"
+            ? "image/*"
+            : type === "sound"
+            ? "audio/*"
+            : "video/mp4,video/mpeg,video/quicktime";
 
     clearFile();
 
-    toolSection.classList.remove("hidden");
-
-    setTimeout(() => {
-        toolSection.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-        });
-    }, 50);
+    toolSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
 }
 
 typeCards.forEach(card => {
     card.addEventListener("click", () => {
-        chooseType(card.dataset.type);
+        setType(card.dataset.type);
     });
 });
 
 fileBox.addEventListener("click", event => {
-    if (event.target.closest("#removeFile")) {
-        return;
-    }
+    if (event.target === removeFile) return;
 
-    if (!currentFile) {
-        fileInput.click();
-    }
-});
-
-removeFile.addEventListener("click", event => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    clearFile();
+    fileInput.click();
 });
 
 fileInput.addEventListener("click", event => {
@@ -186,83 +195,53 @@ fileInput.addEventListener("change", () => {
     resetResult();
 
     fileName.textContent = file.name;
-    fileSize.textContent = bytes(file.size);
+    fileSize.textContent = formatBytes(file.size);
 
-    emptyFile.classList.add("hidden");
-    selectedFile.classList.remove("hidden");
+    emptyFile.hidden = true;
+    selectedFile.hidden = false;
 
     preview.innerHTML = "";
 
     if (selectedType === "picture") {
+        const img = document.createElement("img");
 
-        const image = document.createElement("img");
-        image.src = URL.createObjectURL(file);
+        imageObjectURL = URL.createObjectURL(file);
+        img.src = imageObjectURL;
 
-        image.onload = () => {
-            URL.revokeObjectURL(image.src);
+        preview.appendChild(img);
+    } else {
+        const icons = {
+            sound: "🎵",
+            video: "🎬"
         };
 
-        preview.appendChild(image);
-
-    } else if (selectedType === "sound") {
-
-        preview.textContent = "🎵";
-
-    } else {
-
-        preview.textContent = "🎬";
+        preview.textContent = icons[selectedType];
     }
 
-    createFormats();
-
-    convertSection.classList.remove("hidden");
+    convertSection.hidden = false;
 
     selectedFormat = "";
     convertButton.disabled = true;
 
-    conversionText.textContent =
-        "Choose an output format";
+    createFormats();
+    conversionText.textContent = "Choose an output format";
 });
 
-function createFormats() {
-    formatGrid.innerHTML = "";
+removeFile.addEventListener("click", event => {
+    event.stopPropagation();
 
-    formats[selectedType].forEach(format => {
+    if (imageObjectURL) {
+        URL.revokeObjectURL(imageObjectURL);
+        imageObjectURL = null;
+    }
 
-        const button = document.createElement("button");
+    clearFile();
+});
 
-        button.type = "button";
-        button.className = "format-option";
-        button.textContent = format;
-
-        button.addEventListener("click", event => {
-            event.preventDefault();
-            event.stopPropagation();
-
-            document
-                .querySelectorAll(".format-option")
-                .forEach(item => {
-                    item.classList.remove("active");
-                });
-
-            button.classList.add("active");
-
-            selectedFormat = format;
-
-            conversionText.textContent =
-                "Convert " +
-                selectedType +
-                " to " +
-                format;
-
-            convertButton.disabled = false;
-        });
-
-        formatGrid.appendChild(button);
-    });
-}
-
-async function convertPicture() {
+async function pictureConvert() {
+    if (!currentFile) {
+        throw new Error("Choose a picture first.");
+    }
 
     const image = new Image();
 
@@ -284,12 +263,7 @@ async function convertPicture() {
 
     if (selectedFormat === "JPG") {
         ctx.fillStyle = "#ffffff";
-        ctx.fillRect(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
     ctx.drawImage(image, 0, 0);
@@ -307,11 +281,7 @@ async function convertPicture() {
     }
 
     const blob = await new Promise(resolve => {
-        canvas.toBlob(
-            resolve,
-            mime,
-            0.92
-        );
+        canvas.toBlob(resolve, mime, 0.92);
     });
 
     if (!blob) {
@@ -321,531 +291,257 @@ async function convertPicture() {
     return blob;
 }
 
-async function convertAudioToWav() {
+async function audioToWav() {
+    const arrayBuffer = await currentFile.arrayBuffer();
 
     const AudioContext =
-        window.AudioContext ||
-        window.webkitAudioContext;
+        window.AudioContext || window.webkitAudioContext;
 
     if (!AudioContext) {
-        throw new Error(
-            "Audio conversion is not supported by this browser."
-        );
+        throw new Error("Your browser does not support audio conversion.");
     }
 
     const context = new AudioContext();
 
-    try {
+    const audioBuffer =
+        await context.decodeAudioData(arrayBuffer);
 
-        const data =
-            await currentFile.arrayBuffer();
+    const channels = audioBuffer.numberOfChannels;
+    const sampleRate = audioBuffer.sampleRate;
+    const length = audioBuffer.length;
 
-        const audio =
-            await context.decodeAudioData(data);
+    const buffer = new ArrayBuffer(44 + length * channels * 2);
+    const view = new DataView(buffer);
 
-        const channels =
-            audio.numberOfChannels;
-
-        const sampleRate =
-            audio.sampleRate;
-
-        const length =
-            audio.length;
-
-        const buffer =
-            new ArrayBuffer(
-                44 +
-                length *
-                channels *
-                2
-            );
-
-        const view =
-            new DataView(buffer);
-
-        function writeText(offset, text) {
-
-            for (
-                let i = 0;
-                i < text.length;
-                i++
-            ) {
-                view.setUint8(
-                    offset + i,
-                    text.charCodeAt(i)
-                );
-            }
+    function writeString(offset, text) {
+        for (let i = 0; i < text.length; i++) {
+            view.setUint8(offset + i, text.charCodeAt(i));
         }
-
-        writeText(0, "RIFF");
-
-        view.setUint32(
-            4,
-            36 + length * channels * 2,
-            true
-        );
-
-        writeText(8, "WAVE");
-        writeText(12, "fmt ");
-
-        view.setUint32(16, 16, true);
-        view.setUint16(20, 1, true);
-        view.setUint16(22, channels, true);
-
-        view.setUint32(
-            24,
-            sampleRate,
-            true
-        );
-
-        view.setUint32(
-            28,
-            sampleRate * channels * 2,
-            true
-        );
-
-        view.setUint16(
-            32,
-            channels * 2,
-            true
-        );
-
-        view.setUint16(
-            34,
-            16,
-            true
-        );
-
-        writeText(36, "data");
-
-        view.setUint32(
-            40,
-            length * channels * 2,
-            true
-        );
-
-        let offset = 44;
-
-        for (
-            let i = 0;
-            i < length;
-            i++
-        ) {
-
-            for (
-                let channel = 0;
-                channel < channels;
-                channel++
-            ) {
-
-                let sample =
-                    audio.getChannelData(
-                        channel
-                    )[i];
-
-                sample =
-                    Math.max(
-                        -1,
-                        Math.min(1, sample)
-                    );
-
-                const value =
-                    sample < 0
-                        ? sample * 0x8000
-                        : sample * 0x7fff;
-
-                view.setInt16(
-                    offset,
-                    value,
-                    true
-                );
-
-                offset += 2;
-            }
-        }
-
-        return new Blob(
-            [buffer],
-            {
-                type: "audio/wav"
-            }
-        );
-
-    } finally {
-
-        await context.close();
     }
+
+    writeString(0, "RIFF");
+    view.setUint32(4, 36 + length * channels * 2, true);
+    writeString(8, "WAVE");
+    writeString(12, "fmt ");
+
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, channels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(
+        28,
+        sampleRate * channels * 2,
+        true
+    );
+    view.setUint16(32, channels * 2, true);
+    view.setUint16(34, 16, true);
+
+    writeString(36, "data");
+    view.setUint32(40, length * channels * 2, true);
+
+    let offset = 44;
+
+    for (let i = 0; i < length; i++) {
+        for (let channel = 0; channel < channels; channel++) {
+            let sample =
+                audioBuffer.getChannelData(channel)[i];
+
+            sample = Math.max(-1, Math.min(1, sample));
+
+            const value =
+                sample < 0
+                    ? sample * 0x8000
+                    : sample * 0x7fff;
+
+            view.setInt16(offset, value, true);
+
+            offset += 2;
+        }
+    }
+
+    await context.close();
+
+    return new Blob([buffer], {
+        type: "audio/wav"
+    });
 }
 
-async function performConversion() {
+async function soundConvert() {
+    if (selectedFormat === "WAV") {
+        return await audioToWav();
+    }
 
+    if (
+        currentFile.type === "audio/wav" &&
+        selectedFormat === "WAV"
+    ) {
+        return currentFile;
+    }
+
+    throw new Error(
+        "This browser cannot create that audio format without a codec engine."
+    );
+}
+
+async function videoConvert() {
+    if (
+        selectedFormat === "MP4" &&
+        currentFile.type === "video/mp4"
+    ) {
+        return currentFile;
+    }
+
+    throw new Error(
+        "Video transcoding needs a codec engine. MP4 files can only be kept as MP4 here."
+    );
+}
+
+async function convertFile() {
     if (!currentFile) {
-        throw new Error("Choose a file first.");
+        showToast("Choose a file first.");
+        return;
     }
 
     if (!selectedFormat) {
-        throw new Error(
-            "Choose an output format."
-        );
+        showToast("Choose an output format.");
+        return;
     }
 
-    if (
-        selectedType === "picture"
-    ) {
-        return await convertPicture();
-    }
+    convertButton.disabled = true;
 
-    if (
-        selectedType === "sound"
-    ) {
+    progressSection.hidden = false;
+    resultSection.hidden = true;
 
-        if (selectedFormat === "WAV") {
-            return await convertAudioToWav();
+    setProgress(0, "Preparing...");
+
+    try {
+        for (let i = 10; i <= 30; i += 10) {
+            await new Promise(resolve =>
+                setTimeout(resolve, 120)
+            );
+
+            setProgress(i, "Processing...");
         }
 
-        throw new Error(
-            "This browser can directly create WAV audio. MP2, OGG and MP4 need a codec engine."
-        );
-    }
-
-    if (
-        selectedType === "video"
-    ) {
-
-        if (
-            selectedFormat === "MP4" &&
-            currentFile.type === "video/mp4"
-        ) {
-            return currentFile;
+        if (selectedType === "picture") {
+            outputBlob = await pictureConvert();
         }
 
-        throw new Error(
-            "This browser cannot directly transcode video without a codec engine."
+        if (selectedType === "sound") {
+            outputBlob = await soundConvert();
+        }
+
+        if (selectedType === "video") {
+            outputBlob = await videoConvert();
+        }
+
+        setProgress(70, "Creating file...");
+
+        await new Promise(resolve =>
+            setTimeout(resolve, 250)
         );
+
+        setProgress(90, "Finishing...");
+
+        await new Promise(resolve =>
+            setTimeout(resolve, 250)
+        );
+
+        const extension = selectedFormat.toLowerCase();
+
+        const originalName =
+            currentFile.name.replace(/\.[^/.]+$/, "");
+
+        outputName =
+            originalName + "." + extension;
+
+        resultName.textContent = outputName;
+
+        setProgress(100, "Complete");
+
+        await new Promise(resolve =>
+            setTimeout(resolve, 300)
+        );
+
+        resultSection.hidden = false;
+
+    } catch (error) {
+        progressSection.hidden = true;
+        showToast(error.message || "Conversion failed.");
     }
+
+    convertButton.disabled = false;
 }
 
-convertButton.addEventListener(
-    "click",
-    async event => {
+convertButton.addEventListener("click", convertFile);
 
-        event.preventDefault();
-        event.stopPropagation();
-
-        if (!currentFile) {
-            toastMessage("Choose a file first.");
-            return;
-        }
-
-        if (!selectedFormat) {
-            toastMessage(
-                "Choose an output format."
-            );
-            return;
-        }
-
-        convertButton.disabled = true;
-
-        progressSection.classList.remove(
-            "hidden"
-        );
-
-        resultSection.classList.add(
-            "hidden"
-        );
-
-        setProgress(
-            0,
-            "Preparing..."
-        );
-
-        try {
-
-            for (
-                let i = 10;
-                i <= 30;
-                i += 10
-            ) {
-
-                await new Promise(
-                    resolve =>
-                        setTimeout(
-                            resolve,
-                            120
-                        )
-                );
-
-                setProgress(
-                    i,
-                    "Processing..."
-                );
-            }
-
-            outputBlob =
-                await performConversion();
-
-            setProgress(
-                70,
-                "Creating file..."
-            );
-
-            await new Promise(
-                resolve =>
-                    setTimeout(
-                        resolve,
-                        250
-                    )
-            );
-
-            setProgress(
-                90,
-                "Finishing..."
-            );
-
-            await new Promise(
-                resolve =>
-                    setTimeout(
-                        resolve,
-                        250
-                    )
-            );
-
-            const original =
-                currentFile.name.replace(
-                    /\.[^/.]+$/,
-                    ""
-                );
-
-            outputName =
-                original +
-                "." +
-                selectedFormat.toLowerCase();
-
-            resultName.textContent =
-                outputName;
-
-            setProgress(
-                100,
-                "Complete"
-            );
-
-            await new Promise(
-                resolve =>
-                    setTimeout(
-                        resolve,
-                        300
-                    )
-            );
-
-            resultSection.classList.remove(
-                "hidden"
-            );
-
-        } catch (error) {
-
-            progressSection.classList.add(
-                "hidden"
-            );
-
-            toastMessage(
-                error.message ||
-                "Conversion failed."
-            );
-
-        } finally {
-
-            convertButton.disabled = false;
-        }
+downloadButton.addEventListener("click", () => {
+    if (!outputBlob) {
+        showToast("No converted file.");
+        return;
     }
-);
 
-downloadButton.addEventListener(
-    "click",
-    event => {
+    const url = URL.createObjectURL(outputBlob);
 
-        event.preventDefault();
-        event.stopPropagation();
+    const link = document.createElement("a");
 
-        if (!outputBlob) {
-            toastMessage(
-                "No converted file."
-            );
-            return;
-        }
+    link.href = url;
+    link.download = outputName;
 
-        const url =
-            URL.createObjectURL(
-                outputBlob
-            );
+    document.body.appendChild(link);
 
-        const link =
-            document.createElement("a");
+    link.click();
 
-        link.href = url;
-        link.download = outputName;
+    link.remove();
 
-        document.body.appendChild(link);
+    setTimeout(() => {
+        URL.reokeObjectURL(url);
+    }, 1000);
+});
 
-        link.click();
+modeButton.addEventListener("click", () => {
+    document.body.classList.toggle("light");
 
-        link.remove();
-
-        setTimeout(() => {
-            URL.revokeObjectURL(url);
-        }, 1000);
+    if (document.body.classList.contains("light")) {
+        modeButton.textContent = "☀ Light";
+    } else {
+        modeButton.textContent = "☾ Dark";
     }
-);
-
-function setDeviceMode(mode) {
-
-    document.body.classList.remove(
-        "phone-mode",
-        "desktop-mode"
-    );
-
-    document.body.classList.add(
-        mode + "-mode"
-    );
-
-    phoneMode.classList.toggle(
-        "active",
-        mode === "phone"
-    );
-
-    desktopMode.classList.toggle(
-        "active",
-        mode === "desktop"
-    );
-
-    localStorage.setItem(
-        "convertx-device",
-        mode
-    );
-}
-
-phoneMode.addEventListener(
-    "click",
-    () => {
-        setDeviceMode("phone");
-    }
-);
-
-desktopMode.addEventListener(
-    "click",
-    () => {
-        setDeviceMode("desktop");
-    }
-);
-
-const savedMode =
-    localStorage.getItem(
-        "convertx-device"
-    );
-
-if (
-    savedMode === "phone" ||
-    savedMode === "desktop"
-) {
-
-    setDeviceMode(savedMode);
-
-} else {
-
-    const phone =
-        window.matchMedia(
-            "(max-width: 650px)"
-        ).matches;
-
-    setDeviceMode(
-        phone
-            ? "phone"
-            : "desktop"
-    );
-}
-
-modeButton.addEventListener(
-    "click",
-    () => {
-
-        document.body.classList.toggle(
-            "light"
-        );
-
-        if (
-            document.body.classList.contains(
-                "light"
-            )
-        ) {
-
-            modeButton.textContent =
-                "☀ Light";
-
-        } else {
-
-            modeButton.textContent =
-                "☾ Dark";
-        }
-    }
-);
-
-/* ConvertX typing animation */
+});
 
 let typingIndex = 0;
 let deleting = false;
 
-function typingAnimation() {
-
+function typeAnimation() {
     const text = "ConvertX";
 
     if (!deleting) {
+        typingText.textContent =
+            text.substring(0, typingIndex + 1);
 
         typingIndex++;
 
-        document.getElementById(
-            "typingText"
-        ).textContent =
-            text.substring(
-                0,
-                typingIndex
-            );
-
-        if (
-            typingIndex >= text.length
-        ) {
-
+        if (typingIndex === text.length) {
             deleting = true;
 
-            setTimeout(
-                typingAnimation,
-                1200
-            );
-
+            setTimeout(typeAnimation, 1200);
             return;
         }
-
     } else {
+        typingText.textContent =
+            text.substring(0, typingIndex - 1);
 
         typingIndex--;
 
-        document.getElementById(
-            "typingText"
-        ).textContent =
-            text.substring(
-                0,
-                typingIndex
-            );
-
-        if (
-            typingIndex <= 0
-        ) {
+        if (typingIndex === 0) {
             deleting = false;
         }
     }
 
     setTimeout(
-        typingAnimation,
-        deleting ? 80 : 180
+        typeAnimation,
+        deleting ? 90 : 180
     );
 }
 
-typingAnimation();
+typeAnimation();
