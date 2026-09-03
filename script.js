@@ -1,25 +1,17 @@
 "use strict";
 
-
 /* =========================
    DOM
 ========================= */
 
-const typeCards =
-    document.querySelectorAll(".type-card");
+const typeCards = document.querySelectorAll(".type-card");
 
-const toolSection =
-    document.getElementById("toolSection");
-
+const toolSection = document.getElementById("toolSection");
 const selectedTypeText =
     document.getElementById("selectedTypeText");
 
-const fileBox =
-    document.getElementById("fileBox");
-
-const emptyFile =
-    document.getElementById("emptyFile");
-
+const fileBox = document.getElementById("fileBox");
+const emptyFile = document.getElementById("emptyFile");
 const selectedFile =
     document.getElementById("selectedFile");
 
@@ -90,14 +82,12 @@ const toast =
 
 let selectedType = "";
 let selectedFormat = "";
-
 let currentFile = null;
 
 let outputBlob = null;
 let outputName = "";
 
 let previewURL = null;
-
 let toastTimer = null;
 
 
@@ -106,21 +96,9 @@ let toastTimer = null;
 ========================= */
 
 const formats = {
-
-    picture: [
-        "PNG",
-        "JPG",
-        "WEBP"
-    ],
-
-    sound: [
-        "WAV"
-    ],
-
-    video: [
-        "MP4"
-    ]
-
+    picture: ["PNG", "JPG", "WEBP"],
+    sound: ["WAV"],
+    video: ["MP4"]
 };
 
 
@@ -135,21 +113,13 @@ function showToast(message) {
     }
 
     toast.textContent = message;
-
     toast.classList.add("show");
 
     clearTimeout(toastTimer);
 
-    toastTimer = setTimeout(
-        function () {
-
-            toast.classList.remove(
-                "show"
-            );
-
-        },
-        2500
-    );
+    toastTimer = setTimeout(function () {
+        toast.classList.remove("show");
+    }, 2500);
 }
 
 
@@ -159,11 +129,7 @@ function showToast(message) {
 
 function formatBytes(bytes) {
 
-    if (!Number.isFinite(bytes)) {
-        return "0 B";
-    }
-
-    if (bytes === 0) {
+    if (!bytes || bytes <= 0) {
         return "0 B";
     }
 
@@ -176,28 +142,19 @@ function formatBytes(bytes) {
 
     const index =
         Math.floor(
-            Math.log(bytes) /
-            Math.log(1024)
+            Math.log(bytes) / Math.log(1024)
         );
 
     const safeIndex =
-        Math.min(
-            index,
-            units.length - 1
-        );
+        Math.min(index, units.length - 1);
 
     const value =
         bytes /
-        Math.pow(
-            1024,
-            safeIndex
-        );
+        Math.pow(1024, safeIndex);
 
     return (
         value.toFixed(
-            safeIndex === 0
-                ? 0
-                : 2
+            safeIndex === 0 ? 0 : 2
         ) +
         " " +
         units[safeIndex]
@@ -209,18 +166,16 @@ function formatBytes(bytes) {
    WAIT
 ========================= */
 
-function wait(ms) {
+function wait(milliseconds) {
 
-    return new Promise(
-        function (resolve) {
+    return new Promise(function (resolve) {
 
-            setTimeout(
-                resolve,
-                ms
-            );
+        setTimeout(
+            resolve,
+            milliseconds
+        );
 
-        }
-    );
+    });
 }
 
 
@@ -228,34 +183,25 @@ function wait(ms) {
    PROGRESS
 ========================= */
 
-function setProgress(
-    percent,
-    message
-) {
+function setProgress(percent, message) {
 
-    const value =
+    const safePercent =
         Math.max(
             0,
-            Math.min(
-                100,
-                percent
-            )
+            Math.min(100, percent)
         );
 
     if (progressBar) {
         progressBar.style.width =
-            value + "%";
+            safePercent + "%";
     }
 
     if (progressNumber) {
         progressNumber.textContent =
-            Math.round(value) + "%";
+            Math.round(safePercent) + "%";
     }
 
-    if (
-        progressText &&
-        message
-    ) {
+    if (progressText) {
         progressText.textContent =
             message;
     }
@@ -266,24 +212,20 @@ function setProgress(
    RENAME FILE
 ========================= */
 
-function renameFile(
-    name,
-    extension
-) {
+function renameFile(name, extension) {
 
-    const dot =
+    const dotIndex =
         name.lastIndexOf(".");
 
-    const base =
-        dot > 0
-            ? name.substring(
-                0,
-                dot
-            )
-            : name;
+    let baseName = name;
+
+    if (dotIndex > 0) {
+        baseName =
+            name.substring(0, dotIndex);
+    }
 
     return (
-        base +
+        baseName +
         "." +
         extension.toLowerCase()
     );
@@ -297,22 +239,20 @@ function renameFile(
 function chooseType(type) {
 
     selectedType = type;
-
     selectedFormat = "";
 
     outputBlob = null;
     outputName = "";
 
-    typeCards.forEach(
-        function (card) {
+    typeCards.forEach(function (card) {
 
-            card.classList.toggle(
-                "selected",
-                card.dataset.type === type
-            );
+        card.classList.toggle(
+            "selected",
+            card.dataset.type === type
+        );
 
-        }
-    );
+    });
+
 
     if (selectedTypeText) {
 
@@ -333,13 +273,14 @@ function chooseType(type) {
         }
     }
 
+
     if (toolSection) {
-        toolSection.classList.remove(
-            "hidden"
-        );
+        toolSection.classList.remove("hidden");
     }
 
+
     resetFile();
+
 
     if (fileInput) {
 
@@ -360,22 +301,22 @@ function chooseType(type) {
         }
     }
 
+
     createFormats();
 
-    if (toolSection) {
 
-        setTimeout(
-            function () {
+    setTimeout(function () {
 
-                toolSection.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start"
-                });
+        if (toolSection) {
 
-            },
-            80
-        );
-    }
+            toolSection.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+        }
+
+    }, 80);
 }
 
 
@@ -383,22 +324,20 @@ function chooseType(type) {
    TYPE BUTTONS
 ========================= */
 
-typeCards.forEach(
-    function (card) {
+typeCards.forEach(function (card) {
 
-        card.addEventListener(
-            "click",
-            function () {
+    card.addEventListener(
+        "click",
+        function () {
 
-                chooseType(
-                    card.dataset.type
-                );
+            const type =
+                card.dataset.type;
 
-            }
-        );
+            chooseType(type);
+        }
+    );
 
-    }
-);
+});
 
 
 /* =========================
@@ -409,10 +348,11 @@ function resetFile() {
 
     currentFile = null;
 
-    selectedFormat = "";
-
     outputBlob = null;
     outputName = "";
+
+    selectedFormat = "";
+
 
     if (previewURL) {
 
@@ -423,9 +363,11 @@ function resetFile() {
         previewURL = null;
     }
 
+
     if (fileInput) {
         fileInput.value = "";
     }
+
 
     if (emptyFile) {
         emptyFile.classList.remove(
@@ -433,25 +375,28 @@ function resetFile() {
         );
     }
 
+
     if (selectedFile) {
         selectedFile.classList.add(
             "hidden"
         );
     }
 
+
     if (preview) {
         preview.innerHTML = "";
     }
 
+
     if (fileName) {
-        fileName.textContent =
-            "File";
+        fileName.textContent = "File";
     }
 
+
     if (fileSize) {
-        fileSize.textContent =
-            "0 B";
+        fileSize.textContent = "0 B";
     }
+
 
     if (convertSection) {
         convertSection.classList.add(
@@ -459,11 +404,13 @@ function resetFile() {
         );
     }
 
+
     if (progressSection) {
         progressSection.classList.add(
             "hidden"
         );
     }
+
 
     if (resultSection) {
         resultSection.classList.add(
@@ -471,20 +418,15 @@ function resetFile() {
         );
     }
 
-    if (convertButton) {
-        convertButton.disabled =
-            true;
-    }
 
-    setProgress(
-        0,
-        "Preparing..."
-    );
+    if (convertButton) {
+        convertButton.disabled = true;
+    }
 }
 
 
 /* =========================
-   VALIDATE FILE
+   FILE VALIDATION
 ========================= */
 
 function isValidFile(file) {
@@ -493,26 +435,41 @@ function isValidFile(file) {
         return false;
     }
 
+
     if (selectedType === "picture") {
 
-        return file.type.startsWith(
-            "image/"
+        return (
+            file.type.startsWith("image/") ||
+            /\.(png|jpe?g|webp|gif|bmp|avif)$/i.test(
+                file.name
+            )
         );
+
     }
+
 
     if (selectedType === "sound") {
 
-        return file.type.startsWith(
-            "audio/"
+        return (
+            file.type.startsWith("audio/") ||
+            /\.(mp3|wav|ogg|oga|m4a|aac|flac|webm)$/i.test(
+                file.name
+            )
         );
+
     }
+
 
     if (selectedType === "video") {
 
-        return file.type.startsWith(
-            "video/"
+        return (
+            file.type.startsWith("video/") ||
+            /\.(mp4|webm|mov|mkv|avi|m4v)$/i.test(
+                file.name
+            )
         );
     }
+
 
     return false;
 }
@@ -532,14 +489,16 @@ if (fileInput) {
                 fileInput.files &&
                 fileInput.files[0];
 
+
             if (!file) {
                 return;
             }
 
+
             if (!isValidFile(file)) {
 
                 showToast(
-                    "That file does not match the selected type."
+                    "This file type is not supported here."
                 );
 
                 fileInput.value = "";
@@ -547,8 +506,8 @@ if (fileInput) {
                 return;
             }
 
-            showSelectedFile(file);
 
+            showSelectedFile(file);
         }
     );
 }
@@ -564,6 +523,8 @@ function showSelectedFile(file) {
 
     outputBlob = null;
     outputName = "";
+    selectedFormat = "";
+
 
     if (previewURL) {
 
@@ -572,10 +533,10 @@ function showSelectedFile(file) {
         );
     }
 
+
     previewURL =
-        URL.createObjectURL(
-            file
-        );
+        URL.createObjectURL(file);
+
 
     if (emptyFile) {
         emptyFile.classList.add(
@@ -583,37 +544,35 @@ function showSelectedFile(file) {
         );
     }
 
+
     if (selectedFile) {
         selectedFile.classList.remove(
             "hidden"
         );
     }
 
+
     if (fileName) {
         fileName.textContent =
             file.name;
     }
 
+
     if (fileSize) {
         fileSize.textContent =
-            formatBytes(
-                file.size
-            );
+            formatBytes(file.size);
     }
+
 
     if (preview) {
 
         preview.innerHTML = "";
 
-        if (
-            selectedType ===
-            "picture"
-        ) {
+
+        if (selectedType === "picture") {
 
             const image =
-                document.createElement(
-                    "img"
-                );
+                document.createElement("img");
 
             image.src =
                 previewURL;
@@ -625,44 +584,30 @@ function showSelectedFile(file) {
                 image
             );
 
-        } else if (
-            selectedType ===
-            "sound"
-        ) {
+
+        } else if (selectedType === "sound") {
 
             const audio =
-                document.createElement(
-                    "audio"
-                );
+                document.createElement("audio");
 
             audio.controls = true;
-            audio.preload =
-                "metadata";
-
-            audio.src =
-                previewURL;
+            audio.preload = "metadata";
+            audio.src = previewURL;
 
             preview.appendChild(
                 audio
             );
 
-        } else if (
-            selectedType ===
-            "video"
-        ) {
+
+        } else if (selectedType === "video") {
 
             const video =
-                document.createElement(
-                    "video"
-                );
+                document.createElement("video");
 
             video.controls = true;
             video.playsInline = true;
-            video.preload =
-                "metadata";
-
-            video.src =
-                previewURL;
+            video.preload = "metadata";
+            video.src = previewURL;
 
             preview.appendChild(
                 video
@@ -670,26 +615,25 @@ function showSelectedFile(file) {
         }
     }
 
+
     if (convertSection) {
+
         convertSection.classList.remove(
             "hidden"
         );
     }
 
+
     if (convertButton) {
-        convertButton.disabled =
-            true;
+
+        convertButton.disabled = true;
     }
+
 
     if (conversionText) {
+
         conversionText.textContent =
             "Choose an output format";
-    }
-
-    if (resultSection) {
-        resultSection.classList.add(
-            "hidden"
-        );
     }
 }
 
@@ -704,29 +648,28 @@ function createFormats() {
         return;
     }
 
+
     formatGrid.innerHTML = "";
 
-    selectedFormat = "";
 
-    const list =
+    const availableFormats =
         formats[selectedType] || [];
 
-    list.forEach(
+
+    availableFormats.forEach(
         function (format) {
 
             const button =
-                document.createElement(
-                    "button"
-                );
+                document.createElement("button");
 
-            button.type =
-                "button";
+            button.type = "button";
 
             button.className =
                 "format-button";
 
             button.textContent =
                 format;
+
 
             button.addEventListener(
                 "click",
@@ -735,22 +678,28 @@ function createFormats() {
                     selectedFormat =
                         format;
 
-                    formatGrid
-                        .querySelectorAll(
+
+                    const allButtons =
+                        formatGrid.querySelectorAll(
                             ".format-button"
-                        )
-                        .forEach(
-                            function (
-                                item
-                            ) {
-
-                                item.classList.toggle(
-                                    "selected",
-                                    item === button
-                                );
-
-                            }
                         );
+
+
+                    allButtons.forEach(
+                        function (item) {
+
+                            item.classList.remove(
+                                "selected"
+                            );
+
+                        }
+                    );
+
+
+                    button.classList.add(
+                        "selected"
+                    );
+
 
                     if (conversionText) {
 
@@ -759,15 +708,16 @@ function createFormats() {
                             format;
                     }
 
+
                     if (convertButton) {
 
                         convertButton.disabled =
-                            !currentFile ||
-                            !selectedFormat;
+                            !currentFile;
                     }
 
                 }
             );
+
 
             formatGrid.appendChild(
                 button
@@ -793,6 +743,9 @@ if (removeFile) {
 
             resetFile();
 
+            showToast(
+                "File removed."
+            );
         }
     );
 }
@@ -808,27 +761,28 @@ if (convertButton) {
         "click",
         async function () {
 
-            if (
-                !currentFile ||
-                !selectedFormat
-            ) {
+            if (!currentFile) {
 
                 showToast(
-                    "Choose a file and format first."
+                    "Choose a file first."
                 );
 
                 return;
             }
 
-            convertButton.disabled =
-                true;
 
-            if (progressSection) {
+            if (!selectedFormat) {
 
-                progressSection.classList.remove(
-                    "hidden"
+                showToast(
+                    "Choose an output format."
                 );
+
+                return;
             }
+
+
+            convertButton.disabled = true;
+
 
             if (resultSection) {
 
@@ -837,10 +791,20 @@ if (convertButton) {
                 );
             }
 
+
+            if (progressSection) {
+
+                progressSection.classList.remove(
+                    "hidden"
+                );
+            }
+
+
             setProgress(
-                5,
+                0,
                 "Preparing..."
             );
+
 
             try {
 
@@ -848,9 +812,8 @@ if (convertButton) {
 
             } catch (error) {
 
-                console.error(
-                    error
-                );
+                console.error(error);
+
 
                 if (progressSection) {
 
@@ -859,12 +822,16 @@ if (convertButton) {
                     );
                 }
 
+
                 convertButton.disabled =
                     false;
 
+
                 showToast(
-                    error.message ||
-                    "Conversion failed."
+                    error &&
+                    error.message
+                        ? error.message
+                        : "Conversion failed."
                 );
             }
 
@@ -879,26 +846,35 @@ if (convertButton) {
 
 async function performConversion() {
 
-    if (selectedType === "picture") {
+    if (
+        selectedType === "picture"
+    ) {
 
         await convertImage();
 
         return;
     }
 
-    if (selectedType === "sound") {
+
+    if (
+        selectedType === "sound"
+    ) {
 
         await convertAudioToWav();
 
         return;
     }
 
-    if (selectedType === "video") {
+
+    if (
+        selectedType === "video"
+    ) {
 
         await convertVideo();
 
         return;
     }
+
 
     throw new Error(
         "Unknown conversion type."
@@ -913,17 +889,24 @@ async function performConversion() {
 async function convertImage() {
 
     setProgress(
-        15,
+        10,
         "Loading picture..."
     );
+
 
     const image =
         new Image();
 
-    image.src =
+
+    const imageURL =
         URL.createObjectURL(
             currentFile
         );
+
+
+    image.src =
+        imageURL;
+
 
     await new Promise(
         function (resolve, reject) {
@@ -945,15 +928,18 @@ async function convertImage() {
         }
     );
 
+
     setProgress(
-        40,
+        35,
         "Processing picture..."
     );
+
 
     const canvas =
         document.createElement(
             "canvas"
         );
+
 
     canvas.width =
         image.naturalWidth;
@@ -961,17 +947,24 @@ async function convertImage() {
     canvas.height =
         image.naturalHeight;
 
+
     const context =
         canvas.getContext(
             "2d"
         );
 
+
     if (!context) {
+
+        URL.revokeObjectURL(
+            imageURL
+        );
 
         throw new Error(
             "Canvas is not supported."
         );
     }
+
 
     context.drawImage(
         image,
@@ -979,17 +972,21 @@ async function convertImage() {
         0
     );
 
+
     URL.revokeObjectURL(
-        image.src
+        imageURL
     );
 
+
     setProgress(
-        70,
+        65,
         "Creating output..."
     );
 
+
     let mimeType =
         "image/png";
+
 
     if (
         selectedFormat === "JPG"
@@ -1006,6 +1003,7 @@ async function convertImage() {
             "image/webp";
     }
 
+
     const blob =
         await new Promise(
             function (resolve) {
@@ -1019,15 +1017,18 @@ async function convertImage() {
             }
         );
 
+
     if (!blob) {
 
         throw new Error(
-            "Your browser could not create the image."
+            "Could not create the image."
         );
     }
 
+
     outputBlob =
         blob;
+
 
     outputName =
         renameFile(
@@ -1035,138 +1036,148 @@ async function convertImage() {
             selectedFormat
         );
 
+
     setProgress(
         100,
         "Done"
     );
+
 
     await finishConversion();
 }
 
 
 /* =========================
-   AUDIO → WAV
+   AUDIO TO WAV
 ========================= */
 
 async function convertAudioToWav() {
 
     setProgress(
-        15,
+        10,
         "Reading audio..."
     );
 
-    const arrayBuffer =
-        await currentFile.arrayBuffer();
 
-    setProgress(
-        35,
-        "Decoding audio..."
-    );
-
-    const AudioContext =
+    const AudioContextClass =
         window.AudioContext ||
         window.webkitAudioContext;
 
-    if (!AudioContext) {
+
+    if (!AudioContextClass) {
 
         throw new Error(
-            "Audio conversion is not supported in this browser."
+            "Your browser does not support audio conversion."
         );
     }
 
-    const context =
-        new AudioContext();
 
-    let audioBuffer;
+    const audioContext =
+        new AudioContextClass();
+
 
     try {
 
-        audioBuffer =
-            await context.decodeAudioData(
+        setProgress(
+            30,
+            "Decoding audio..."
+        );
+
+
+        const arrayBuffer =
+            await currentFile.arrayBuffer();
+
+
+        const audioBuffer =
+            await audioContext.decodeAudioData(
                 arrayBuffer
             );
 
-    } catch (error) {
 
-        throw new Error(
-            "This audio format cannot be decoded by your browser."
+        setProgress(
+            60,
+            "Creating WAV..."
         );
+
+
+        outputBlob =
+            encodeWAV(
+                audioBuffer
+            );
+
+
+        outputName =
+            renameFile(
+                currentFile.name,
+                "WAV"
+            );
+
+
+        setProgress(
+            100,
+            "Done"
+        );
+
+
+        await finishConversion();
 
     } finally {
 
-        if (
-            context.close
-        ) {
+        try {
 
-            try {
-                await context.close();
-            } catch (error) {
-                console.warn(error);
-            }
+            await audioContext.close();
 
+        } catch (error) {
+
+            console.warn(
+                "Audio context close failed",
+                error
+            );
         }
     }
-
-    setProgress(
-        65,
-        "Encoding WAV..."
-    );
-
-    outputBlob =
-        encodeWAV(
-            audioBuffer
-        );
-
-    outputName =
-        renameFile(
-            currentFile.name,
-            "WAV"
-        );
-
-    setProgress(
-        100,
-        "Done"
-    );
-
-    await finishConversion();
 }
 
 
 /* =========================
-   ENCODE WAV
+   WAV ENCODER
 ========================= */
 
 function encodeWAV(audioBuffer) {
 
     const channels =
-        audioBuffer.numberOfChannels;
+        Math.min(
+            audioBuffer.numberOfChannels,
+            2
+        );
+
 
     const sampleRate =
         audioBuffer.sampleRate;
 
+
     const length =
         audioBuffer.length;
 
-    const bytesPerSample =
-        2;
 
     const blockAlign =
-        channels *
-        bytesPerSample;
+        channels * 2;
+
 
     const dataSize =
-        length *
-        blockAlign;
+        length * blockAlign;
+
 
     const buffer =
         new ArrayBuffer(
             44 + dataSize
         );
 
+
     const view =
         new DataView(
             buffer
         );
+
 
     writeString(
         view,
@@ -1174,11 +1185,13 @@ function encodeWAV(audioBuffer) {
         "RIFF"
     );
 
+
     view.setUint32(
         4,
         36 + dataSize,
         true
     );
+
 
     writeString(
         view,
@@ -1186,17 +1199,20 @@ function encodeWAV(audioBuffer) {
         "WAVE"
     );
 
+
     writeString(
         view,
         12,
         "fmt "
     );
 
+
     view.setUint32(
         16,
         16,
         true
     );
+
 
     view.setUint16(
         20,
@@ -1204,11 +1220,13 @@ function encodeWAV(audioBuffer) {
         true
     );
 
+
     view.setUint16(
         22,
         channels,
         true
     );
+
 
     view.setUint32(
         24,
@@ -1216,12 +1234,13 @@ function encodeWAV(audioBuffer) {
         true
     );
 
+
     view.setUint32(
         28,
-        sampleRate *
-        blockAlign,
+        sampleRate * blockAlign,
         true
     );
+
 
     view.setUint16(
         32,
@@ -1229,11 +1248,13 @@ function encodeWAV(audioBuffer) {
         true
     );
 
+
     view.setUint16(
         34,
         16,
         true
     );
+
 
     writeString(
         view,
@@ -1241,76 +1262,98 @@ function encodeWAV(audioBuffer) {
         "data"
     );
 
+
     view.setUint32(
         40,
         dataSize,
         true
     );
 
-    const channelData = [];
-
-    for (
-        let channel = 0;
-        channel < channels;
-        channel++
-    ) {
-
-        channelData.push(
-            audioBuffer.getChannelData(
-                channel
-            )
-        );
-
-    }
 
     let offset = 44;
 
+
+    const leftChannel =
+        audioBuffer.getChannelData(0);
+
+
+    let rightChannel = null;
+
+
+    if (channels === 2) {
+
+        rightChannel =
+            audioBuffer.getChannelData(1);
+    }
+
+
     for (
-        let sample = 0;
-        sample < length;
-        sample++
+        let i = 0;
+        i < length;
+        i++
     ) {
 
-        for (
-            let channel = 0;
-            channel < channels;
-            channel++
-        ) {
+        let left =
+            Math.max(
+                -1,
+                Math.min(
+                    1,
+                    leftChannel[i]
+                )
+            );
 
-            let value =
-                channelData[
-                    channel
-                ][sample];
 
-            value =
+        left =
+            left < 0
+                ? left * 0x8000
+                : left * 0x7fff;
+
+
+        view.setInt16(
+            offset,
+            left,
+            true
+        );
+
+
+        if (channels === 2) {
+
+            let right =
                 Math.max(
                     -1,
                     Math.min(
                         1,
-                        value
+                        rightChannel[i]
                     )
                 );
 
-            const intValue =
-                value < 0
-                    ? value * 0x8000
-                    : value * 0x7fff;
+
+            right =
+                right < 0
+                    ? right * 0x8000
+                    : right * 0x7fff;
+
 
             view.setInt16(
-                offset,
-                intValue,
+                offset + 2,
+                right,
                 true
             );
+
+
+            offset += 4;
+
+        } else {
 
             offset += 2;
         }
     }
 
+
     return new Blob(
         [buffer],
         {
-            type:
-                "audio/wav"
+            type: "audio/wav"
         }
     );
 }
@@ -1323,20 +1366,19 @@ function encodeWAV(audioBuffer) {
 function writeString(
     view,
     offset,
-    text
+    string
 ) {
 
     for (
         let i = 0;
-        i < text.length;
+        i < string.length;
         i++
     ) {
 
         view.setUint8(
             offset + i,
-            text.charCodeAt(i)
+            string.charCodeAt(i)
         );
-
     }
 }
 
@@ -1347,36 +1389,42 @@ function writeString(
 
 async function convertVideo() {
 
-    setProgress(
-        35,
-        "Checking video..."
-    );
-
     const isMP4 =
-        currentFile.type ===
-            "video/mp4" ||
+        currentFile.type === "video/mp4" ||
         /\.mp4$/i.test(
             currentFile.name
         );
 
+
     if (!isMP4) {
 
         throw new Error(
-            "Browser-only ConvertX cannot transcode this video to MP4 yet."
+            "Browser-only ConvertX cannot convert this video to MP4 yet."
         );
     }
 
-    await wait(400);
 
     setProgress(
-        75,
+        40,
         "Preparing MP4..."
     );
 
+
+    await wait(500);
+
+
+    setProgress(
+        80,
+        "Finalizing..."
+    );
+
+
     await wait(400);
+
 
     outputBlob =
         currentFile;
+
 
     outputName =
         renameFile(
@@ -1384,22 +1432,25 @@ async function convertVideo() {
             "MP4"
         );
 
+
     setProgress(
         100,
         "Done"
     );
+
 
     await finishConversion();
 }
 
 
 /* =========================
-   FINISH CONVERSION
+   FINISH
 ========================= */
 
 async function finishConversion() {
 
-    await wait(250);
+    await wait(300);
+
 
     if (progressSection) {
 
@@ -1408,6 +1459,7 @@ async function finishConversion() {
         );
     }
 
+
     if (resultSection) {
 
         resultSection.classList.remove(
@@ -1415,11 +1467,13 @@ async function finishConversion() {
         );
     }
 
+
     if (resultName) {
 
         resultName.textContent =
             outputName;
     }
+
 
     if (convertButton) {
 
@@ -1427,8 +1481,26 @@ async function finishConversion() {
             false;
     }
 
+
     showToast(
-        "Conversion complete."
+        "Conversion complete!"
+    );
+
+
+    setTimeout(
+        function () {
+
+            if (resultSection) {
+
+                resultSection.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
+
+            }
+
+        },
+        100
     );
 }
 
@@ -1446,50 +1518,66 @@ if (downloadButton) {
             if (!outputBlob) {
 
                 showToast(
-                    "No converted file available."
+                    "No file to download."
                 );
 
                 return;
             }
 
-            const url =
+
+            const downloadURL =
                 URL.createObjectURL(
                     outputBlob
                 );
 
-            const link =
+
+            const anchor =
                 document.createElement(
                     "a"
                 );
 
-            link.href =
-                url;
 
-            link.download =
+            anchor.href =
+                downloadURL;
+
+
+            anchor.download =
                 outputName ||
                 "converted-file";
 
+
+            anchor.style.display =
+                "none";
+
+
             document.body.appendChild(
-                link
+                anchor
             );
 
-            link.click();
+
+            anchor.click();
+
 
             document.body.removeChild(
-                link
+                anchor
             );
+
 
             setTimeout(
                 function () {
 
                     URL.revokeObjectURL(
-                        url
+                        downloadURL
                     );
 
                 },
                 1000
             );
 
+
+            showToast(
+                "Download started."
+            );
         }
     );
 }
@@ -1505,23 +1593,35 @@ if (phoneMode) {
         "click",
         function () {
 
-            document.body.classList.add(
+            document.body.classList.toggle(
                 "phone-mode"
             );
+
 
             document.body.classList.remove(
                 "desktop-mode"
             );
 
+
+            const enabled =
+                document.body.classList.contains(
+                    "phone-mode"
+                );
+
+
             localStorage.setItem(
                 "convertx-mode",
-                "phone"
+                enabled
+                    ? "phone"
+                    : ""
             );
+
 
             showToast(
-                "Phone mode enabled."
+                enabled
+                    ? "Phone mode enabled"
+                    : "Phone mode disabled"
             );
-
         }
     );
 }
@@ -1537,23 +1637,35 @@ if (desktopMode) {
         "click",
         function () {
 
-            document.body.classList.add(
+            document.body.classList.toggle(
                 "desktop-mode"
             );
+
 
             document.body.classList.remove(
                 "phone-mode"
             );
 
+
+            const enabled =
+                document.body.classList.contains(
+                    "desktop-mode"
+                );
+
+
             localStorage.setItem(
                 "convertx-mode",
-                "desktop"
+                enabled
+                    ? "desktop"
+                    : ""
             );
+
 
             showToast(
-                "Desktop mode enabled."
+                enabled
+                    ? "Desktop mode enabled"
+                    : "Desktop mode disabled"
             );
-
         }
     );
 }
@@ -1573,15 +1685,18 @@ if (themeButton) {
                 "light-theme"
             );
 
+
             const isLight =
                 document.body.classList.contains(
                     "light-theme"
                 );
 
+
             themeButton.textContent =
                 isLight
                     ? "🌙 Dark"
                     : "☀ Light";
+
 
             localStorage.setItem(
                 "convertx-theme",
@@ -1589,7 +1704,6 @@ if (themeButton) {
                     ? "light"
                     : "dark"
             );
-
         }
     );
 }
@@ -1606,6 +1720,7 @@ if (themeButton) {
             "convertx-theme"
         );
 
+
     const savedMode =
         localStorage.getItem(
             "convertx-mode"
@@ -1619,6 +1734,7 @@ if (themeButton) {
         document.body.classList.add(
             "light-theme"
         );
+
 
         if (themeButton) {
 
