@@ -1,164 +1,1343 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ConvertX</title>
-<link rel="stylesheet" href="style.css">
-</head>
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
 
-<body>
+html {
+    scroll-behavior: smooth;
+}
 
-<div class="background-name">
-    <span id="typingText"></span>
-    <span class="typing-cursor">|</span>
-</div>
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #080808;
+    color: #fff;
+    overflow-x: hidden;
+    transition: background .3s ease, color .3s ease;
+}
 
-<button id="modeButton" class="mode-button">☀ Light</button>
+button,
+input {
+    font: inherit;
+}
 
-<main class="container">
+button {
+    cursor: pointer;
+    touch-action: manipulation;
+}
 
-    <header class="header">
-        <div class="logo">C</div>
-        <h1>ConvertX</h1>
-        <p>Simple file conversion</p>
-    </header>
+.hidden {
+    display: none !important;
+}
 
-    <section class="type-section">
-        <h2>What do you want to convert?</h2>
 
-        <div class="type-grid">
+/* =========================
+   BACKGROUND
+========================= */
 
-            <button class="type-card" data-type="picture" type="button">
-                <div class="type-icon">🖼️</div>
-                <strong>Picture</strong>
-                <span>Convert image files</span>
-            </button>
+.background-name {
+    position: fixed;
+    inset: 0;
 
-            <button class="type-card" data-type="sound" type="button">
-                <div class="type-icon">🎵</div>
-                <strong>Sound</strong>
-                <span>Convert audio files</span>
-            </button>
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-            <button class="type-card" data-type="video" type="button">
-                <div class="type-icon">🎬</div>
-                <strong>Video</strong>
-                <span>Convert video files</span>
-            </button>
+    z-index: 0;
 
-        </div>
-    </section>
+    pointer-events: none;
+    user-select: none;
 
-    <section id="toolSection" class="tool-section" hidden>
+    font-size: clamp(60px, 15vw, 180px);
+    font-weight: 900;
 
-        <div class="tool-title">
-            <span class="tool-dot"></span>
-            <span id="selectedTypeText">Choose your file</span>
-        </div>
+    color: rgba(255, 255, 255, .035);
 
-        <div id="fileBox" class="file-box">
+    white-space: nowrap;
 
-            <div id="emptyFile" class="empty-file">
-                <div class="upload-icon">↑</div>
-                <h3>Add your file</h3>
-                <p>Tap here to choose a file</p>
-                <span class="file-hint">Your file stays on your device</span>
-            </div>
+    animation: backgroundFloat 5s ease-in-out infinite;
+}
 
-            <div id="selectedFile" class="selected-file" hidden>
+@keyframes backgroundFloat {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
 
-                <button
-                    id="removeFile"
-                    class="remove-file"
-                    type="button"
-                    aria-label="Remove file"
-                >×</button>
+    50% {
+        transform: translateY(-8px);
+    }
+}
 
-                <div id="preview" class="preview"></div>
+.cursor {
+    opacity: .5;
+    animation: blink .8s infinite;
+}
 
-                <div class="file-information">
-                    <strong id="fileName">File</strong>
-                    <span id="fileSize">0 B</span>
-                </div>
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+}
 
-            </div>
 
-            <input id="fileInput" type="file" hidden>
+/* =========================
+   TOP CONTROLS
+========================= */
 
-        </div>
+.top-controls {
+    position: fixed;
+    top: 15px;
+    right: 15px;
 
-        <div id="convertSection" class="convert-section" hidden>
+    z-index: 9999;
 
-            <h2>Convert to</h2>
+    display: flex;
+    gap: 7px;
+}
 
-            <div id="formatGrid" class="format-grid"></div>
+.top-controls button {
+    min-width: 42px;
+    height: 40px;
 
-            <p id="conversionText" class="conversion-text">
-                Choose an output format
-            </p>
+    padding: 0 10px;
 
-            <button
-                id="convertButton"
-                class="convert-button"
-                type="button"
-                disabled
-            >Convert</button>
+    border: 1px solid #333;
+    border-radius: 11px;
 
-        </div>
+    background: rgba(20, 20, 20, .96);
+    color: #fff;
 
-        <div id="progressSection" class="progress-section" hidden>
+    font-weight: bold;
 
-            <div class="progress-header">
-                <span id="progressText">Preparing...</span>
-                <strong id="progressNumber">0%</strong>
-            </div>
+    transition:
+        transform .15s ease,
+        background .2s ease,
+        color .2s ease,
+        border-color .2s ease;
+}
 
-            <div class="progress-track">
-                <div id="progressBar" class="progress-bar"></div>
-            </div>
+.top-controls button:hover {
+    border-color: #fff;
+}
 
-        </div>
+.top-controls button:active {
+    transform: scale(.92);
+}
 
-        <div id="resultSection" class="result-section" hidden>
+.top-controls button.active {
+    background: #fff;
+    color: #000;
+}
 
-            <div class="success-icon">✓</div>
 
-            <h2>Conversion complete</h2>
+/* =========================
+   MAIN
+========================= */
 
-            <p id="resultName">file</p>
+.container {
+    position: relative;
+    z-index: 10;
 
-            <button
-                id="downloadButton"
-                class="download-button"
-                type="button"
-            >↓ Download</button>
+    width: min(900px, calc(100% - 30px));
 
-        </div>
+    margin: auto;
 
-    </section>
+    padding: 100px 0 30px;
+}
 
-    <div class="big-space"></div>
 
-    <footer class="footer">
-        <p>Make By Vathana</p>
-        <p>Code By Vathana</p>
-        <p>Social media</p>
+/* =========================
+   HEADER
+========================= */
 
-        <a
-            href="https://tiktok.com/@vathana1200"
-            target="_blank"
-            rel="noopener noreferrer"
-        >
-            TikTok: Vathana Gaming
-        </a>
-    </footer>
+.header {
+    text-align: center;
+    margin-bottom: 60px;
 
-</main>
+    animation: pageAppear .7s ease both;
+}
 
-<div id="toast" class="toast"></div>
+@keyframes pageAppear {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
 
-<script src="script.js"></script>
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
-</body>
-</html>
+.logo {
+    width: 72px;
+    height: 72px;
+
+    margin: auto;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 20px;
+
+    background: #fff;
+    color: #000;
+
+    font-size: 40px;
+    font-weight: 900;
+
+    box-shadow:
+        0 15px 45px rgba(255, 255, 255, .08);
+
+    animation: logoFloat 2.5s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+    0%,
+    100% {
+        transform:
+            translateY(0)
+            rotate(0deg);
+    }
+
+    50% {
+        transform:
+            translateY(-8px)
+            rotate(2deg);
+    }
+}
+
+.header h1 {
+    margin: 20px 0 8px;
+    font-size: 46px;
+
+    animation: titleGlow 3s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+    0%,
+    100% {
+        text-shadow: 0 0 0 transparent;
+    }
+
+    50% {
+        text-shadow:
+            0 0 25px rgba(255, 255, 255, .15);
+    }
+}
+
+.header p {
+    margin: 0;
+    color: #999;
+}
+
+
+/* =========================
+   TYPE SECTION
+========================= */
+
+.type-section {
+    text-align: center;
+}
+
+.type-section h2,
+.convert-section h2 {
+    font-size: 24px;
+}
+
+.type-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 18px;
+
+    margin-top: 25px;
+}
+
+.type-card {
+    min-height: 180px;
+
+    padding: 25px 15px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+
+    border: 1px solid #292929;
+    border-radius: 20px;
+
+    background: #111;
+    color: #fff;
+
+    transition:
+        transform .2s ease,
+        border-color .2s ease,
+        background .2s ease,
+        box-shadow .2s ease;
+}
+
+.type-card:hover {
+    transform: translateY(-6px);
+
+    border-color: #fff;
+
+    box-shadow:
+        0 15px 35px rgba(0, 0, 0, .3);
+}
+
+.type-card:active {
+    transform: scale(.96);
+}
+
+.type-card.active {
+    background: #fff;
+    color: #000;
+
+    box-shadow:
+        0 15px 40px rgba(255, 255, 255, .08);
+}
+
+.type-icon {
+    font-size: 42px;
+
+    transition:
+        transform .2s ease;
+}
+
+.type-card:hover .type-icon {
+    transform:
+        scale(1.12)
+        rotate(-3deg);
+}
+
+.type-card small {
+    color: #999;
+}
+
+.type-card.active small {
+    color: #555;
+}
+
+
+/* =========================
+   TOOL
+========================= */
+
+.tool-section {
+    margin-top: 70px;
+
+    animation:
+        sectionIn .45s ease both;
+}
+
+@keyframes sectionIn {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tool-title {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 15px;
+}
+
+.tool-title span {
+    width: 10px;
+    height: 10px;
+
+    flex: 0 0 10px;
+
+    border-radius: 50%;
+
+    background: #00ff88;
+
+    box-shadow:
+        0 0 15px rgba(0, 255, 136, .5);
+
+    animation:
+        dotPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+    50% {
+        transform: scale(1.35);
+
+        box-shadow:
+            0 0 25px rgba(0, 255, 136, .7);
+    }
+}
+
+
+/* =========================
+   FILE BOX
+========================= */
+
+.file-box {
+    position: relative;
+
+    min-height: 230px;
+
+    border: 2px dashed #333;
+    border-radius: 22px;
+
+    background: #101010;
+
+    display: grid;
+    place-items: center;
+
+    text-align: center;
+
+    overflow: hidden;
+
+    transition:
+        border-color .2s ease,
+        transform .2s ease;
+}
+
+.file-box:hover {
+    border-color: #777;
+}
+
+.file-box:active {
+    border-color: #fff;
+}
+
+
+/* Native file picker */
+
+#fileInput {
+    position: absolute;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    opacity: 0;
+
+    cursor: pointer;
+
+    z-index: 5;
+}
+
+
+/* Empty file */
+
+#emptyFile {
+    position: relative;
+
+    z-index: 2;
+
+    padding: 20px;
+
+    pointer-events: none;
+
+    animation:
+        uploadFloat 2s ease-in-out infinite;
+}
+
+@keyframes uploadFloat {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-4px);
+    }
+}
+
+.upload-icon {
+    width: 55px;
+    height: 55px;
+
+    margin: auto;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 50%;
+
+    background: #fff;
+    color: #000;
+
+    font-size: 30px;
+}
+
+#emptyFile h3 {
+    margin: 14px 0 6px;
+}
+
+#emptyFile p {
+    margin: 0;
+    color: #aaa;
+}
+
+#emptyFile small {
+    display: block;
+    margin-top: 8px;
+    color: #666;
+}
+
+
+/* =========================
+   SELECTED FILE
+========================= */
+
+.selected-file {
+    position: relative;
+
+    z-index: 20;
+
+    width: 100%;
+    min-height: 210px;
+
+    padding: 30px 60px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 25px;
+
+    animation:
+        fileAppear .35s ease both;
+}
+
+@keyframes fileAppear {
+    from {
+        opacity: 0;
+
+        transform:
+            scale(.96)
+            translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            scale(1)
+            translateY(0);
+    }
+}
+
+
+/* Remove button */
+
+.remove-file {
+    position: absolute;
+
+    top: 12px;
+    right: 12px;
+
+    z-index: 100;
+
+    width: 38px;
+    height: 38px;
+
+    display: grid;
+    place-items: center;
+
+    padding: 0;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: #222;
+    color: #fff;
+
+    font-size: 25px;
+    line-height: 1;
+
+    transition:
+        transform .15s ease,
+        background .2s ease,
+        color .2s ease;
+}
+
+.remove-file:hover {
+    background: #fff;
+    color: #000;
+}
+
+.remove-file:active {
+    transform:
+        scale(.85)
+        rotate(8deg);
+}
+
+
+/* Preview */
+
+.preview {
+    width: 110px;
+    height: 110px;
+
+    flex: 0 0 110px;
+
+    overflow: hidden;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 16px;
+
+    background: #181818;
+
+    font-size: 50px;
+
+    animation:
+        previewIn .4s ease both;
+}
+
+@keyframes previewIn {
+    from {
+        opacity: 0;
+
+        transform:
+            scale(.8)
+            rotate(-5deg);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            scale(1)
+            rotate(0);
+    }
+}
+
+.preview img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+}
+
+
+/* File information */
+
+.file-info {
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+
+    text-align: left;
+}
+
+.file-info strong {
+    display: block;
+
+    max-width: 400px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+.file-info span {
+    color: #888;
+}
+
+
+/* =========================
+   CONVERSION
+========================= */
+
+.convert-section {
+    margin-top: 35px;
+
+    animation:
+        sectionIn .4s ease both;
+}
+
+.convert-section h2 {
+    margin: 0 0 15px;
+}
+
+.format-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 10px;
+
+    margin: 20px 0;
+}
+
+.format-option {
+    height: 55px;
+
+    border:
+        1px solid #333;
+
+    border-radius: 12px;
+
+    background: #111;
+    color: #fff;
+
+    font-weight: bold;
+
+    transition:
+        transform .15s ease,
+        background .2s ease,
+        color .2s ease,
+        border-color .2s ease;
+}
+
+.format-option:hover {
+    border-color: #fff;
+
+    transform:
+        translateY(-2px);
+}
+
+.format-option:active {
+    transform:
+        scale(.95);
+}
+
+.format-option.active {
+    background: #fff;
+    color: #000;
+}
+
+#conversionText {
+    min-height: 20px;
+
+    margin: 15px 0;
+
+    color: #888;
+
+    text-align: center;
+}
+
+
+/* =========================
+   CONVERT BUTTON
+========================= */
+
+.convert-button {
+    width: 100%;
+    height: 58px;
+
+    margin-top: 10px;
+
+    border: 0;
+    border-radius: 15px;
+
+    background: #fff;
+    color: #000;
+
+    font-weight: 800;
+
+    transition:
+        transform .15s ease,
+        opacity .2s ease,
+        box-shadow .2s ease;
+}
+
+.convert-button:hover:not(:disabled) {
+    transform:
+        translateY(-3px);
+
+    box-shadow:
+        0 12px 30px
+        rgba(255, 255, 255, .1);
+}
+
+.convert-button:active:not(:disabled) {
+    transform: scale(.98);
+}
+
+.convert-button:disabled {
+    opacity: .35;
+
+    cursor: not-allowed;
+}
+
+
+/* =========================
+   PROGRESS
+========================= */
+
+.progress-section {
+    margin-top: 30px;
+
+    padding: 20px;
+
+    border-radius: 17px;
+
+    background: #111;
+
+    animation:
+        sectionIn .4s ease both;
+}
+
+.progress-top {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 15px;
+
+    margin-bottom: 12px;
+}
+
+.progress-top span {
+    color: #aaa;
+}
+
+.progress-track {
+    width: 100%;
+    height: 10px;
+
+    overflow: hidden;
+
+    border-radius: 10px;
+
+    background: #292929;
+}
+
+#progressBar {
+    position: relative;
+
+    width: 0%;
+    height: 100%;
+
+    background: #fff;
+
+    transition:
+        width .18s ease;
+}
+
+#progressBar::after {
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255,255,255,.5),
+            transparent
+        );
+
+    animation:
+        progressShine 1s linear infinite;
+}
+
+@keyframes progressShine {
+    from {
+        transform:
+            translateX(-100%);
+    }
+
+    to {
+        transform:
+            translateX(100%);
+    }
+}
+
+
+/* =========================
+   RESULT
+========================= */
+
+.result-section {
+    margin-top: 30px;
+
+    padding: 35px;
+
+    text-align: center;
+
+    border:
+        1px solid #292929;
+
+    border-radius: 20px;
+
+    background: #101010;
+
+    animation:
+        resultIn .5s cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes resultIn {
+    from {
+        opacity: 0;
+
+        transform:
+            scale(.9)
+            translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            scale(1)
+            translateY(0);
+    }
+}
+
+.success {
+    width: 60px;
+    height: 60px;
+
+    margin: auto;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 50%;
+
+    background: #00ff88;
+    color: #000;
+
+    font-size: 35px;
+    font-weight: bold;
+
+    animation:
+        successPop .5s cubic-bezier(.2,1.5,.4,1) both;
+}
+
+@keyframes successPop {
+    from {
+        transform: scale(0);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+.result-section h2 {
+    margin: 18px 0 8px;
+}
+
+.result-section p {
+    margin: 0 0 18px;
+
+    color: #888;
+
+    overflow-wrap: anywhere;
+}
+
+#downloadButton {
+    width: 100%;
+    height: 55px;
+
+    border: 0;
+    border-radius: 13px;
+
+    background: #fff;
+    color: #000;
+
+    font-weight: bold;
+
+    transition:
+        transform .15s ease,
+        box-shadow .2s ease;
+}
+
+#downloadButton:hover {
+    transform:
+        translateY(-3px);
+
+    box-shadow:
+        0 12px 30px
+        rgba(255,255,255,.1);
+}
+
+#downloadButton:active {
+    transform: scale(.97);
+}
+
+
+/* =========================
+   FOOTER
+========================= */
+
+.big-space {
+    height: 600px;
+}
+
+footer {
+    text-align: center;
+
+    padding: 50px 10px;
+
+    border-top:
+        1px solid #222;
+
+    color: #777;
+}
+
+footer p {
+    margin: 7px 0;
+}
+
+footer a {
+    color: #fff;
+
+    font-weight: bold;
+
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================
+   TOAST
+========================= */
+
+#toast {
+    position: fixed;
+
+    left: 50%;
+    bottom: 25px;
+
+    z-index: 20000;
+
+    max-width:
+        calc(100% - 30px);
+
+    padding:
+        13px 20px;
+
+    border-radius: 12px;
+
+    background: #fff;
+    color: #000;
+
+    text-align: center;
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transform:
+        translate(-50%, 100px);
+
+    transition:
+        opacity .25s ease,
+        transform .25s ease;
+}
+
+#toast.show {
+    opacity: 1;
+
+    transform:
+        translate(-50%, 0);
+}
+
+
+/* =========================
+   PHONE MODE
+========================= */
+
+body.phone-mode .container {
+    width:
+        calc(100% - 24px);
+
+    padding-top: 85px;
+}
+
+body.phone-mode .header {
+    margin-bottom: 40px;
+}
+
+body.phone-mode .header h1 {
+    font-size: 34px;
+}
+
+body.phone-mode .logo {
+    width: 62px;
+    height: 62px;
+
+    font-size: 34px;
+}
+
+body.phone-mode .type-grid {
+    grid-template-columns: 1fr;
+}
+
+body.phone-mode .type-card {
+    min-height: 115px;
+
+    flex-direction: row;
+
+    justify-content: flex-start;
+
+    padding:
+        15px 20px;
+
+    text-align: left;
+}
+
+body.phone-mode .type-icon {
+    font-size: 32px;
+}
+
+body.phone-mode .selected-file {
+    flex-direction: column;
+
+    padding:
+        45px 20px 25px;
+}
+
+body.phone-mode .file-info {
+    width: 100%;
+
+    align-items: center;
+
+    text-align: center;
+}
+
+body.phone-mode .file-info strong {
+    max-width: 250px;
+}
+
+body.phone-mode .format-grid {
+    grid-template-columns:
+        repeat(2, 1fr);
+}
+
+body.phone-mode .big-space {
+    height: 400px;
+}
+
+
+/* =========================
+   DESKTOP MODE
+========================= */
+
+body.desktop-mode .container {
+    max-width: 1050px;
+}
+
+body.desktop-mode .type-card {
+    min-height: 200px;
+}
+
+
+/* =========================
+   LIGHT MODE
+========================= */
+
+body.light {
+    background: #f4f4f4;
+    color: #111;
+}
+
+body.light .background-name {
+    color:
+        rgba(0,0,0,.035);
+}
+
+body.light .top-controls button {
+    background: #fff;
+    color: #111;
+
+    border-color: #ddd;
+}
+
+body.light .type-card,
+body.light .file-box,
+body.light .progress-section,
+body.light .result-section {
+    background: #fff;
+    color: #111;
+
+    border-color: #ddd;
+}
+
+body.light .type-card small,
+body.light #emptyFile p,
+body.light #emptyFile small,
+body.light .file-info span,
+body.light #conversionText,
+body.light .progress-top span {
+    color: #777;
+}
+
+body.light .format-option {
+    background: #fff;
+    color: #111;
+
+    border-color: #ddd;
+}
+
+body.light .format-option:hover,
+body.light .format-option.active {
+    background: #111;
+    color: #fff;
+}
+
+body.light .progress-track {
+    background: #ddd;
+}
+
+body.light #progressBar {
+    background: #111;
+}
+
+body.light .remove-file {
+    background: #eee;
+    color: #111;
+}
+
+body.light #downloadButton,
+body.light .convert-button {
+    background: #111;
+    color: #fff;
+}
+
+body.light footer {
+    border-color: #ddd;
+}
+
+body.light footer a {
+    color: #111;
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 650px) {
+
+    .top-controls {
+        top: 10px;
+        right: 10px;
+    }
+
+    .top-controls button {
+        min-width: 38px;
+        height: 36px;
+        padding: 0 8px;
+    }
+
+    .container {
+        width:
+            calc(100% - 24px);
+    }
+
+    .header h1 {
+        font-size: 38px;
+    }
+
+    .type-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .format-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+    .selected-file {
+        flex-direction: column;
+    }
+
+    .file-info {
+        align-items: center;
+        text-align: center;
+    }
+}
+
+
+/* =========================
+   VERY SMALL PHONES
+========================= */
+
+@media (max-width: 380px) {
+
+    .top-controls {
+        gap: 4px;
+    }
+
+    .top-controls button {
+        min-width: 34px;
+
+        padding: 0 6px;
+
+        font-size: 13px;
+    }
+
+    .header h1 {
+        font-size: 32px;
+    }
+
+    .type-card {
+        padding:
+            20px 14px;
+    }
+
+    .format-option {
+        height: 50px;
+    }
+
+    .result-section {
+        padding:
+            25px 18px;
+    }
+}
+
+
+/* =========================
+   REDUCED MOTION SUPPORT
+========================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+    }
+}
