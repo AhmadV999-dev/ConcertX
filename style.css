@@ -1,484 +1,851 @@
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+const typeCards = document.querySelectorAll(".type-card");
+
+const toolSection = document.getElementById("toolSection");
+const selectedTypeText = document.getElementById("selectedTypeText");
+
+const fileBox = document.getElementById("fileBox");
+const fileInput = document.getElementById("fileInput");
+
+const emptyFile = document.getElementById("emptyFile");
+const selectedFile = document.getElementById("selectedFile");
+const removeFile = document.getElementById("removeFile");
+
+const preview = document.getElementById("preview");
+const fileName = document.getElementById("fileName");
+const fileSize = document.getElementById("fileSize");
+
+const convertSection = document.getElementById("convertSection");
+const formatGrid = document.getElementById("formatGrid");
+const conversionText = document.getElementById("conversionText");
+const convertButton = document.getElementById("convertButton");
+
+const progressSection = document.getElementById("progressSection");
+const progressBar = document.getElementById("progressBar");
+const progressText = document.getElementById("progressText");
+const progressNumber = document.getElementById("progressNumber");
+
+const resultSection = document.getElementById("resultSection");
+const resultName = document.getElementById("resultName");
+const downloadButton = document.getElementById("downloadButton");
+
+const phoneMode = document.getElementById("phoneMode");
+const desktopMode = document.getElementById("desktopMode");
+const modeButton = document.getElementById("modeButton");
+
+const toast = document.getElementById("toast");
+
+let selectedType = "";
+let selectedFormat = "";
+let currentFile = null;
+let outputBlob = null;
+let outputName = "";
+
+const formats = {
+    picture: ["PNG", "JPG", "WEBP"],
+    sound: ["MP4", "MP2", "WAV", "OGG"],
+    video: ["MP4", "MP2", "WAV", "OGG"]
+};
+
+function toastMessage(message) {
+    toast.textContent = message;
+    toast.classList.add("show");
+
+    clearTimeout(toast.timer);
+
+    toast.timer = setTimeout(() => {
+        toast.classList.remove("show");
+    }, 2200);
 }
 
-:root {
-    --bg: #f5f7fb;
-    --card: #ffffff;
-    --text: #111827;
-    --muted: #6b7280;
-    --border: #e5e7eb;
-    --accent: #111827;
-    --accentText: #ffffff;
-    --soft: #f0f2f5;
-    --danger: #ef4444;
-    --success: #16a34a;
+function bytes(size) {
+    if (size < 1024) return size + " B";
+
+    if (size < 1024 * 1024) {
+        return (size / 1024).toFixed(1) + " KB";
+    }
+
+    return (size / 1024 / 1024).toFixed(2) + " MB";
 }
 
-body {
-    font-family: Arial, Helvetica, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    transition: background .25s, color .25s;
+function setProgress(value, text) {
+    progressBar.style.width = value + "%";
+    progressNumber.textContent = value + "%";
+    progressText.textContent = text;
 }
 
-body.light {
-    --bg: #f5f7fb;
-    --card: #ffffff;
-    --text: #111827;
-    --muted: #6b7280;
-    --border: #e5e7eb;
-    --accent: #111827;
-    --accentText: #ffffff;
-    --soft: #f0f2f5;
+function resetResult() {
+    outputBlob = null;
+    outputName = "";
+
+    resultSection.classList.add("hidden");
+    progressSection.classList.add("hidden");
+
+    setProgress(0, "Preparing...");
 }
 
-body:not(.light) {
-    --bg: #0b0d10;
-    --card: #15181d;
-    --text: #f5f5f5;
-    --muted: #9ca3af;
-    --border: #292e36;
-    --accent: #ffffff;
-    --accentText: #111111;
-    --soft: #20242b;
+function clearFile() {
+    currentFile = null;
+    selectedFormat = "";
+    outputBlob = null;
+    outputName = "";
+
+    fileInput.value = "";
+
+    emptyFile.classList.remove("hidden");
+    selectedFile.classList.add("hidden");
+
+    convertSection.classList.add("hidden");
+    progressSection.classList.add("hidden");
+    resultSection.classList.add("hidden");
+
+    preview.innerHTML = "";
+    formatGrid.innerHTML = "";
+
+    convertButton.disabled = true;
+    conversionText.textContent = "Choose an output format";
 }
 
-[hidden] {
-    display: none !important;
+function chooseType(type) {
+    selectedType = type;
+
+    typeCards.forEach(card => {
+        card.classList.toggle(
+            "active",
+            card.dataset.type === type
+        );
+    });
+
+    const names = {
+        picture: "picture",
+        sound: "sound",
+        video: "video"
+    };
+
+    selectedTypeText.textContent =
+        "Choose your " + names[type] + " file";
+
+    if (type === "picture") {
+        fileInput.accept = "image/*";
+    }
+
+    if (type === "sound") {
+        fileInput.accept = "audio/*";
+    }
+
+    if (type === "video") {
+        fileInput.accept =
+            "video/mp4,video/mpeg,video/quicktime";
+    }
+
+    clearFile();
+
+    toolSection.classList.remove("hidden");
+
+    setTimeout(() => {
+        toolSection.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }, 50);
 }
 
-.background-name {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: clamp(60px, 15vw, 180px);
-    font-weight: 900;
-    color: rgba(128, 128, 128, .06);
-    pointer-events: none;
-    user-select: none;
-    z-index: 0;
+typeCards.forEach(card => {
+    card.addEventListener("click", () => {
+        chooseType(card.dataset.type);
+    });
+});
+
+fileBox.addEventListener("click", event => {
+    if (event.target.closest("#removeFile")) {
+        return;
+    }
+
+    if (!currentFile) {
+        fileInput.click();
+    }
+});
+
+removeFile.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    clearFile();
+});
+
+fileInput.addEventListener("click", event => {
+    event.stopPropagation();
+});
+
+fileInput.addEventListener("change", () => {
+    const file = fileInput.files[0];
+
+    if (!file) return;
+
+    currentFile = file;
+
+    resetResult();
+
+    fileName.textContent = file.name;
+    fileSize.textContent = bytes(file.size);
+
+    emptyFile.classList.add("hidden");
+    selectedFile.classList.remove("hidden");
+
+    preview.innerHTML = "";
+
+    if (selectedType === "picture") {
+
+        const image = document.createElement("img");
+        image.src = URL.createObjectURL(file);
+
+        image.onload = () => {
+            URL.revokeObjectURL(image.src);
+        };
+
+        preview.appendChild(image);
+
+    } else if (selectedType === "sound") {
+
+        preview.textContent = "🎵";
+
+    } else {
+
+        preview.textContent = "🎬";
+    }
+
+    createFormats();
+
+    convertSection.classList.remove("hidden");
+
+    selectedFormat = "";
+    convertButton.disabled = true;
+
+    conversionText.textContent =
+        "Choose an output format";
+});
+
+function createFormats() {
+    formatGrid.innerHTML = "";
+
+    formats[selectedType].forEach(format => {
+
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.className = "format-option";
+        button.textContent = format;
+
+        button.addEventListener("click", event => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            document
+                .querySelectorAll(".format-option")
+                .forEach(item => {
+                    item.classList.remove("active");
+                });
+
+            button.classList.add("active");
+
+            selectedFormat = format;
+
+            conversionText.textContent =
+                "Convert " +
+                selectedType +
+                " to " +
+                format;
+
+            convertButton.disabled = false;
+        });
+
+        formatGrid.appendChild(button);
+    });
 }
 
-.typing-cursor {
-    animation: blink .8s infinite;
+async function convertPicture() {
+
+    const image = new Image();
+
+    const url = URL.createObjectURL(currentFile);
+
+    image.src = url;
+
+    await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = reject;
+    });
+
+    const canvas = document.createElement("canvas");
+
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+
+    const ctx = canvas.getContext("2d");
+
+    if (selectedFormat === "JPG") {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+    }
+
+    ctx.drawImage(image, 0, 0);
+
+    URL.revokeObjectURL(url);
+
+    let mime = "image/png";
+
+    if (selectedFormat === "JPG") {
+        mime = "image/jpeg";
+    }
+
+    if (selectedFormat === "WEBP") {
+        mime = "image/webp";
+    }
+
+    const blob = await new Promise(resolve => {
+        canvas.toBlob(
+            resolve,
+            mime,
+            0.92
+        );
+    });
+
+    if (!blob) {
+        throw new Error("Picture conversion failed.");
+    }
+
+    return blob;
 }
 
-@keyframes blink {
-    50% {
-        opacity: 0;
+async function convertAudioToWav() {
+
+    const AudioContext =
+        window.AudioContext ||
+        window.webkitAudioContext;
+
+    if (!AudioContext) {
+        throw new Error(
+            "Audio conversion is not supported by this browser."
+        );
+    }
+
+    const context = new AudioContext();
+
+    try {
+
+        const data =
+            await currentFile.arrayBuffer();
+
+        const audio =
+            await context.decodeAudioData(data);
+
+        const channels =
+            audio.numberOfChannels;
+
+        const sampleRate =
+            audio.sampleRate;
+
+        const length =
+            audio.length;
+
+        const buffer =
+            new ArrayBuffer(
+                44 +
+                length *
+                channels *
+                2
+            );
+
+        const view =
+            new DataView(buffer);
+
+        function writeText(offset, text) {
+
+            for (
+                let i = 0;
+                i < text.length;
+                i++
+            ) {
+                view.setUint8(
+                    offset + i,
+                    text.charCodeAt(i)
+                );
+            }
+        }
+
+        writeText(0, "RIFF");
+
+        view.setUint32(
+            4,
+            36 + length * channels * 2,
+            true
+        );
+
+        writeText(8, "WAVE");
+        writeText(12, "fmt ");
+
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, channels, true);
+
+        view.setUint32(
+            24,
+            sampleRate,
+            true
+        );
+
+        view.setUint32(
+            28,
+            sampleRate * channels * 2,
+            true
+        );
+
+        view.setUint16(
+            32,
+            channels * 2,
+            true
+        );
+
+        view.setUint16(
+            34,
+            16,
+            true
+        );
+
+        writeText(36, "data");
+
+        view.setUint32(
+            40,
+            length * channels * 2,
+            true
+        );
+
+        let offset = 44;
+
+        for (
+            let i = 0;
+            i < length;
+            i++
+        ) {
+
+            for (
+                let channel = 0;
+                channel < channels;
+                channel++
+            ) {
+
+                let sample =
+                    audio.getChannelData(
+                        channel
+                    )[i];
+
+                sample =
+                    Math.max(
+                        -1,
+                        Math.min(1, sample)
+                    );
+
+                const value =
+                    sample < 0
+                        ? sample * 0x8000
+                        : sample * 0x7fff;
+
+                view.setInt16(
+                    offset,
+                    value,
+                    true
+                );
+
+                offset += 2;
+            }
+        }
+
+        return new Blob(
+            [buffer],
+            {
+                type: "audio/wav"
+            }
+        );
+
+    } finally {
+
+        await context.close();
     }
 }
 
-.mode-button {
-    position: fixed;
-    top: 18px;
-    right: 18px;
-    border: 1px solid var(--border);
-    background: var(--card);
-    color: var(--text);
-    border-radius: 12px;
-    padding: 10px 14px;
-    cursor: pointer;
-    z-index: 10;
-    font-weight: 700;
-}
+async function performConversion() {
 
-.container {
-    position: relative;
-    z-index: 1;
-    width: min(900px, calc(100% - 30px));
-    margin: auto;
-    padding: 70px 0 30px;
-}
-
-.header {
-    text-align: center;
-    margin-bottom: 55px;
-}
-
-.logo {
-    width: 70px;
-    height: 70px;
-    margin: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 22px;
-    background: var(--accent);
-    color: var(--accentText);
-    font-size: 38px;
-    font-weight: 900;
-    animation: logoFloat 2s ease-in-out infinite;
-}
-
-@keyframes logoFloat {
-    0%, 100% {
-        transform: translateY(0) rotate(0);
+    if (!currentFile) {
+        throw new Error("Choose a file first.");
     }
 
-    50% {
-        transform: translateY(-8px) rotate(3deg);
+    if (!selectedFormat) {
+        throw new Error(
+            "Choose an output format."
+        );
+    }
+
+    if (
+        selectedType === "picture"
+    ) {
+        return await convertPicture();
+    }
+
+    if (
+        selectedType === "sound"
+    ) {
+
+        if (selectedFormat === "WAV") {
+            return await convertAudioToWav();
+        }
+
+        throw new Error(
+            "This browser can directly create WAV audio. MP2, OGG and MP4 need a codec engine."
+        );
+    }
+
+    if (
+        selectedType === "video"
+    ) {
+
+        if (
+            selectedFormat === "MP4" &&
+            currentFile.type === "video/mp4"
+        ) {
+            return currentFile;
+        }
+
+        throw new Error(
+            "This browser cannot directly transcode video without a codec engine."
+        );
     }
 }
 
-.header h1 {
-    font-size: 48px;
-    margin-top: 18px;
+convertButton.addEventListener(
+    "click",
+    async event => {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (!currentFile) {
+            toastMessage("Choose a file first.");
+            return;
+        }
+
+        if (!selectedFormat) {
+            toastMessage(
+                "Choose an output format."
+            );
+            return;
+        }
+
+        convertButton.disabled = true;
+
+        progressSection.classList.remove(
+            "hidden"
+        );
+
+        resultSection.classList.add(
+            "hidden"
+        );
+
+        setProgress(
+            0,
+            "Preparing..."
+        );
+
+        try {
+
+            for (
+                let i = 10;
+                i <= 30;
+                i += 10
+            ) {
+
+                await new Promise(
+                    resolve =>
+                        setTimeout(
+                            resolve,
+                            120
+                        )
+                );
+
+                setProgress(
+                    i,
+                    "Processing..."
+                );
+            }
+
+            outputBlob =
+                await performConversion();
+
+            setProgress(
+                70,
+                "Creating file..."
+            );
+
+            await new Promise(
+                resolve =>
+                    setTimeout(
+                        resolve,
+                        250
+                    )
+            );
+
+            setProgress(
+                90,
+                "Finishing..."
+            );
+
+            await new Promise(
+                resolve =>
+                    setTimeout(
+                        resolve,
+                        250
+                    )
+            );
+
+            const original =
+                currentFile.name.replace(
+                    /\.[^/.]+$/,
+                    ""
+                );
+
+            outputName =
+                original +
+                "." +
+                selectedFormat.toLowerCase();
+
+            resultName.textContent =
+                outputName;
+
+            setProgress(
+                100,
+                "Complete"
+            );
+
+            await new Promise(
+                resolve =>
+                    setTimeout(
+                        resolve,
+                        300
+                    )
+            );
+
+            resultSection.classList.remove(
+                "hidden"
+            );
+
+        } catch (error) {
+
+            progressSection.classList.add(
+                "hidden"
+            );
+
+            toastMessage(
+                error.message ||
+                "Conversion failed."
+            );
+
+        } finally {
+
+            convertButton.disabled = false;
+        }
+    }
+);
+
+downloadButton.addEventListener(
+    "click",
+    event => {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (!outputBlob) {
+            toastMessage(
+                "No converted file."
+            );
+            return;
+        }
+
+        const url =
+            URL.createObjectURL(
+                outputBlob
+            );
+
+        const link =
+            document.createElement("a");
+
+        link.href = url;
+        link.download = outputName;
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        link.remove();
+
+        setTimeout(() => {
+            URL.revokeObjectURL(url);
+        }, 1000);
+    }
+);
+
+function setDeviceMode(mode) {
+
+    document.body.classList.remove(
+        "phone-mode",
+        "desktop-mode"
+    );
+
+    document.body.classList.add(
+        mode + "-mode"
+    );
+
+    phoneMode.classList.toggle(
+        "active",
+        mode === "phone"
+    );
+
+    desktopMode.classList.toggle(
+        "active",
+        mode === "desktop"
+    );
+
+    localStorage.setItem(
+        "convertx-device",
+        mode
+    );
 }
 
-.header p {
-    color: var(--muted);
-    margin-top: 8px;
+phoneMode.addEventListener(
+    "click",
+    () => {
+        setDeviceMode("phone");
+    }
+);
+
+desktopMode.addEventListener(
+    "click",
+    () => {
+        setDeviceMode("desktop");
+    }
+);
+
+const savedMode =
+    localStorage.getItem(
+        "convertx-device"
+    );
+
+if (
+    savedMode === "phone" ||
+    savedMode === "desktop"
+) {
+
+    setDeviceMode(savedMode);
+
+} else {
+
+    const phone =
+        window.matchMedia(
+            "(max-width: 650px)"
+        ).matches;
+
+    setDeviceMode(
+        phone
+            ? "phone"
+            : "desktop"
+    );
 }
 
-.type-section h2 {
-    text-align: center;
-    margin-bottom: 22px;
-}
+modeButton.addEventListener(
+    "click",
+    () => {
 
-.type-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-}
+        document.body.classList.toggle(
+            "light"
+        );
 
-.type-card {
-    border: 1px solid var(--border);
-    background: var(--card);
-    color: var(--text);
-    padding: 28px 18px;
-    border-radius: 20px;
-    cursor: pointer;
-    text-align: center;
-    transition: .2s;
-}
+        if (
+            document.body.classList.contains(
+                "light"
+            )
+        ) {
 
-.type-card:hover {
-    transform: translateY(-4px);
-}
+            modeButton.textContent =
+                "☀ Light";
 
-.type-card.active {
-    background: var(--accent);
-    color: var(--accentText);
-    transform: translateY(-4px);
-}
+        } else {
 
-.type-icon {
-    font-size: 40px;
-    margin-bottom: 14px;
-}
+            modeButton.textContent =
+                "☾ Dark";
+        }
+    }
+);
 
-.type-card strong,
-.type-card span {
-    display: block;
-}
+/* ConvertX typing animation */
 
-.type-card span {
-    color: var(--muted);
-    font-size: 13px;
-    margin-top: 7px;
-}
+let typingIndex = 0;
+let deleting = false;
 
-.type-card.active span {
-    color: rgba(255,255,255,.7);
-}
+function typingAnimation() {
 
-.tool-section {
-    margin-top: 35px;
-    padding: 24px;
-    border: 1px solid var(--border);
-    background: var(--card);
-    border-radius: 24px;
-}
+    const text = "ConvertX";
 
-.tool-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 800;
-    margin-bottom: 18px;
-}
+    if (!deleting) {
 
-.tool-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #22c55e;
-}
+        typingIndex++;
 
-.file-box {
-    min-height: 190px;
-    border: 2px dashed var(--border);
-    border-radius: 18px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
+        document.getElementById(
+            "typingText"
+        ).textContent =
+            text.substring(
+                0,
+                typingIndex
+            );
 
-.empty-file {
-    text-align: center;
-}
+        if (
+            typingIndex >= text.length
+        ) {
 
-.upload-icon {
-    width: 55px;
-    height: 55px;
-    border-radius: 16px;
-    background: var(--soft);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: auto auto 12px;
-    font-size: 30px;
-}
+            deleting = true;
 
-.empty-file h3 {
-    margin-bottom: 6px;
-}
+            setTimeout(
+                typingAnimation,
+                1200
+            );
 
-.empty-file p,
-.file-hint {
-    color: var(--muted);
-}
+            return;
+        }
 
-.file-hint {
-    display: block;
-    font-size: 12px;
-    margin-top: 8px;
-}
+    } else {
 
-.selected-file {
-    width: 100%;
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
+        typingIndex--;
 
-.remove-file {
-    position: absolute;
-    right: 0;
-    top: 0;
-    border: 0;
-    background: var(--soft);
-    color: var(--danger);
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 22px;
-}
+        document.getElementById(
+            "typingText"
+        ).textContent =
+            text.substring(
+                0,
+                typingIndex
+            );
 
-.preview {
-    width: 100px;
-    height: 100px;
-    border-radius: 15px;
-    overflow: hidden;
-    background: var(--soft);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 40px;
-}
-
-.preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.file-information {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding-right: 45px;
-}
-
-.file-information span {
-    color: var(--muted);
-    font-size: 14px;
-}
-
-.convert-section {
-    margin-top: 25px;
-}
-
-.convert-section h2 {
-    margin-bottom: 15px;
-}
-
-.format-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-}
-
-.format-option {
-    border: 1px solid var(--border);
-    background: var(--soft);
-    color: var(--text);
-    padding: 14px 8px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: 800;
-}
-
-.format-option.active {
-    background: var(--accent);
-    color: var(--accentText);
-}
-
-.conversion-text {
-    text-align: center;
-    color: var(--muted);
-    margin: 15px 0;
-}
-
-.convert-button,
-.download-button {
-    width: 100%;
-    border: 0;
-    border-radius: 14px;
-    padding: 15px;
-    font-size: 16px;
-    font-weight: 800;
-    cursor: pointer;
-    background: var(--accent);
-    color: var(--accentText);
-}
-
-.convert-button:disabled {
-    opacity: .4;
-    cursor: not-allowed;
-}
-
-.progress-section {
-    margin-top: 25px;
-}
-
-.progress-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 9px;
-}
-
-.progress-track {
-    height: 12px;
-    background: var(--soft);
-    border-radius: 20px;
-    overflow: hidden;
-}
-
-.progress-bar {
-    width: 0%;
-    height: 100%;
-    background: var(--accent);
-    transition: width .25s ease;
-}
-
-.result-section {
-    margin-top: 25px;
-    padding: 25px;
-    text-align: center;
-    border: 1px solid var(--border);
-    border-radius: 18px;
-}
-
-.success-icon {
-    width: 55px;
-    height: 55px;
-    border-radius: 50%;
-    margin: auto auto 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(22,163,74,.12);
-    color: var(--success);
-    font-size: 30px;
-    font-weight: 900;
-}
-
-.result-section p {
-    color: var(--muted);
-    margin: 8px 0 18px;
-}
-
-.big-space {
-    height: 700px;
-}
-
-.footer {
-    text-align: center;
-    padding: 30px 0;
-    border-top: 1px solid var(--border);
-    color: var(--muted);
-}
-
-.footer p {
-    margin: 5px;
-}
-
-.footer a {
-    color: var(--text);
-    font-weight: 700;
-    text-decoration: none;
-}
-
-.toast {
-    position: fixed;
-    bottom: 25px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: var(--accent);
-    color: var(--accentText);
-    padding: 12px 18px;
-    border-radius: 12px;
-    opacity: 0;
-    pointer-events: none;
-    transition: .25s;
-    z-index: 20;
-}
-
-.toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-}
-
-@media (max-width: 650px) {
-
-    .container {
-        padding-top: 85px;
+        if (
+            typingIndex <= 0
+        ) {
+            deleting = false;
+        }
     }
 
-    .header h1 {
-        font-size: 38px;
-    }
-
-    .type-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .format-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .tool-section {
-        padding: 18px;
-    }
-
-    .selected-file {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    .file-information {
-        padding-right: 0;
-    }
+    setTimeout(
+        typingAnimation,
+        deleting ? 80 : 180
+    );
 }
+
+typingAnimation();
