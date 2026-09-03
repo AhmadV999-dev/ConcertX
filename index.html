@@ -1,1 +1,230 @@
-Delete 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConvertX</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="app">
+
+    <header class="topbar">
+        <div class="brand">
+            <div class="logo">C</div>
+            <div>
+                <h1>ConvertX</h1>
+                <p>Simple file converter</p>
+            </div>
+        </div>
+
+        <div class="local">
+            <span></span>
+            Local
+        </div>
+    </header>
+
+
+    <section class="hero">
+        <p class="label">CONVERT YOUR FILES</p>
+
+        <h2>
+            Simple.
+            <span>Fast.</span>
+            Private.
+        </h2>
+
+        <p class="description">
+            Choose a conversion, select your file,
+            and download the result.
+        </p>
+    </section>
+
+
+    <section class="converter">
+
+        <div class="title">
+            <p>CONVERSION</p>
+            <h3>Choose what to convert</h3>
+        </div>
+
+
+        <div class="category-buttons">
+
+            <button class="category active" data-category="image">
+                <b>▧</b>
+                <span>
+                    <strong>Pictures</strong>
+                    <small>PNG, JPG, WEBP</small>
+                </span>
+            </button>
+
+            <button class="category" data-category="audio">
+                <b>♫</b>
+                <span>
+                    <strong>Sounds</strong>
+                    <small>OGG, WAV, MP3</small>
+                </span>
+            </button>
+
+            <button class="category" data-category="video">
+                <b>▶</b>
+                <span>
+                    <strong>Video</strong>
+                    <small>Extract audio</small>
+                </span>
+            </button>
+
+        </div>
+
+
+        <div class="conversion-box">
+
+            <label for="conversionSelect">
+                Conversion
+            </label>
+
+            <select id="conversionSelect">
+            </select>
+
+        </div>
+
+
+        <div id="dropZone" class="drop-zone">
+
+            <div class="upload">
+                ↑
+            </div>
+
+            <h4>
+                Choose a file
+            </h4>
+
+            <p>
+                Tap here or drag a file into this box
+            </p>
+
+            <button id="browseBtn">
+                Browse files
+            </button>
+
+            <small id="fileHint">
+                PNG, JPG or WEBP
+            </small>
+
+            <input id="fileInput" type="file" hidden>
+
+        </div>
+
+
+        <div id="fileCard" class="file-card hidden">
+
+            <div id="fileType" class="file-type">
+                IMG
+            </div>
+
+            <div class="file-info">
+                <strong id="fileName"></strong>
+                <small id="fileSize"></small>
+            </div>
+
+            <button id="removeBtn">
+                ×
+            </button>
+
+        </div>
+
+
+        <div id="previewBox" class="preview hidden">
+            <p>PREVIEW</p>
+            <img id="previewImage">
+        </div>
+
+
+        <button
+            id="convertBtn"
+            class="convert-btn"
+            disabled
+        >
+            Convert file
+            <span>→</span>
+        </button>
+
+
+        <div id="progressBox" class="progress hidden">
+
+            <div>
+                <span id="progressText">
+                    Preparing...
+                </span>
+
+                <b id="progressNumber">
+                    0%
+                </b>
+            </div>
+
+            <div class="progress-track">
+                <div id="progressBar"></div>
+            </div>
+
+        </div>
+
+
+        <div id="resultBox" class="result hidden">
+
+            <div class="check">
+                ✓
+            </div>
+
+            <div class="result-info">
+                <small>CONVERTED</small>
+                <strong id="resultName"></strong>
+            </div>
+
+            <button id="downloadBtn">
+                Download
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <section class="features">
+
+        <div class="feature">
+            <b>⚡</b>
+            <strong>Fast</strong>
+            <p>Runs directly in your browser.</p>
+        </div>
+
+        <div class="feature">
+            <b>🔒</b>
+            <strong>Private</strong>
+            <p>Your files stay on your device.</p>
+        </div>
+
+        <div class="feature">
+            <b>∞</b>
+            <strong>Simple</strong>
+            <p>No account needed.</p>
+        </div>
+
+    </section>
+
+
+    <footer>
+        ConvertX · Local browser converter
+    </footer>
+
+</div>
+
+
+<div id="toast"></div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
