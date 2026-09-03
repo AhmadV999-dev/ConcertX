@@ -2,33 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width,initial-scale=1,
-        maximum-scale=1,user-scalable=no"
-    >
-
-    <meta
-        name="description"
-        content="ConvertX - simple browser file converter"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#080808">
     <title>ConvertX</title>
 
-    <!-- IMPORTANT: relative paths for GitHub Pages -->
     <link rel="stylesheet" href="./style.css">
 </head>
 
 <body>
 
-    <!-- Background animation -->
-    <div class="background-name">
-        <span id="typingText">ConvertX</span><span class="cursor">|</span>
-    </div>
+    <!-- Background -->
+    <div class="bg-text">ConvertX</div>
 
 
-    <!-- Top controls -->
+    <!-- Top Controls -->
     <div class="top-controls">
 
         <button
@@ -48,36 +35,43 @@
         </button>
 
         <button
-            id="modeButton"
+            id="themeButton"
             type="button"
-            aria-label="Change theme"
+            aria-label="Toggle theme"
         >
-            ☾
+            ☀ Light
         </button>
 
     </div>
 
 
+    <!-- Main -->
     <main class="container">
 
-        <!-- HEADER -->
-
+        <!-- Header -->
         <header class="header">
 
-            <div class="logo">C</div>
+            <div class="logo">
+                C
+            </div>
 
-            <h1>ConvertX</h1>
+            <h1>
+                ConvertX
+            </h1>
 
-            <p>Simple file conversion</p>
+            <p>
+                Simple file conversion
+            </p>
 
         </header>
 
 
-        <!-- TYPE SELECT -->
-
+        <!-- Conversion Type -->
         <section class="type-section">
 
-            <h2>What do you want to convert?</h2>
+            <h2>
+                What do you want to convert?
+            </h2>
 
             <div class="type-grid">
 
@@ -87,9 +81,13 @@
                     type="button"
                 >
 
-                    <span class="type-icon">🖼️</span>
+                    <span class="type-icon">
+                        🖼️
+                    </span>
 
-                    <strong>Picture</strong>
+                    <strong>
+                        Picture
+                    </strong>
 
                     <small>
                         PNG • JPG • WEBP
@@ -104,9 +102,13 @@
                     type="button"
                 >
 
-                    <span class="type-icon">🎵</span>
+                    <span class="type-icon">
+                        🎵
+                    </span>
 
-                    <strong>Sound</strong>
+                    <strong>
+                        Sound
+                    </strong>
 
                     <small>
                         Audio → WAV
@@ -121,9 +123,13 @@
                     type="button"
                 >
 
-                    <span class="type-icon">🎬</span>
+                    <span class="type-icon">
+                        🎬
+                    </span>
 
-                    <strong>Video</strong>
+                    <strong>
+                        Video
+                    </strong>
 
                     <small>
                         MP4
@@ -136,8 +142,7 @@
         </section>
 
 
-        <!-- CONVERTER -->
-
+        <!-- Converter Tool -->
         <section
             id="toolSection"
             class="tool-section hidden"
@@ -154,30 +159,24 @@
             </div>
 
 
-            <!-- FILE BOX -->
-
+            <!-- File Box -->
             <div
                 id="fileBox"
                 class="file-box"
             >
 
-                <!-- Native browser file picker -->
-                <input
-                    id="fileInput"
-                    type="file"
-                    aria-label="Choose file"
+                <div
+                    id="emptyFile"
+                    class="empty-file"
                 >
-
-
-                <!-- Empty state -->
-
-                <div id="emptyFile">
 
                     <div class="upload-icon">
                         ↑
                     </div>
 
-                    <h3>Add your file</h3>
+                    <h3>
+                        Add your file
+                    </h3>
 
                     <p>
                         Tap here to choose a file
@@ -190,8 +189,7 @@
                 </div>
 
 
-                <!-- Selected state -->
-
+                <!-- Selected File -->
                 <div
                     id="selectedFile"
                     class="selected-file hidden"
@@ -206,12 +204,10 @@
                         ×
                     </button>
 
-
                     <div
                         id="preview"
                         class="preview"
                     ></div>
-
 
                     <div class="file-info">
 
@@ -227,17 +223,26 @@
 
                 </div>
 
+
+                <!-- File Input -->
+                <input
+                    id="fileInput"
+                    type="file"
+                    accept=""
+                >
+
             </div>
 
 
-            <!-- FORMAT -->
-
+            <!-- Conversion Options -->
             <div
                 id="convertSection"
                 class="convert-section hidden"
             >
 
-                <h2>Convert to</h2>
+                <h2>
+                    Convert to
+                </h2>
 
                 <div
                     id="formatGrid"
@@ -260,8 +265,7 @@
             </div>
 
 
-            <!-- PROGRESS -->
-
+            <!-- Progress -->
             <div
                 id="progressSection"
                 class="progress-section hidden"
@@ -279,18 +283,18 @@
 
                 </div>
 
-
                 <div class="progress-track">
 
-                    <div id="progressBar"></div>
+                    <div
+                        id="progressBar"
+                    ></div>
 
                 </div>
 
             </div>
 
 
-            <!-- RESULT -->
-
+            <!-- Result -->
             <div
                 id="resultSection"
                 class="result-section hidden"
@@ -323,15 +327,20 @@
         <div class="big-space"></div>
 
 
-        <!-- FOOTER -->
-
+        <!-- Footer -->
         <footer>
 
-            <p>Make By Vathana</p>
+            <p>
+                Made by Vathana
+            </p>
 
-            <p>Code By Vathana</p>
+            <p>
+                Code By Vathana
+            </p>
 
-            <p>Social media</p>
+            <p>
+                Social media
+            </p>
 
             <a
                 href="https://tiktok.com/@vathana1200"
@@ -346,10 +355,11 @@
     </main>
 
 
+    <!-- Toast -->
     <div id="toast"></div>
 
 
-    <!-- IMPORTANT: relative path for GitHub Pages -->
+    <!-- JavaScript -->
     <script src="./script.js"></script>
 
 </body>
