@@ -1,621 +1,690 @@
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
+"use strict";
+
+const typeCards = document.querySelectorAll(".type-card");
+
+const toolSection = document.getElementById("toolSection");
+const selectedTypeText = document.getElementById("selectedTypeText");
+
+const fileBox = document.getElementById("fileBox");
+const fileInput = document.getElementById("fileInput");
+
+const emptyFile = document.getElementById("emptyFile");
+const selectedFile = document.getElementById("selectedFile");
+const removeFile = document.getElementById("removeFile");
+
+const preview = document.getElementById("preview");
+const fileName = document.getElementById("fileName");
+const fileSize = document.getElementById("fileSize");
+
+const convertSection = document.getElementById("convertSection");
+const formatGrid = document.getElementById("formatGrid");
+const conversionText = document.getElementById("conversionText");
+const convertButton = document.getElementById("convertButton");
+
+const progressSection = document.getElementById("progressSection");
+const progressBar = document.getElementById("progressBar");
+const progressText = document.getElementById("progressText");
+const progressNumber = document.getElementById("progressNumber");
+
+const resultSection = document.getElementById("resultSection");
+const resultName = document.getElementById("resultName");
+const downloadButton = document.getElementById("downloadButton");
+
+const phoneMode = document.getElementById("phoneMode");
+const desktopMode = document.getElementById("desktopMode");
+const modeButton = document.getElementById("modeButton");
+const toast = document.getElementById("toast");
+
+let selectedType = "";
+let selectedFormat = "";
+let currentFile = null;
+let outputBlob = null;
+let outputName = "";
+
+const formats = {
+    picture: ["PNG", "JPG", "WEBP"],
+    sound: ["MP4", "MP2", "WAV", "OGG"],
+    video: ["MP4", "MP2", "WAV", "OGG"]
+};
+
+function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add("show");
+
+    clearTimeout(showToast.timer);
+
+    showToast.timer = setTimeout(() => {
+        toast.classList.remove("show");
+    }, 2200);
 }
 
-html {
-    scroll-behavior: smooth;
+function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + " B";
+
+    if (bytes < 1048576) {
+        return (bytes / 1024).toFixed(1) + " KB";
+    }
+
+    return (bytes / 1048576).toFixed(2) + " MB";
 }
 
-body {
-    margin: 0;
-    min-height: 100vh;
-    font-family: Arial, Helvetica, sans-serif;
-    background: #080808;
-    color: #ffffff;
-    transition: background 0.3s, color 0.3s;
-    overflow-x: hidden;
+function progress(value, text) {
+    progressBar.style.width = value + "%";
+    progressNumber.textContent = value + "%";
+    progressText.textContent = text;
 }
 
-button,
-a,
-input {
-    font: inherit;
+function resetResult() {
+    outputBlob = null;
+    outputName = "";
+
+    progressSection.classList.add("hidden");
+    resultSection.classList.add("hidden");
+
+    progress(0, "Preparing...");
 }
 
-button {
-    cursor: pointer;
+function clearFile() {
+    currentFile = null;
+    selectedFormat = "";
+    outputBlob = null;
+    outputName = "";
+
+    fileInput.value = "";
+
+    emptyFile.classList.remove("hidden");
+    selectedFile.classList.add("hidden");
+
+    convertSection.classList.add("hidden");
+    progressSection.classList.add("hidden");
+    resultSection.classList.add("hidden");
+
+    formatGrid.innerHTML = "";
+    preview.innerHTML = "";
+
+    convertButton.disabled = true;
+    conversionText.textContent = "Choose an output format";
 }
 
-.background-name {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 0;
-    pointer-events: none;
-    user-select: none;
-    font-size: clamp(60px, 15vw, 180px);
-    font-weight: 900;
-    color: rgba(255,255,255,0.025);
-    white-space: nowrap;
+function chooseType(type) {
+    selectedType = type;
+
+    typeCards.forEach(card => {
+        card.classList.toggle(
+            "active",
+            card.dataset.type === type
+        );
+    });
+
+    const names = {
+        picture: "picture",
+        sound: "sound",
+        video: "video"
+    };
+
+    selectedTypeText.textContent =
+        "Choose your " + names[type] + " file";
+
+    if (type === "picture") {
+        fileInput.accept = "image/*";
+    }
+
+    if (type === "sound") {
+        fileInput.accept = "audio/*";
+    }
+
+    if (type === "video") {
+        fileInput.accept =
+            "video/mp4,video/mpeg,video/quicktime";
+    }
+
+    clearFile();
+
+    toolSection.classList.remove("hidden");
 }
 
-.cursor {
-    opacity: 0.5;
-    animation: blink 0.8s infinite;
+/* TYPE BUTTONS */
+
+typeCards.forEach(card => {
+    card.addEventListener("click", function () {
+        chooseType(this.dataset.type);
+    });
+});
+
+/* FILE BOX */
+
+fileBox.addEventListener("click", function (event) {
+    if (event.target.closest("#removeFile")) {
+        return;
+    }
+
+    if (!currentFile) {
+        fileInput.click();
+    }
+});
+
+/* FILE SELECTED */
+
+fileInput.addEventListener("change", function () {
+    const file = this.files && this.files[0];
+
+    if (!file) return;
+
+    currentFile = file;
+
+    resetResult();
+
+    fileName.textContent = file.name;
+    fileSize.textContent = formatBytes(file.size);
+
+    emptyFile.classList.add("hidden");
+    selectedFile.classList.remove("hidden");
+
+    preview.innerHTML = "";
+
+    if (selectedType === "picture") {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+
+        img.onload = function () {
+            URL.revokeObjectURL(img.src);
+        };
+
+        preview.appendChild(img);
+    } else if (selectedType === "sound") {
+        preview.textContent = "🎵";
+    } else {
+        preview.textContent = "🎬";
+    }
+
+    createFormats();
+
+    convertSection.classList.remove("hidden");
+});
+
+/* REMOVE */
+
+removeFile.addEventListener("click", function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    clearFile();
+});
+
+/* FORMAT BUTTONS */
+
+function createFormats() {
+    formatGrid.innerHTML = "";
+
+    formats[selectedType].forEach(format => {
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.className = "format-option";
+        button.textContent = format;
+
+        button.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            document
+                .querySelectorAll(".format-option")
+                .forEach(item => {
+                    item.classList.remove("active");
+                });
+
+            this.classList.add("active");
+
+            selectedFormat = format;
+
+            conversionText.textContent =
+                "Convert " +
+                selectedType +
+                " to " +
+                format;
+
+            convertButton.disabled = false;
+        });
+
+        formatGrid.appendChild(button);
+    });
 }
 
-@keyframes blink {
-    50% {
-        opacity: 0;
+/* PICTURE CONVERSION */
+
+async function pictureConvert() {
+    const image = new Image();
+    const url = URL.createObjectURL(currentFile);
+
+    image.src = url;
+
+    await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = reject;
+    });
+
+    const canvas = document.createElement("canvas");
+
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+
+    const ctx = canvas.getContext("2d");
+
+    if (selectedFormat === "JPG") {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+    }
+
+    ctx.drawImage(image, 0, 0);
+
+    URL.revokeObjectURL(url);
+
+    let mime = "image/png";
+
+    if (selectedFormat === "JPG") {
+        mime = "image/jpeg";
+    }
+
+    if (selectedFormat === "WEBP") {
+        mime = "image/webp";
+    }
+
+    const blob = await new Promise(resolve => {
+        canvas.toBlob(resolve, mime, 0.92);
+    });
+
+    if (!blob) {
+        throw new Error("Picture conversion failed.");
+    }
+
+    return blob;
+}
+
+/* AUDIO TO WAV */
+
+async function audioToWav() {
+    const AudioContext =
+        window.AudioContext ||
+        window.webkitAudioContext;
+
+    if (!AudioContext) {
+        throw new Error(
+            "Audio conversion is not supported."
+        );
+    }
+
+    const context = new AudioContext();
+
+    try {
+        const data =
+            await currentFile.arrayBuffer();
+
+        const audio =
+            await context.decodeAudioData(data);
+
+        const channels = audio.numberOfChannels;
+        const sampleRate = audio.sampleRate;
+        const length = audio.length;
+
+        const buffer =
+            new ArrayBuffer(
+                44 +
+                length *
+                channels *
+                2
+            );
+
+        const view =
+            new DataView(buffer);
+
+        function writeText(offset, text) {
+            for (let i = 0; i < text.length; i++) {
+                view.setUint8(
+                    offset + i,
+                    text.charCodeAt(i)
+                );
+            }
+        }
+
+        writeText(0, "RIFF");
+
+        view.setUint32(
+            4,
+            36 + length * channels * 2,
+            true
+        );
+
+        writeText(8, "WAVE");
+        writeText(12, "fmt ");
+
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, channels, true);
+
+        view.setUint32(
+            24,
+            sampleRate,
+            true
+        );
+
+        view.setUint32(
+            28,
+            sampleRate * channels * 2,
+            true
+        );
+
+        view.setUint16(
+            32,
+            channels * 2,
+            true
+        );
+
+        view.setUint16(34, 16, true);
+
+        writeText(36, "data");
+
+        view.setUint32(
+            40,
+            length * channels * 2,
+            true
+        );
+
+        let offset = 44;
+
+        for (let i = 0; i < length; i++) {
+            for (let channel = 0; channel < channels; channel++) {
+                let sample =
+                    audio.getChannelData(channel)[i];
+
+                sample = Math.max(
+                    -1,
+                    Math.min(1, sample)
+                );
+
+                const value =
+                    sample < 0
+                        ? sample * 0x8000
+                        : sample * 0x7fff;
+
+                view.setInt16(
+                    offset,
+                    value,
+                    true
+                );
+
+                offset += 2;
+            }
+        }
+
+        return new Blob(
+            [buffer],
+            { type: "audio/wav" }
+        );
+
+    } finally {
+        await context.close();
     }
 }
 
-.top-controls {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    z-index: 1000;
-    display: flex;
-    gap: 7px;
-}
+/* CONVERSION */
 
-.top-controls button {
-    border: 1px solid #333;
-    background: rgba(20,20,20,0.95);
-    color: white;
-    border-radius: 10px;
-    min-width: 42px;
-    height: 40px;
-    padding: 0 10px;
-}
+async function doConversion() {
+    if (!currentFile) {
+        throw new Error("Choose a file first.");
+    }
 
-.top-controls button:hover,
-.top-controls button.active {
-    background: white;
-    color: black;
-}
+    if (!selectedFormat) {
+        throw new Error("Choose an output format.");
+    }
 
-.container {
-    position: relative;
-    z-index: 10;
-    width: min(900px, calc(100% - 30px));
-    margin: auto;
-    padding-top: 100px;
-}
+    if (selectedType === "picture") {
+        return await pictureConvert();
+    }
 
-.header {
-    text-align: center;
-    margin-bottom: 60px;
-}
+    if (selectedType === "sound") {
+        if (selectedFormat === "WAV") {
+            return await audioToWav();
+        }
 
-.logo {
-    width: 72px;
-    height: 72px;
-    margin: auto;
-    display: grid;
-    place-items: center;
-    border-radius: 20px;
-    background: white;
-    color: black;
-    font-size: 40px;
-    font-weight: 900;
-    animation: logoFloat 2.5s ease-in-out infinite;
-}
+        throw new Error(
+            "This format needs a codec engine."
+        );
+    }
 
-@keyframes logoFloat {
-    50% {
-        transform: translateY(-7px) rotate(2deg);
+    if (selectedType === "video") {
+        if (
+            selectedFormat === "MP4" &&
+            currentFile.type === "video/mp4"
+        ) {
+            return currentFile;
+        }
+
+        throw new Error(
+            "This video conversion needs a codec engine."
+        );
     }
 }
 
-.header h1 {
-    margin: 20px 0 8px;
-    font-size: 45px;
-}
+/* CONVERT BUTTON */
 
-.header p {
-    color: #999;
-}
+convertButton.addEventListener("click", async function () {
 
-.type-section {
-    text-align: center;
-}
-
-.type-section h2,
-.convert-section h2 {
-    font-size: 24px;
-}
-
-.type-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
-    margin-top: 25px;
-}
-
-.type-card {
-    min-height: 180px;
-    border: 1px solid #292929;
-    border-radius: 20px;
-    background: #111;
-    color: white;
-    padding: 25px 15px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 9px;
-    transition: 0.2s;
-}
-
-.type-card:hover {
-    transform: translateY(-4px);
-    border-color: white;
-}
-
-.type-card.active {
-    background: white;
-    color: black;
-}
-
-.type-icon {
-    font-size: 42px;
-}
-
-.type-card small {
-    color: #999;
-}
-
-.type-card.active small {
-    color: #555;
-}
-
-.tool-section {
-    margin-top: 70px;
-}
-
-.hidden {
-    display: none !important;
-}
-
-.tool-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.tool-title span {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #00ff88;
-}
-
-.file-box {
-    position: relative;
-    min-height: 230px;
-    border: 2px dashed #333;
-    border-radius: 22px;
-    background: #101010;
-    display: grid;
-    place-items: center;
-    text-align: center;
-    overflow: hidden;
-}
-
-.file-box:hover {
-    border-color: #777;
-}
-
-#fileInput {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-    z-index: 5;
-}
-
-#emptyFile {
-    position: relative;
-    z-index: 2;
-    pointer-events: none;
-}
-
-.upload-icon {
-    width: 55px;
-    height: 55px;
-    border-radius: 50%;
-    background: white;
-    color: black;
-    display: grid;
-    place-items: center;
-    margin: auto;
-    font-size: 30px;
-}
-
-#emptyFile h3 {
-    margin-bottom: 5px;
-}
-
-#emptyFile p {
-    color: #aaa;
-}
-
-#emptyFile small {
-    color: #666;
-}
-
-.selected-file {
-    position: relative;
-    z-index: 10;
-    width: 100%;
-    min-height: 210px;
-    padding: 30px 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 25px;
-}
-
-.remove-file {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    z-index: 20;
-    width: 38px;
-    height: 38px;
-    border: 0;
-    border-radius: 50%;
-    background: #222;
-    color: white;
-    font-size: 25px;
-}
-
-.remove-file:hover {
-    background: #fff;
-    color: #000;
-}
-
-.preview {
-    width: 110px;
-    height: 110px;
-    border-radius: 16px;
-    overflow: hidden;
-    background: #181818;
-    display: grid;
-    place-items: center;
-    font-size: 50px;
-    flex-shrink: 0;
-}
-
-.preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.file-info {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    text-align: left;
-    overflow: hidden;
-}
-
-.file-info strong {
-    max-width: 400px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.file-info span {
-    color: #888;
-}
-
-.convert-section {
-    margin-top: 35px;
-}
-
-.format-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin: 20px 0;
-}
-
-.format-option {
-    height: 55px;
-    border: 1px solid #333;
-    border-radius: 12px;
-    background: #111;
-    color: white;
-}
-
-.format-option:hover,
-.format-option.active {
-    background: white;
-    color: black;
-}
-
-#conversionText {
-    color: #888;
-    text-align: center;
-}
-
-.convert-button {
-    width: 100%;
-    height: 58px;
-    border: 0;
-    border-radius: 15px;
-    background: white;
-    color: black;
-    font-weight: 800;
-    margin-top: 10px;
-}
-
-.convert-button:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-}
-
-.progress-section {
-    margin-top: 30px;
-    padding: 20px;
-    border-radius: 17px;
-    background: #111;
-}
-
-.progress-top {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 12px;
-}
-
-.progress-top span {
-    color: #aaa;
-}
-
-.progress-track {
-    width: 100%;
-    height: 10px;
-    border-radius: 10px;
-    background: #292929;
-    overflow: hidden;
-}
-
-#progressBar {
-    width: 0%;
-    height: 100%;
-    background: white;
-    transition: width 0.15s;
-}
-
-.result-section {
-    margin-top: 30px;
-    padding: 35px;
-    text-align: center;
-    border: 1px solid #292929;
-    border-radius: 20px;
-    background: #101010;
-}
-
-.success {
-    width: 60px;
-    height: 60px;
-    margin: auto;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    background: #00ff88;
-    color: black;
-    font-size: 35px;
-    font-weight: bold;
-}
-
-.result-section p {
-    color: #888;
-}
-
-#downloadButton {
-    width: 100%;
-    height: 55px;
-    border: 0;
-    border-radius: 13px;
-    background: white;
-    color: black;
-    font-weight: bold;
-}
-
-.big-space {
-    height: 600px;
-}
-
-footer {
-    text-align: center;
-    padding: 50px 10px;
-    border-top: 1px solid #222;
-    color: #777;
-}
-
-footer a {
-    color: white;
-    text-decoration: none;
-}
-
-footer a:hover {
-    text-decoration: underline;
-}
-
-#toast {
-    position: fixed;
-    left: 50%;
-    bottom: 25px;
-    transform: translate(-50%, 100px);
-    z-index: 2000;
-    background: white;
-    color: black;
-    padding: 13px 20px;
-    border-radius: 12px;
-    opacity: 0;
-    transition: 0.25s;
-    pointer-events: none;
-}
-
-#toast.show {
-    opacity: 1;
-    transform: translate(-50%, 0);
-}
-
-/* PHONE */
-
-body.phone-mode .container {
-    width: calc(100% - 24px);
-    padding-top: 85px;
-}
-
-body.phone-mode .header {
-    margin-bottom: 40px;
-}
-
-body.phone-mode .header h1 {
-    font-size: 34px;
-}
-
-body.phone-mode .logo {
-    width: 62px;
-    height: 62px;
-    font-size: 34px;
-}
-
-body.phone-mode .type-grid {
-    grid-template-columns: 1fr;
-}
-
-body.phone-mode .type-card {
-    min-height: 115px;
-    flex-direction: row;
-    justify-content: flex-start;
-    padding: 15px 20px;
-}
-
-body.phone-mode .type-icon {
-    font-size: 32px;
-}
-
-body.phone-mode .selected-file {
-    flex-direction: column;
-    padding: 45px 20px 25px;
-}
-
-body.phone-mode .file-info {
-    text-align: center;
-    max-width: 100%;
-}
-
-body.phone-mode .file-info strong {
-    max-width: 250px;
-}
-
-body.phone-mode .format-grid {
-    grid-template-columns: repeat(2, 1fr);
-}
-
-body.phone-mode .big-space {
-    height: 400px;
-}
-
-/* DESKTOP */
-
-body.desktop-mode .container {
-    max-width: 1050px;
-}
-
-body.desktop-mode .type-card {
-    min-height: 200px;
-}
-
-/* LIGHT */
-
-body.light {
-    background: #f4f4f4;
-    color: #111;
-}
-
-body.light .background-name {
-    color: rgba(0,0,0,0.035);
-}
-
-body.light .top-controls button {
-    background: white;
-    color: black;
-    border-color: #ddd;
-}
-
-body.light .type-card,
-body.light .file-box,
-body.light .progress-section,
-body.light .result-section {
-    background: white;
-    color: #111;
-    border-color: #ddd;
-}
-
-body.light .type-card small,
-body.light #emptyFile p,
-body.light .file-info span,
-body.light #conversionText,
-body.light .progress-top span {
-    color: #777;
-}
-
-body.light .format-option {
-    background: white;
-    color: #111;
-    border-color: #ddd;
-}
-
-body.light .format-option:hover,
-body.light .format-option.active {
-    background: #111;
-    color: white;
-}
-
-body.light .progress-track {
-    background: #ddd;
-}
-
-body.light #progressBar {
-    background: #111;
-}
-
-body.light .remove-file {
-    background: #eee;
-    color: #111;
-}
-
-body.light footer {
-    border-color: #ddd;
-}
-
-body.light footer a {
-    color: #111;
-}
-
-@media (max-width: 650px) {
-    .top-controls {
-        top: 10px;
-        right: 10px;
+    if (!currentFile) {
+        showToast("Choose a file first.");
+        return;
     }
 
-    .top-controls button {
-        min-width: 38px;
-        height: 36px;
-        padding: 0 8px;
+    if (!selectedFormat) {
+        showToast("Choose a format first.");
+        return;
     }
+
+    this.disabled = true;
+
+    progressSection.classList.remove("hidden");
+    resultSection.classList.add("hidden");
+
+    try {
+        progress(10, "Preparing...");
+
+        await wait(200);
+
+        progress(30, "Processing...");
+
+        await wait(200);
+
+        outputBlob =
+            await doConversion();
+
+        progress(70, "Creating file...");
+
+        await wait(250);
+
+        progress(90, "Finishing...");
+
+        await wait(250);
+
+        const original =
+            currentFile.name.replace(
+                /\.[^/.]+$/,
+                ""
+            );
+
+        outputName =
+            original +
+            "." +
+            selectedFormat.toLowerCase();
+
+        resultName.textContent = outputName;
+
+        progress(100, "Complete");
+
+        await wait(300);
+
+        resultSection.classList.remove(
+            "hidden"
+        );
+
+    } catch (error) {
+
+        progressSection.classList.add(
+            "hidden"
+        );
+
+        showToast(
+            error.message ||
+            "Conversion failed."
+        );
+
+    } finally {
+        this.disabled = false;
+    }
+});
+
+function wait(ms) {
+    return new Promise(resolve => {
+        setTimeout(resolve, ms);
+    });
 }
+
+/* DOWNLOAD */
+
+downloadButton.addEventListener("click", function () {
+
+    if (!outputBlob) {
+        showToast("No converted file.");
+        return;
+    }
+
+    const url =
+        URL.createObjectURL(outputBlob);
+
+    const link =
+        document.createElement("a");
+
+    link.href = url;
+    link.download = outputName;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => {
+        URL.revokeObjectURL(url);
+    }, 1000);
+});
+
+/* DEVICE MODE */
+
+function setDeviceMode(mode) {
+
+    document.body.classList.remove(
+        "phone-mode",
+        "desktop-mode"
+    );
+
+    document.body.classList.add(
+        mode + "-mode"
+    );
+
+    phoneMode.classList.toggle(
+        "active",
+        mode === "phone"
+    );
+
+    desktopMode.classList.toggle(
+        "active",
+        mode === "desktop"
+    );
+
+    localStorage.setItem(
+        "convertx-device",
+        mode
+    );
+}
+
+phoneMode.addEventListener("click", function () {
+    setDeviceMode("phone");
+});
+
+desktopMode.addEventListener("click", function () {
+    setDeviceMode("desktop");
+});
+
+const saved =
+    localStorage.getItem("convertx-device");
+
+if (saved === "phone" || saved === "desktop") {
+    setDeviceMode(saved);
+} else {
+    setDeviceMode(
+        window.innerWidth <= 650
+            ? "phone"
+            : "desktop"
+    );
+}
+
+/* LIGHT / DARK */
+
+modeButton.addEventListener("click", function () {
+
+    document.body.classList.toggle("light");
+
+    this.textContent =
+        document.body.classList.contains("light")
+            ? "☀ Light"
+            : "☾ Dark";
+});
+
+/* BACKGROUND TYPING */
+
+const typingText =
+    document.getElementById("typingText");
+
+let index = 0;
+let deleting = false;
+
+function typeLoop() {
+
+    const text = "ConvertX";
+
+    if (!deleting) {
+        index++;
+
+        typingText.textContent =
+            text.substring(0, index);
+
+        if (index === text.length) {
+            deleting = true;
+
+            setTimeout(
+                typeLoop,
+                1200
+            );
+
+            return;
+        }
+    } else {
+
+        index--;
+
+        typingText.textContent =
+            text.substring(0, index);
+
+        if (index === 0) {
+            deleting = false;
+        }
+    }
+
+    setTimeout(
+        typeLoop,
+        deleting ? 80 : 180
+    );
+}
+
+typeLoop();
