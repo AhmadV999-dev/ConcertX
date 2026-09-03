@@ -4,76 +4,127 @@
    DOM
 ========================= */
 
-const typeCards = document.querySelectorAll(".type-card");
+const typeCards =
+    document.querySelectorAll(".type-card");
 
-const toolSection = document.getElementById("toolSection");
+const toolSection =
+    document.getElementById("toolSection");
+
 const selectedTypeText =
-    document.getElementById("selectedTypeText");
+    document.getElementById(
+        "selectedTypeText"
+    );
 
-const fileBox = document.getElementById("fileBox");
-const emptyFile = document.getElementById("emptyFile");
+const fileBox =
+    document.getElementById("fileBox");
+
+const emptyFile =
+    document.getElementById("emptyFile");
+
 const selectedFile =
-    document.getElementById("selectedFile");
+    document.getElementById(
+        "selectedFile"
+    );
 
 const fileInput =
-    document.getElementById("fileInput");
+    document.getElementById(
+        "fileInput"
+    );
 
 const removeFile =
-    document.getElementById("removeFile");
+    document.getElementById(
+        "removeFile"
+    );
 
 const preview =
-    document.getElementById("preview");
+    document.getElementById(
+        "preview"
+    );
 
 const fileName =
-    document.getElementById("fileName");
+    document.getElementById(
+        "fileName"
+    );
 
 const fileSize =
-    document.getElementById("fileSize");
+    document.getElementById(
+        "fileSize"
+    );
 
 const convertSection =
-    document.getElementById("convertSection");
+    document.getElementById(
+        "convertSection"
+    );
 
 const formatGrid =
-    document.getElementById("formatGrid");
+    document.getElementById(
+        "formatGrid"
+    );
 
 const conversionText =
-    document.getElementById("conversionText");
+    document.getElementById(
+        "conversionText"
+    );
 
 const convertButton =
-    document.getElementById("convertButton");
+    document.getElementById(
+        "convertButton"
+    );
 
 const progressSection =
-    document.getElementById("progressSection");
+    document.getElementById(
+        "progressSection"
+    );
 
 const progressText =
-    document.getElementById("progressText");
+    document.getElementById(
+        "progressText"
+    );
 
 const progressNumber =
-    document.getElementById("progressNumber");
+    document.getElementById(
+        "progressNumber"
+    );
 
 const progressBar =
-    document.getElementById("progressBar");
+    document.getElementById(
+        "progressBar"
+    );
 
 const resultSection =
-    document.getElementById("resultSection");
+    document.getElementById(
+        "resultSection"
+    );
 
 const resultName =
-    document.getElementById("resultName");
+    document.getElementById(
+        "resultName"
+    );
 
 const downloadButton =
-    document.getElementById("downloadButton");
+    document.getElementById(
+        "downloadButton"
+    );
 
 const phoneMode =
-    document.getElementById("phoneMode");
+    document.getElementById(
+        "phoneMode"
+    );
 
 const desktopMode =
-    document.getElementById("desktopMode");
+    document.getElementById(
+        "desktopMode"
+    );
 
 const themeButton =
-    document.getElementById("themeButton");
+    document.getElementById(
+        "themeButton"
+    );
 
 const toast =
-    document.getElementById("toast");
+    document.getElementById(
+        "toast"
+    );
 
 
 /* =========================
@@ -82,12 +133,14 @@ const toast =
 
 let selectedType = "";
 let selectedFormat = "";
+
 let currentFile = null;
 
 let outputBlob = null;
 let outputName = "";
 
 let previewURL = null;
+
 let toastTimer = null;
 
 
@@ -96,9 +149,21 @@ let toastTimer = null;
 ========================= */
 
 const formats = {
-    picture: ["PNG", "JPG", "WEBP"],
-    sound: ["WAV"],
-    video: ["MP4"]
+
+    picture: [
+        "PNG",
+        "JPG",
+        "WEBP"
+    ],
+
+    sound: [
+        "WAV"
+    ],
+
+    video: [
+        "MP4"
+    ]
+
 };
 
 
@@ -113,13 +178,24 @@ function showToast(message) {
     }
 
     toast.textContent = message;
+
     toast.classList.add("show");
 
-    clearTimeout(toastTimer);
+    clearTimeout(
+        toastTimer
+    );
 
-    toastTimer = setTimeout(function () {
-        toast.classList.remove("show");
-    }, 2500);
+    toastTimer =
+        setTimeout(
+            function () {
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            },
+            2500
+        );
 }
 
 
@@ -129,7 +205,10 @@ function showToast(message) {
 
 function formatBytes(bytes) {
 
-    if (!bytes || bytes <= 0) {
+    if (
+        !bytes ||
+        bytes <= 0
+    ) {
         return "0 B";
     }
 
@@ -142,19 +221,28 @@ function formatBytes(bytes) {
 
     const index =
         Math.floor(
-            Math.log(bytes) / Math.log(1024)
+            Math.log(bytes) /
+            Math.log(1024)
         );
 
     const safeIndex =
-        Math.min(index, units.length - 1);
+        Math.min(
+            index,
+            units.length - 1
+        );
 
     const value =
         bytes /
-        Math.pow(1024, safeIndex);
+        Math.pow(
+            1024,
+            safeIndex
+        );
 
     return (
         value.toFixed(
-            safeIndex === 0 ? 0 : 2
+            safeIndex === 0
+                ? 0
+                : 2
         ) +
         " " +
         units[safeIndex]
@@ -168,14 +256,16 @@ function formatBytes(bytes) {
 
 function wait(milliseconds) {
 
-    return new Promise(function (resolve) {
+    return new Promise(
+        function (resolve) {
 
-        setTimeout(
-            resolve,
-            milliseconds
-        );
+            setTimeout(
+                resolve,
+                milliseconds
+            );
 
-    });
+        }
+    );
 }
 
 
@@ -183,25 +273,39 @@ function wait(milliseconds) {
    PROGRESS
 ========================= */
 
-function setProgress(percent, message) {
+function setProgress(
+    percent,
+    message
+) {
 
     const safePercent =
         Math.max(
             0,
-            Math.min(100, percent)
+            Math.min(
+                100,
+                percent
+            )
         );
 
+
     if (progressBar) {
+
         progressBar.style.width =
             safePercent + "%";
     }
 
+
     if (progressNumber) {
+
         progressNumber.textContent =
-            Math.round(safePercent) + "%";
+            Math.round(
+                safePercent
+            ) + "%";
     }
 
+
     if (progressText) {
+
         progressText.textContent =
             message;
     }
@@ -209,20 +313,31 @@ function setProgress(percent, message) {
 
 
 /* =========================
-   RENAME FILE
+   RENAME
 ========================= */
 
-function renameFile(name, extension) {
+function renameFile(
+    name,
+    extension
+) {
 
     const dotIndex =
         name.lastIndexOf(".");
 
-    let baseName = name;
+
+    let baseName =
+        name;
+
 
     if (dotIndex > 0) {
+
         baseName =
-            name.substring(0, dotIndex);
+            name.substring(
+                0,
+                dotIndex
+            );
     }
+
 
     return (
         baseName +
@@ -239,29 +354,37 @@ function renameFile(name, extension) {
 function chooseType(type) {
 
     selectedType = type;
+
     selectedFormat = "";
 
     outputBlob = null;
     outputName = "";
 
-    typeCards.forEach(function (card) {
 
-        card.classList.toggle(
-            "selected",
-            card.dataset.type === type
-        );
+    typeCards.forEach(
+        function (card) {
 
-    });
+            card.classList.toggle(
+                "selected",
+                card.dataset.type === type
+            );
+
+        }
+    );
 
 
     if (selectedTypeText) {
 
-        if (type === "picture") {
+        if (
+            type === "picture"
+        ) {
 
             selectedTypeText.textContent =
                 "Choose a picture";
 
-        } else if (type === "sound") {
+        } else if (
+            type === "sound"
+        ) {
 
             selectedTypeText.textContent =
                 "Choose a sound";
@@ -275,7 +398,10 @@ function chooseType(type) {
 
 
     if (toolSection) {
-        toolSection.classList.remove("hidden");
+
+        toolSection.classList.remove(
+            "hidden"
+        );
     }
 
 
@@ -284,12 +410,16 @@ function chooseType(type) {
 
     if (fileInput) {
 
-        if (type === "picture") {
+        if (
+            type === "picture"
+        ) {
 
             fileInput.accept =
                 "image/*";
 
-        } else if (type === "sound") {
+        } else if (
+            type === "sound"
+        ) {
 
             fileInput.accept =
                 "audio/*";
@@ -305,18 +435,21 @@ function chooseType(type) {
     createFormats();
 
 
-    setTimeout(function () {
+    setTimeout(
+        function () {
 
-        if (toolSection) {
+            if (toolSection) {
 
-            toolSection.scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
+                toolSection.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
 
-        }
+            }
 
-    }, 80);
+        },
+        80
+    );
 }
 
 
@@ -324,20 +457,22 @@ function chooseType(type) {
    TYPE BUTTONS
 ========================= */
 
-typeCards.forEach(function (card) {
+typeCards.forEach(
+    function (card) {
 
-    card.addEventListener(
-        "click",
-        function () {
+        card.addEventListener(
+            "click",
+            function () {
 
-            const type =
-                card.dataset.type;
+                chooseType(
+                    card.dataset.type
+                );
 
-            chooseType(type);
-        }
-    );
+            }
+        );
 
-});
+    }
+);
 
 
 /* =========================
@@ -365,11 +500,13 @@ function resetFile() {
 
 
     if (fileInput) {
+
         fileInput.value = "";
     }
 
 
     if (emptyFile) {
+
         emptyFile.classList.remove(
             "hidden"
         );
@@ -377,6 +514,7 @@ function resetFile() {
 
 
     if (selectedFile) {
+
         selectedFile.classList.add(
             "hidden"
         );
@@ -384,21 +522,27 @@ function resetFile() {
 
 
     if (preview) {
+
         preview.innerHTML = "";
     }
 
 
     if (fileName) {
-        fileName.textContent = "File";
+
+        fileName.textContent =
+            "File";
     }
 
 
     if (fileSize) {
-        fileSize.textContent = "0 B";
+
+        fileSize.textContent =
+            "0 B";
     }
 
 
     if (convertSection) {
+
         convertSection.classList.add(
             "hidden"
         );
@@ -406,6 +550,7 @@ function resetFile() {
 
 
     if (progressSection) {
+
         progressSection.classList.add(
             "hidden"
         );
@@ -413,6 +558,7 @@ function resetFile() {
 
 
     if (resultSection) {
+
         resultSection.classList.add(
             "hidden"
         );
@@ -420,13 +566,15 @@ function resetFile() {
 
 
     if (convertButton) {
-        convertButton.disabled = true;
+
+        convertButton.disabled =
+            true;
     }
 }
 
 
 /* =========================
-   FILE VALIDATION
+   VALIDATE FILE
 ========================= */
 
 function isValidFile(file) {
@@ -436,34 +584,47 @@ function isValidFile(file) {
     }
 
 
-    if (selectedType === "picture") {
+    if (
+        selectedType ===
+        "picture"
+    ) {
 
         return (
-            file.type.startsWith("image/") ||
+            file.type.startsWith(
+                "image/"
+            ) ||
             /\.(png|jpe?g|webp|gif|bmp|avif)$/i.test(
                 file.name
             )
         );
-
     }
 
 
-    if (selectedType === "sound") {
+    if (
+        selectedType ===
+        "sound"
+    ) {
 
         return (
-            file.type.startsWith("audio/") ||
+            file.type.startsWith(
+                "audio/"
+            ) ||
             /\.(mp3|wav|ogg|oga|m4a|aac|flac|webm)$/i.test(
                 file.name
             )
         );
-
     }
 
 
-    if (selectedType === "video") {
+    if (
+        selectedType ===
+        "video"
+    ) {
 
         return (
-            file.type.startsWith("video/") ||
+            file.type.startsWith(
+                "video/"
+            ) ||
             /\.(mp4|webm|mov|mkv|avi|m4v)$/i.test(
                 file.name
             )
@@ -472,6 +633,37 @@ function isValidFile(file) {
 
 
     return false;
+}
+
+
+/* =========================
+   FILE BOX CLICK
+========================= */
+
+/*
+   IMPORTANT:
+   The file input is tiny and cannot
+   block other buttons.
+
+   Only the file box opens the picker.
+*/
+
+if (fileBox) {
+
+    fileBox.addEventListener(
+        "click",
+        function () {
+
+            if (
+                !currentFile &&
+                fileInput
+            ) {
+
+                fileInput.click();
+            }
+
+        }
+    );
 }
 
 
@@ -495,26 +687,32 @@ if (fileInput) {
             }
 
 
-            if (!isValidFile(file)) {
+            if (
+                !isValidFile(file)
+            ) {
 
                 showToast(
-                    "This file type is not supported here."
+                    "This file type is not supported."
                 );
 
-                fileInput.value = "";
+                fileInput.value =
+                    "";
 
                 return;
             }
 
 
-            showSelectedFile(file);
+            showSelectedFile(
+                file
+            );
+
         }
     );
 }
 
 
 /* =========================
-   SHOW SELECTED FILE
+   SHOW FILE
 ========================= */
 
 function showSelectedFile(file) {
@@ -523,6 +721,7 @@ function showSelectedFile(file) {
 
     outputBlob = null;
     outputName = "";
+
     selectedFormat = "";
 
 
@@ -535,10 +734,13 @@ function showSelectedFile(file) {
 
 
     previewURL =
-        URL.createObjectURL(file);
+        URL.createObjectURL(
+            file
+        );
 
 
     if (emptyFile) {
+
         emptyFile.classList.add(
             "hidden"
         );
@@ -546,6 +748,7 @@ function showSelectedFile(file) {
 
 
     if (selectedFile) {
+
         selectedFile.classList.remove(
             "hidden"
         );
@@ -553,14 +756,18 @@ function showSelectedFile(file) {
 
 
     if (fileName) {
+
         fileName.textContent =
             file.name;
     }
 
 
     if (fileSize) {
+
         fileSize.textContent =
-            formatBytes(file.size);
+            formatBytes(
+                file.size
+            );
     }
 
 
@@ -569,10 +776,15 @@ function showSelectedFile(file) {
         preview.innerHTML = "";
 
 
-        if (selectedType === "picture") {
+        if (
+            selectedType ===
+            "picture"
+        ) {
 
             const image =
-                document.createElement("img");
+                document.createElement(
+                    "img"
+                );
 
             image.src =
                 previewURL;
@@ -585,29 +797,51 @@ function showSelectedFile(file) {
             );
 
 
-        } else if (selectedType === "sound") {
+        } else if (
+            selectedType ===
+            "sound"
+        ) {
 
             const audio =
-                document.createElement("audio");
+                document.createElement(
+                    "audio"
+                );
 
-            audio.controls = true;
-            audio.preload = "metadata";
-            audio.src = previewURL;
+            audio.controls =
+                true;
+
+            audio.preload =
+                "metadata";
+
+            audio.src =
+                previewURL;
 
             preview.appendChild(
                 audio
             );
 
 
-        } else if (selectedType === "video") {
+        } else if (
+            selectedType ===
+            "video"
+        ) {
 
             const video =
-                document.createElement("video");
+                document.createElement(
+                    "video"
+                );
 
-            video.controls = true;
-            video.playsInline = true;
-            video.preload = "metadata";
-            video.src = previewURL;
+            video.controls =
+                true;
+
+            video.playsInline =
+                true;
+
+            video.preload =
+                "metadata";
+
+            video.src =
+                previewURL;
 
             preview.appendChild(
                 video
@@ -626,7 +860,8 @@ function showSelectedFile(file) {
 
     if (convertButton) {
 
-        convertButton.disabled = true;
+        convertButton.disabled =
+            true;
     }
 
 
@@ -639,7 +874,7 @@ function showSelectedFile(file) {
 
 
 /* =========================
-   CREATE FORMAT BUTTONS
+   FORMAT BUTTONS
 ========================= */
 
 function createFormats() {
@@ -649,23 +884,31 @@ function createFormats() {
     }
 
 
-    formatGrid.innerHTML = "";
+    formatGrid.innerHTML =
+        "";
 
 
     const availableFormats =
-        formats[selectedType] || [];
+        formats[selectedType] ||
+        [];
 
 
     availableFormats.forEach(
         function (format) {
 
             const button =
-                document.createElement("button");
+                document.createElement(
+                    "button"
+                );
 
-            button.type = "button";
+
+            button.type =
+                "button";
+
 
             button.className =
                 "format-button";
+
 
             button.textContent =
                 format;
@@ -679,13 +922,13 @@ function createFormats() {
                         format;
 
 
-                    const allButtons =
+                    const buttons =
                         formatGrid.querySelectorAll(
                             ".format-button"
                         );
 
 
-                    allButtons.forEach(
+                    buttons.forEach(
                         function (item) {
 
                             item.classList.remove(
@@ -739,9 +982,12 @@ if (removeFile) {
         function (event) {
 
             event.preventDefault();
+
             event.stopPropagation();
 
+
             resetFile();
+
 
             showToast(
                 "File removed."
@@ -752,7 +998,7 @@ if (removeFile) {
 
 
 /* =========================
-   CONVERT BUTTON
+   CONVERT
 ========================= */
 
 if (convertButton) {
@@ -781,7 +1027,8 @@ if (convertButton) {
             }
 
 
-            convertButton.disabled = true;
+            convertButton.disabled =
+                true;
 
 
             if (resultSection) {
@@ -812,7 +1059,9 @@ if (convertButton) {
 
             } catch (error) {
 
-                console.error(error);
+                console.error(
+                    error
+                );
 
 
                 if (progressSection) {
@@ -847,7 +1096,8 @@ if (convertButton) {
 async function performConversion() {
 
     if (
-        selectedType === "picture"
+        selectedType ===
+        "picture"
     ) {
 
         await convertImage();
@@ -857,7 +1107,8 @@ async function performConversion() {
 
 
     if (
-        selectedType === "sound"
+        selectedType ===
+        "sound"
     ) {
 
         await convertAudioToWav();
@@ -867,7 +1118,8 @@ async function performConversion() {
 
 
     if (
-        selectedType === "video"
+        selectedType ===
+        "video"
     ) {
 
         await convertVideo();
@@ -909,10 +1161,14 @@ async function convertImage() {
 
 
     await new Promise(
-        function (resolve, reject) {
+        function (
+            resolve,
+            reject
+        ) {
 
             image.onload =
                 resolve;
+
 
             image.onerror =
                 function () {
@@ -944,6 +1200,7 @@ async function convertImage() {
     canvas.width =
         image.naturalWidth;
 
+
     canvas.height =
         image.naturalHeight;
 
@@ -962,6 +1219,28 @@ async function convertImage() {
 
         throw new Error(
             "Canvas is not supported."
+        );
+    }
+
+
+    /*
+       JPG does not support transparency.
+       Give it a white background.
+    */
+
+    if (
+        selectedFormat ===
+        "JPG"
+    ) {
+
+        context.fillStyle =
+            "#ffffff";
+
+        context.fillRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
         );
     }
 
@@ -989,14 +1268,16 @@ async function convertImage() {
 
 
     if (
-        selectedFormat === "JPG"
+        selectedFormat ===
+        "JPG"
     ) {
 
         mimeType =
             "image/jpeg";
 
     } else if (
-        selectedFormat === "WEBP"
+        selectedFormat ===
+        "WEBP"
     ) {
 
         mimeType =
@@ -1164,12 +1445,14 @@ function encodeWAV(audioBuffer) {
 
 
     const dataSize =
-        length * blockAlign;
+        length *
+        blockAlign;
 
 
     const buffer =
         new ArrayBuffer(
-            44 + dataSize
+            44 +
+            dataSize
         );
 
 
@@ -1237,7 +1520,8 @@ function encodeWAV(audioBuffer) {
 
     view.setUint32(
         28,
-        sampleRate * blockAlign,
+        sampleRate *
+        blockAlign,
         true
     );
 
@@ -1270,21 +1554,27 @@ function encodeWAV(audioBuffer) {
     );
 
 
-    let offset = 44;
-
-
     const leftChannel =
-        audioBuffer.getChannelData(0);
+        audioBuffer.getChannelData(
+            0
+        );
 
 
-    let rightChannel = null;
+    let rightChannel =
+        null;
 
 
     if (channels === 2) {
 
         rightChannel =
-            audioBuffer.getChannelData(1);
+            audioBuffer.getChannelData(
+                1
+            );
     }
+
+
+    let offset =
+        44;
 
 
     for (
@@ -1316,7 +1606,9 @@ function encodeWAV(audioBuffer) {
         );
 
 
-        if (channels === 2) {
+        if (
+            channels === 2
+        ) {
 
             let right =
                 Math.max(
@@ -1353,7 +1645,8 @@ function encodeWAV(audioBuffer) {
     return new Blob(
         [buffer],
         {
-            type: "audio/wav"
+            type:
+                "audio/wav"
         }
     );
 }
@@ -1390,22 +1683,29 @@ function writeString(
 async function convertVideo() {
 
     const isMP4 =
-        currentFile.type === "video/mp4" ||
+        currentFile.type ===
+            "video/mp4" ||
         /\.mp4$/i.test(
             currentFile.name
         );
 
 
+    /*
+       This does NOT fake conversion.
+       Non-MP4 videos need a real video
+       codec such as FFmpeg.
+    */
+
     if (!isMP4) {
 
         throw new Error(
-            "Browser-only ConvertX cannot convert this video to MP4 yet."
+            "This browser version can only save an existing MP4 as MP4."
         );
     }
 
 
     setProgress(
-        40,
+        30,
         "Preparing MP4..."
     );
 
@@ -1414,8 +1714,8 @@ async function convertVideo() {
 
 
     setProgress(
-        80,
-        "Finalizing..."
+        75,
+        "Finalizing MP4..."
     );
 
 
@@ -1496,7 +1796,6 @@ async function finishConversion() {
                     behavior: "smooth",
                     block: "start"
                 });
-
             }
 
         },
@@ -1728,7 +2027,8 @@ if (themeButton) {
 
 
     if (
-        savedTheme === "light"
+        savedTheme ===
+        "light"
     ) {
 
         document.body.classList.add(
@@ -1745,7 +2045,8 @@ if (themeButton) {
 
 
     if (
-        savedMode === "phone"
+        savedMode ===
+        "phone"
     ) {
 
         document.body.classList.add(
@@ -1755,7 +2056,8 @@ if (themeButton) {
 
 
     if (
-        savedMode === "desktop"
+        savedMode ===
+        "desktop"
     ) {
 
         document.body.classList.add(
