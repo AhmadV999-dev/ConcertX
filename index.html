@@ -10,11 +10,14 @@
 <body>
 
 <div class="background-name">
-    <span id="typingText"></span>
-    <span class="typing-cursor">|</span>
+    <span id="typingText">ConvertX</span><span class="cursor">|</span>
 </div>
 
-<button id="modeButton" class="mode-button">☀ Light</button>
+<div class="top-controls">
+    <button id="phoneMode" type="button">📱</button>
+    <button id="desktopMode" type="button">🖥️</button>
+    <button id="modeButton" type="button">☾ Dark</button>
+</div>
 
 <main class="container">
 
@@ -30,109 +33,100 @@
         <div class="type-grid">
 
             <button class="type-card" data-type="picture" type="button">
-                <div class="type-icon">🖼️</div>
+                <span class="type-icon">🖼️</span>
                 <strong>Picture</strong>
-                <span>Convert image files</span>
+                <small>Convert image files</small>
             </button>
 
             <button class="type-card" data-type="sound" type="button">
-                <div class="type-icon">🎵</div>
+                <span class="type-icon">🎵</span>
                 <strong>Sound</strong>
-                <span>Convert audio files</span>
+                <small>Convert audio files</small>
             </button>
 
             <button class="type-card" data-type="video" type="button">
-                <div class="type-icon">🎬</div>
+                <span class="type-icon">🎬</span>
                 <strong>Video</strong>
-                <span>Convert video files</span>
+                <small>Convert video files</small>
             </button>
 
         </div>
     </section>
 
-    <section id="toolSection" class="tool-section" hidden>
+    <section id="toolSection" class="tool-section hidden">
 
         <div class="tool-title">
-            <span class="tool-dot"></span>
-            <span id="selectedTypeText">Choose your file</span>
+            <span></span>
+            <b id="selectedTypeText">Choose your file</b>
         </div>
 
         <div id="fileBox" class="file-box">
 
-            <div id="emptyFile" class="empty-file">
+            <div id="emptyFile">
                 <div class="upload-icon">↑</div>
                 <h3>Add your file</h3>
                 <p>Tap here to choose a file</p>
-                <span class="file-hint">Your file stays on your device</span>
+                <small>Your file stays on your device</small>
             </div>
 
-            <div id="selectedFile" class="selected-file" hidden>
+            <div id="selectedFile" class="selected-file hidden">
 
-                <button
-                    id="removeFile"
-                    class="remove-file"
-                    type="button"
-                    aria-label="Remove file"
-                >×</button>
+                <button id="removeFile" class="remove-file" type="button">
+                    ×
+                </button>
 
                 <div id="preview" class="preview"></div>
 
-                <div class="file-information">
+                <div class="file-info">
                     <strong id="fileName">File</strong>
                     <span id="fileSize">0 B</span>
                 </div>
 
             </div>
 
-            <input id="fileInput" type="file" hidden>
-
+            <input id="fileInput" type="file">
         </div>
 
-        <div id="convertSection" class="convert-section" hidden>
+        <div id="convertSection" class="convert-section hidden">
 
             <h2>Convert to</h2>
 
             <div id="formatGrid" class="format-grid"></div>
 
-            <p id="conversionText" class="conversion-text">
+            <p id="conversionText">
                 Choose an output format
             </p>
 
-            <button
-                id="convertButton"
-                class="convert-button"
-                type="button"
-                disabled
-            >Convert</button>
+            <button id="convertButton" class="convert-button" type="button">
+                Convert
+            </button>
 
         </div>
 
-        <div id="progressSection" class="progress-section" hidden>
+        <div id="progressSection" class="progress-section hidden">
 
-            <div class="progress-header">
+            <div class="progress-top">
                 <span id="progressText">Preparing...</span>
-                <strong id="progressNumber">0%</strong>
+                <b id="progressNumber">0%</b>
             </div>
 
             <div class="progress-track">
-                <div id="progressBar" class="progress-bar"></div>
+                <div id="progressBar"></div>
             </div>
 
         </div>
 
-        <div id="resultSection" class="result-section" hidden>
+        <div id="resultSection" class="result-section hidden">
 
-            <div class="success-icon">✓</div>
+            <div class="success">✓</div>
 
             <h2>Conversion complete</h2>
 
             <p id="resultName">file</p>
 
-            <button
-                id="downloadButton"
-                class="download-button"
-                type="button"
-            >↓ Download</button>
+            <button id="downloadButton" type="button">
+                ↓ Download
+            </button>
 
         </div>
 
@@ -140,7 +134,7 @@
 
     <div class="big-space"></div>
 
-    <footer class="footer">
+    <footer>
         <p>Make By Vathana</p>
         <p>Code By Vathana</p>
         <p>Social media</p>
@@ -156,9 +150,8 @@
 
 </main>
 
-<div id="toast" class="toast"></div>
+<div id="toast"></div>
 
 <script src="script.js"></script>
-
 </body>
-</html>
+</html>"
