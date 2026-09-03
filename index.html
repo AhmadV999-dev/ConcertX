@@ -1,164 +1,356 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ConvertX</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1,
+        maximum-scale=1,user-scalable=no"
+    >
+
+    <meta
+        name="description"
+        content="ConvertX - simple browser file converter"
+    >
+
+    <title>ConvertX</title>
+
+    <!-- IMPORTANT: relative paths for GitHub Pages -->
+    <link rel="stylesheet" href="./style.css">
 </head>
 
 <body>
 
-<div class="background-name">
-    <span id="typingText"></span>
-    <span class="typing-cursor">|</span>
-</div>
+    <!-- Background animation -->
+    <div class="background-name">
+        <span id="typingText">ConvertX</span><span class="cursor">|</span>
+    </div>
 
-<button id="modeButton" class="mode-button">☀ Light</button>
 
-<main class="container">
+    <!-- Top controls -->
+    <div class="top-controls">
 
-    <header class="header">
-        <div class="logo">C</div>
-        <h1>ConvertX</h1>
-        <p>Simple file conversion</p>
-    </header>
+        <button
+            id="phoneMode"
+            type="button"
+            aria-label="Phone mode"
+        >
+            📱
+        </button>
 
-    <section class="type-section">
-        <h2>What do you want to convert?</h2>
+        <button
+            id="desktopMode"
+            type="button"
+            aria-label="Desktop mode"
+        >
+            🖥️
+        </button>
 
-        <div class="type-grid">
+        <button
+            id="modeButton"
+            type="button"
+            aria-label="Change theme"
+        >
+            ☾
+        </button>
 
-            <button class="type-card" data-type="picture" type="button">
-                <div class="type-icon">🖼️</div>
-                <strong>Picture</strong>
-                <span>Convert image files</span>
-            </button>
+    </div>
 
-            <button class="type-card" data-type="sound" type="button">
-                <div class="type-icon">🎵</div>
-                <strong>Sound</strong>
-                <span>Convert audio files</span>
-            </button>
 
-            <button class="type-card" data-type="video" type="button">
-                <div class="type-icon">🎬</div>
-                <strong>Video</strong>
-                <span>Convert video files</span>
-            </button>
+    <main class="container">
 
-        </div>
-    </section>
+        <!-- HEADER -->
 
-    <section id="toolSection" class="tool-section" hidden>
+        <header class="header">
 
-        <div class="tool-title">
-            <span class="tool-dot"></span>
-            <span id="selectedTypeText">Choose your file</span>
-        </div>
+            <div class="logo">C</div>
 
-        <div id="fileBox" class="file-box">
+            <h1>ConvertX</h1>
 
-            <div id="emptyFile" class="empty-file">
-                <div class="upload-icon">↑</div>
-                <h3>Add your file</h3>
-                <p>Tap here to choose a file</p>
-                <span class="file-hint">Your file stays on your device</span>
-            </div>
+            <p>Simple file conversion</p>
 
-            <div id="selectedFile" class="selected-file" hidden>
+        </header>
+
+
+        <!-- TYPE SELECT -->
+
+        <section class="type-section">
+
+            <h2>What do you want to convert?</h2>
+
+            <div class="type-grid">
 
                 <button
-                    id="removeFile"
-                    class="remove-file"
+                    class="type-card"
+                    data-type="picture"
                     type="button"
-                    aria-label="Remove file"
-                >×</button>
+                >
 
-                <div id="preview" class="preview"></div>
+                    <span class="type-icon">🖼️</span>
 
-                <div class="file-information">
-                    <strong id="fileName">File</strong>
-                    <span id="fileSize">0 B</span>
+                    <strong>Picture</strong>
+
+                    <small>
+                        PNG • JPG • WEBP
+                    </small>
+
+                </button>
+
+
+                <button
+                    class="type-card"
+                    data-type="sound"
+                    type="button"
+                >
+
+                    <span class="type-icon">🎵</span>
+
+                    <strong>Sound</strong>
+
+                    <small>
+                        Audio → WAV
+                    </small>
+
+                </button>
+
+
+                <button
+                    class="type-card"
+                    data-type="video"
+                    type="button"
+                >
+
+                    <span class="type-icon">🎬</span>
+
+                    <strong>Video</strong>
+
+                    <small>
+                        MP4
+                    </small>
+
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- CONVERTER -->
+
+        <section
+            id="toolSection"
+            class="tool-section hidden"
+        >
+
+            <div class="tool-title">
+
+                <span></span>
+
+                <b id="selectedTypeText">
+                    Choose your file
+                </b>
+
+            </div>
+
+
+            <!-- FILE BOX -->
+
+            <div
+                id="fileBox"
+                class="file-box"
+            >
+
+                <!-- Native browser file picker -->
+                <input
+                    id="fileInput"
+                    type="file"
+                    aria-label="Choose file"
+                >
+
+
+                <!-- Empty state -->
+
+                <div id="emptyFile">
+
+                    <div class="upload-icon">
+                        ↑
+                    </div>
+
+                    <h3>Add your file</h3>
+
+                    <p>
+                        Tap here to choose a file
+                    </p>
+
+                    <small>
+                        Your file stays on your device
+                    </small>
+
+                </div>
+
+
+                <!-- Selected state -->
+
+                <div
+                    id="selectedFile"
+                    class="selected-file hidden"
+                >
+
+                    <button
+                        id="removeFile"
+                        class="remove-file"
+                        type="button"
+                        aria-label="Remove file"
+                    >
+                        ×
+                    </button>
+
+
+                    <div
+                        id="preview"
+                        class="preview"
+                    ></div>
+
+
+                    <div class="file-info">
+
+                        <strong id="fileName">
+                            File
+                        </strong>
+
+                        <span id="fileSize">
+                            0 B
+                        </span>
+
+                    </div>
+
                 </div>
 
             </div>
 
-            <input id="fileInput" type="file" hidden>
 
-        </div>
+            <!-- FORMAT -->
 
-        <div id="convertSection" class="convert-section" hidden>
+            <div
+                id="convertSection"
+                class="convert-section hidden"
+            >
 
-            <h2>Convert to</h2>
+                <h2>Convert to</h2>
 
-            <div id="formatGrid" class="format-grid"></div>
+                <div
+                    id="formatGrid"
+                    class="format-grid"
+                ></div>
 
-            <p id="conversionText" class="conversion-text">
-                Choose an output format
-            </p>
+                <p id="conversionText">
+                    Choose an output format
+                </p>
 
-            <button
-                id="convertButton"
-                class="convert-button"
-                type="button"
-                disabled
-            >Convert</button>
+                <button
+                    id="convertButton"
+                    class="convert-button"
+                    type="button"
+                    disabled
+                >
+                    Convert
+                </button>
 
-        </div>
-
-        <div id="progressSection" class="progress-section" hidden>
-
-            <div class="progress-header">
-                <span id="progressText">Preparing...</span>
-                <strong id="progressNumber">0%</strong>
             </div>
 
-            <div class="progress-track">
-                <div id="progressBar" class="progress-bar"></div>
+
+            <!-- PROGRESS -->
+
+            <div
+                id="progressSection"
+                class="progress-section hidden"
+            >
+
+                <div class="progress-top">
+
+                    <span id="progressText">
+                        Preparing...
+                    </span>
+
+                    <b id="progressNumber">
+                        0%
+                    </b>
+
+                </div>
+
+
+                <div class="progress-track">
+
+                    <div id="progressBar"></div>
+
+                </div>
+
             </div>
 
-        </div>
 
-        <div id="resultSection" class="result-section" hidden>
+            <!-- RESULT -->
 
-            <div class="success-icon">✓</div>
+            <div
+                id="resultSection"
+                class="result-section hidden"
+            >
 
-            <h2>Conversion complete</h2>
+                <div class="success">
+                    ✓
+                </div>
 
-            <p id="resultName">file</p>
+                <h2>
+                    Conversion complete
+                </h2>
 
-            <button
-                id="downloadButton"
-                class="download-button"
-                type="button"
-            >↓ Download</button>
+                <p id="resultName">
+                    file
+                </p>
 
-        </div>
+                <button
+                    id="downloadButton"
+                    type="button"
+                >
+                    ↓ Download
+                </button>
 
-    </section>
+            </div>
 
-    <div class="big-space"></div>
+        </section>
 
-    <footer class="footer">
-        <p>Make By Vathana</p>
-        <p>Code By Vathana</p>
-        <p>Social media</p>
 
-        <a
-            href="https://tiktok.com/@vathana1200"
-            target="_blank"
-            rel="noopener noreferrer"
-        >
-            TikTok Vathana Gaming
-        </a>
-    </footer>
+        <div class="big-space"></div>
 
-</main>
 
-<div id="toast" class="toast"></div>
+        <!-- FOOTER -->
 
-<script src="script.js"></script>
+        <footer>
+
+            <p>Make By Vathana</p>
+
+            <p>Code By Vathana</p>
+
+            <p>Social media</p>
+
+            <a
+                href="https://tiktok.com/@vathana1200"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                TikTok Vathana Gaming
+            </a>
+
+        </footer>
+
+    </main>
+
+
+    <div id="toast"></div>
+
+
+    <!-- IMPORTANT: relative path for GitHub Pages -->
+    <script src="./script.js"></script>
 
 </body>
 </html>
