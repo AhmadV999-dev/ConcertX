@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#090b10">
+  <meta name="theme-color" content="#0b0d12">
   <title>ConvertX</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -20,38 +20,32 @@
         </div>
       </div>
 
-      <div class="top-actions">
-        <button id="deviceBtn" class="icon-btn" title="Phone / Desktop">📱</button>
-        <button id="themeBtn" class="icon-btn" title="Light / Dark">☀️</button>
-      </div>
+      <button id="themeBtn" class="icon-btn" type="button" aria-label="Toggle theme">
+        ☀
+      </button>
     </header>
 
     <main>
 
       <section class="hero">
-        <span class="badge">100% Browser Based</span>
         <h2>Convert your files</h2>
-        <p>No account. No payment. No FFmpeg.</p>
+        <p>Fast, private and runs directly in your browser.</p>
       </section>
 
-      <section class="type-section">
-        <button class="type-card active" data-type="picture">
+      <section class="type-grid">
+
+        <button class="type-card active" data-type="image" type="button">
           <span class="type-icon">🖼️</span>
-          <strong>Picture</strong>
-          <small>PNG, JPG, WEBP...</small>
+          <span class="type-name">Picture</span>
+          <span class="type-desc">PNG, JPG, WEBP, BMP</span>
         </button>
 
-        <button class="type-card" data-type="sound">
+        <button class="type-card" data-type="audio" type="button">
           <span class="type-icon">🎵</span>
-          <strong>Audio</strong>
-          <small>Browser-supported audio</small>
+          <span class="type-name">Audio</span>
+          <span class="type-desc">Audio → WAV</span>
         </button>
 
-        <button class="type-card" data-type="video">
-          <span class="type-icon">🎬</span>
-          <strong>Video</strong>
-          <small>Browser-supported video</small>
-        </button>
       </section>
 
       <section id="converter" class="converter">
@@ -60,77 +54,100 @@
           <input id="fileInput" type="file">
 
           <div class="upload-icon">＋</div>
-          <h3>Add your file</h3>
 
-          <p id="supportedText">
-            Add PNG, JPG, JPEG, WEBP, BMP or GIF
-          </p>
+          <h3>Choose a file</h3>
+          <p id="fileHint">PNG, JPG, JPEG, WEBP or BMP</p>
 
-          <span class="browse-btn">Choose file</span>
-        </div>
+          <button id="chooseBtn" class="primary-btn" type="button">
+            Choose File
+          </button>
 
-        <div id="fileInfo" class="file-info hidden">
-          <div class="file-icon" id="fileIcon">📄</div>
+          <div id="fileInfo" class="file-info hidden">
+            <div>
+              <strong id="fileName">file.png</strong>
+              <span id="fileSize">0 KB</span>
+            </div>
 
-          <div class="file-details">
-            <strong id="fileName">file.png</strong>
-            <span id="fileSize">0 KB</span>
+            <button id="removeBtn" class="remove-btn" type="button">
+              ×
+            </button>
           </div>
-
-          <button id="removeBtn" class="remove-btn">×</button>
         </div>
 
-        <div id="formatArea" class="hidden">
+        <div id="formatSection" class="format-section">
+
           <div class="section-title">
             <h3>Convert to</h3>
-            <span id="selectedType">Picture</span>
+            <span id="formatLabel">Picture</span>
           </div>
 
-          <div id="formats" class="formats"></div>
+          <div id="imageFormats" class="format-grid">
 
-          <button id="convertBtn" class="convert-btn" disabled>
-            Convert file
-          </button>
+            <button class="format-btn active" data-format="png" type="button">
+              <b>PNG</b>
+              <small>Lossless</small>
+            </button>
+
+            <button class="format-btn" data-format="jpg" type="button">
+              <b>JPG</b>
+              <small>Photo</small>
+            </button>
+
+            <button class="format-btn" data-format="webp" type="button">
+              <b>WEBP</b>
+              <small>Modern</small>
+            </button>
+
+            <button class="format-btn" data-format="bmp" type="button">
+              <b>BMP</b>
+              <small>Bitmap</small>
+            </button>
+
+          </div>
+
+          <div id="audioFormats" class="format-grid hidden">
+
+            <button class="format-btn active" data-format="wav" type="button">
+              <b>WAV</b>
+              <small>PCM audio</small>
+            </button>
+
+          </div>
+
         </div>
 
-        <div id="progressArea" class="hidden">
-          <div class="progress-header">
-            <span id="progressText">Preparing...</span>
+        <button id="convertBtn" class="convert-btn" type="button" disabled>
+          Convert File
+        </button>
+
+        <div id="progressArea" class="progress-area hidden">
+          <div class="progress-top">
+            <span id="progressText">Converting...</span>
             <span id="progressPercent">0%</span>
           </div>
 
-          <div class="progress">
+          <div class="progress-track">
             <div id="progressBar"></div>
           </div>
         </div>
 
-        <div id="resultArea" class="result hidden">
+        <div id="resultBox" class="result-box hidden">
+
           <div class="success-icon">✓</div>
 
-          <h3>Conversion complete</h3>
+          <div class="result-text">
+            <strong id="resultName">Converted file</strong>
+            <span id="resultDetails">Ready to download</span>
+          </div>
 
-          <p id="resultName">ConvertXpng1234.png</p>
+          <a id="downloadBtn" class="download-btn" href="#" download>
+            Download
+          </a>
 
-          <button id="downloadBtn" class="download-btn">
-            Download file
-          </button>
-
-          <button id="newBtn" class="new-btn">
-            Convert another file
-          </button>
         </div>
 
-        <div id="message" class="message hidden"></div>
+        <div id="errorBox" class="error-box hidden"></div>
 
-      </section>
-
-      <section class="notice">
-        <strong>Browser limitation</strong>
-        <p>
-          ConvertX does not use FFmpeg or a paid server.
-          Image conversions are handled directly by your browser.
-          Audio and video conversion depends on formats supported by your browser.
-        </p>
       </section>
 
     </main>
@@ -138,9 +155,7 @@
     <footer>
       <span>ConvertX</span>
       <span>•</span>
-      <span>Client-side</span>
-      <span>•</span>
-      <span>No FFmpeg</span>
+      <span>Made by Vathana Gaming</span>
     </footer>
 
   </div>
