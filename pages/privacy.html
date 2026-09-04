@@ -12,61 +12,60 @@
 
   <style>
     .cx-page {
-      width: min(680px, calc(100% - 32px));
+      width: min(700px, calc(100% - 32px));
       margin: 0 auto;
       padding: 50px 0;
     }
 
     .cx-card {
-      padding: 28px;
+      padding: 32px;
       border: 1px solid rgba(255,255,255,.08);
-      border-radius: 22px;
+      border-radius: 24px;
       background: rgba(255,255,255,.035);
       box-shadow: 0 20px 60px rgba(0,0,0,.25);
     }
 
-    .cx-logo {
-      width: 52px;
-      height: 52px;
+    .cx-icon {
+      width: 56px;
+      height: 56px;
       display: grid;
       place-items: center;
-      margin-bottom: 20px;
-      border-radius: 15px;
+      margin-bottom: 22px;
+      border-radius: 16px;
       background: #0b0d12;
       border: 1px solid #20e6ff;
       color: #20e6ff;
       font-size: 24px;
-      font-weight: 800;
     }
 
-    .cx-page h1 {
+    .cx-card h1 {
       margin: 0 0 18px;
-      font-size: 30px;
+      font-size: 32px;
     }
 
-    .cx-page p {
+    .cx-card p {
       line-height: 1.7;
       opacity: .78;
     }
 
     .cx-note {
-      margin-top: 20px;
-      padding: 18px;
-      border-radius: 15px;
-      border: 1px solid rgba(255,255,255,.08);
+      margin: 22px 0;
+      padding: 19px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.07);
       background: rgba(255,255,255,.025);
-      line-height: 1.6;
+      line-height: 1.65;
     }
 
     .cx-back {
       display: inline-flex;
-      margin-top: 22px;
-      padding: 11px 18px;
-      border-radius: 12px;
-      text-decoration: none;
-      color: inherit;
+      margin-top: 8px;
+      padding: 12px 18px;
+      border-radius: 13px;
       border: 1px solid rgba(255,255,255,.12);
-      transition: .2s;
+      color: inherit;
+      text-decoration: none;
+      transition: .2s ease;
     }
 
     .cx-back:hover {
@@ -81,7 +80,7 @@
   <main class="cx-page">
     <section class="cx-card">
 
-      <div class="cx-logo">🔒</div>
+      <div class="cx-icon">🔒</div>
 
       <h1>Privacy</h1>
 
@@ -93,13 +92,13 @@
       <div class="cx-note">
         <strong>Your files</strong><br>
         Files selected for conversion are processed locally by
-        the browser. ConvertX does not intentionally upload your
-        selected files to a ConvertX server.
+        your browser. ConvertX does not intentionally upload
+        your selected files to a ConvertX server.
       </div>
 
       <p>
-        You should still avoid selecting files containing information
-        you do not want to process on your device or in your browser.
+        ConvertX does not require you to create an account just
+        to use the basic conversion features.
       </p>
 
       <a class="cx-back" href="../index.html">
