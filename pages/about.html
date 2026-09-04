@@ -12,41 +12,41 @@
 
   <style>
     .cx-page {
-      width: min(680px, calc(100% - 32px));
+      width: min(700px, calc(100% - 32px));
       margin: 0 auto;
       padding: 50px 0;
     }
 
     .cx-card {
-      padding: 28px;
+      padding: 32px;
       border: 1px solid rgba(255,255,255,.08);
-      border-radius: 22px;
+      border-radius: 24px;
       background: rgba(255,255,255,.035);
       box-shadow: 0 20px 60px rgba(0,0,0,.25);
     }
 
-    .cx-logo {
-      width: 52px;
-      height: 52px;
+    .cx-icon {
+      width: 56px;
+      height: 56px;
       display: grid;
       place-items: center;
-      margin-bottom: 20px;
-      border-radius: 15px;
+      margin-bottom: 22px;
+      border-radius: 16px;
       background: #0b0d12;
       border: 1px solid #20e6ff;
       color: #20e6ff;
-      font-size: 24px;
+      font-size: 25px;
       font-weight: 800;
     }
 
-    .cx-page h1 {
-      margin: 0 0 10px;
-      font-size: 30px;
+    .cx-card h1 {
+      margin: 0 0 12px;
+      font-size: 32px;
     }
 
-    .cx-page p {
+    .cx-card p {
       line-height: 1.7;
-      opacity: .8;
+      opacity: .78;
     }
 
     .cx-credit {
@@ -57,13 +57,15 @@
 
     .cx-back {
       display: inline-flex;
-      margin-top: 22px;
-      padding: 11px 18px;
-      border-radius: 12px;
-      text-decoration: none;
-      color: inherit;
+      align-items: center;
+      gap: 8px;
+      margin-top: 24px;
+      padding: 12px 18px;
+      border-radius: 13px;
       border: 1px solid rgba(255,255,255,.12);
-      transition: .2s;
+      color: inherit;
+      text-decoration: none;
+      transition: .2s ease;
     }
 
     .cx-back:hover {
@@ -78,19 +80,19 @@
   <main class="cx-page">
     <section class="cx-card">
 
-      <div class="cx-logo">X</div>
+      <div class="cx-icon">X</div>
 
       <h1>About ConvertX</h1>
 
       <p>
-        ConvertX is a simple browser-based file conversion tool.
-        It is designed to make supported file conversions easy,
-        fast, and straightforward.
+        ConvertX is a simple and lightweight browser-based file
+        conversion tool. Choose a supported file, select an output
+        format, convert it, and download the result.
       </p>
 
       <p>
-        Your supported files are processed directly in your browser.
-        ConvertX does not need unnecessary accounts or complicated setup.
+        ConvertX is designed to be fast, clean, private, and easy
+        to use on both phones and computers.
       </p>
 
       <div class="cx-credit">
