@@ -1,9 +1,22 @@
 "use strict";
 
+/*
+==================================================
+  CONVERTX
+  Image + Audio + Video
+  Browser + Termux FFmpeg backend
+==================================================
+*/
+
 /* =========================
-   CONFIG
+   SETTINGS
 ========================= */
 
+/*
+   Your Termux FFmpeg server.
+
+   If Termux is running on the SAME phone:
+*/
 const BACKEND_URL = "http://127.0.0.1:8080";
 
 
@@ -106,7 +119,7 @@ let outputURL = null;
 
 function formatBytes(bytes) {
 
-  if (!bytes) {
+  if (!bytes || bytes <= 0) {
     return "0 B";
   }
 
@@ -127,9 +140,11 @@ function formatBytes(bytes) {
   return (
     bytes /
     Math.pow(1024, index)
-  ).toFixed(index === 0 ? 0 : 2)
-    + " "
-    + units[index];
+  ).toFixed(
+    index === 0 ? 0 : 2
+  ) +
+    " " +
+    units[index];
 }
 
 
@@ -177,24 +192,14 @@ function showError(message) {
     "hidden"
   );
 
-  setTimeout(() => {
-
-    errorBox.classList.add(
-      "hidden"
-    );
-
-  }, 6000);
-
 }
 
 
 function hideError() {
 
-  if (errorBox) {
-    errorBox.classList.add(
-      "hidden"
-    );
-  }
+  errorBox?.classList.add(
+    "hidden"
+  );
 
 }
 
@@ -203,7 +208,10 @@ function setProgress(value, text) {
 
   value = Math.max(
     0,
-    Math.min(100, value)
+    Math.min(
+      100,
+      value
+    )
   );
 
   if (progressBar) {
@@ -233,6 +241,7 @@ function setProgress(value, text) {
 function clearOutput() {
 
   outputBlob = null;
+
   outputName = "";
 
   if (outputURL) {
@@ -257,13 +266,9 @@ function clearOutput() {
 
   }
 
-  if (resultBox) {
-
-    resultBox.classList.add(
-      "hidden"
-    );
-
-  }
+  resultBox?.classList.add(
+    "hidden"
+  );
 
 }
 
@@ -286,22 +291,18 @@ function selectType(type) {
   });
 
 
+  /* IMAGE */
+
   if (type === "image") {
 
-    if (formatLabel) {
-      formatLabel.textContent =
-        "Picture";
-    }
+    formatLabel.textContent =
+      "Picture";
 
-    if (fileHint) {
-      fileHint.textContent =
-        "PNG, JPG, JPEG or WEBP";
-    }
+    fileHint.textContent =
+      "PNG, JPG, JPEG or WEBP";
 
-    if (fileInput) {
-      fileInput.accept =
-        "image/png,image/jpeg,image/webp";
-    }
+    fileInput.accept =
+      "image/png,image/jpeg,image/webp";
 
     imageFormats?.classList.remove(
       "hidden"
@@ -315,27 +316,24 @@ function selectType(type) {
       "hidden"
     );
 
-    selectedFormat = "png";
+    selectedFormat =
+      "png";
 
   }
 
 
-  if (type === "audio") {
+  /* AUDIO */
 
-    if (formatLabel) {
-      formatLabel.textContent =
-        "Audio";
-    }
+  else if (type === "audio") {
 
-    if (fileHint) {
-      fileHint.textContent =
-        "Browser-supported audio files";
-    }
+    formatLabel.textContent =
+      "Audio";
 
-    if (fileInput) {
-      fileInput.accept =
-        "audio/*";
-    }
+    fileHint.textContent =
+      "MP3, WAV, OGG, M4A, AAC or FLAC";
+
+    fileInput.accept =
+      "audio/*";
 
     imageFormats?.classList.add(
       "hidden"
@@ -349,27 +347,24 @@ function selectType(type) {
       "hidden"
     );
 
-    selectedFormat = "wav";
+    selectedFormat =
+      "mp3";
 
   }
 
 
-  if (type === "video") {
+  /* VIDEO */
 
-    if (formatLabel) {
-      formatLabel.textContent =
-        "Video";
-    }
+  else if (type === "video") {
 
-    if (fileHint) {
-      fileHint.textContent =
-        "MP4, WebM, MKV, MOV, AVI and more";
-    }
+    formatLabel.textContent =
+      "Video";
 
-    if (fileInput) {
-      fileInput.accept =
-        "video/*";
-    }
+    fileHint.textContent =
+      "MP4, WebM, MKV, MOV, AVI and more";
+
+    fileInput.accept =
+      "video/*";
 
     imageFormats?.classList.add(
       "hidden"
@@ -383,7 +378,8 @@ function selectType(type) {
       "hidden"
     );
 
-    selectedFormat = "mp4";
+    selectedFormat =
+      "mp4";
 
   }
 
@@ -412,7 +408,7 @@ typeCards.forEach(card => {
 
 
 /* =========================
-   FORMAT SELECTION
+   FORMAT BUTTONS
 ========================= */
 
 const formatButtons =
@@ -435,8 +431,6 @@ formatButtons.forEach(button => {
       updateFormatButtons();
 
       updateConvertButton();
-
-      hideError();
 
     }
   );
@@ -503,8 +497,7 @@ fileInput?.addEventListener(
   () => {
 
     const file =
-      fileInput.files &&
-      fileInput.files[0];
+      fileInput.files?.[0];
 
     if (!file) {
       return;
@@ -517,7 +510,7 @@ fileInput?.addEventListener(
 
 
 /* =========================
-   VALIDATION
+   FILE VALIDATION
 ========================= */
 
 function validImage(file) {
@@ -537,7 +530,7 @@ function validAudio(file) {
 
   return (
     file.type.startsWith("audio/") ||
-    /\.(mp3|wav|ogg|oga|m4a|aac|webm|flac)$/i
+    /\.(mp3|wav|ogg|oga|m4a|aac|flac|opus|webm)$/i
       .test(file.name)
   );
 
@@ -548,12 +541,16 @@ function validVideo(file) {
 
   return (
     file.type.startsWith("video/") ||
-    /\.(mp4|webm|mkv|mov|avi|m4v|3gp|mpeg|mpg|ts)$/i
+    /\.(mp4|webm|mkv|mov|avi|m4v|3gp|mpeg|mpg|ts|flv)$/i
       .test(file.name)
   );
 
 }
 
+
+/* =========================
+   HANDLE FILE
+========================= */
 
 function handleFile(file) {
 
@@ -571,7 +568,6 @@ function handleFile(file) {
     );
 
     return;
-
   }
 
 
@@ -587,7 +583,6 @@ function handleFile(file) {
     );
 
     return;
-
   }
 
 
@@ -603,36 +598,33 @@ function handleFile(file) {
     );
 
     return;
-
   }
 
 
-  currentFile = file;
+  currentFile =
+    file;
 
   clearOutput();
 
-  if (fileName) {
-    fileName.textContent =
-      file.name;
-  }
 
-  if (fileSize) {
-    fileSize.textContent =
-      formatBytes(file.size);
-  }
+  fileName.textContent =
+    file.name;
 
-  if (fileTitle) {
-    fileTitle.textContent =
-      "File selected";
-  }
+  fileSize.textContent =
+    formatBytes(file.size);
 
-  fileInfo?.classList.remove(
+  fileTitle.textContent =
+    "File selected";
+
+
+  fileInfo.classList.remove(
     "hidden"
   );
 
-  if (convertBtn) {
-    convertBtn.disabled = false;
-  }
+
+  convertBtn.disabled =
+    false;
+
 
   progressArea?.classList.add(
     "hidden"
@@ -642,12 +634,13 @@ function handleFile(file) {
 
 
 /* =========================
-   RESET
+   RESET FILE
 ========================= */
 
 function resetFile() {
 
-  currentFile = null;
+  currentFile =
+    null;
 
   if (fileInput) {
     fileInput.value = "";
@@ -655,22 +648,32 @@ function resetFile() {
 
   clearOutput();
 
+
   if (fileTitle) {
+
     fileTitle.textContent =
       "Choose a file";
+
   }
+
 
   fileInfo?.classList.add(
     "hidden"
   );
 
+
   progressArea?.classList.add(
     "hidden"
   );
 
+
   if (convertBtn) {
-    convertBtn.disabled = true;
+
+    convertBtn.disabled =
+      true;
+
   }
+
 
   setProgress(
     0,
@@ -685,6 +688,7 @@ removeBtn?.addEventListener(
   event => {
 
     event.preventDefault();
+
     event.stopPropagation();
 
     resetFile();
@@ -723,9 +727,11 @@ convertBtn?.addEventListener(
       return;
     }
 
+
     hideError();
 
-    convertBtn.disabled = true;
+    convertBtn.disabled =
+      true;
 
     progressArea?.classList.remove(
       "hidden"
@@ -738,27 +744,24 @@ convertBtn?.addEventListener(
 
     try {
 
-      setProgress(
-        5,
-        "Reading file..."
-      );
-
-      await wait(100);
-
-
       let blob;
 
 
-      /* IMAGE */
+      /* =====================
+         IMAGE
+      ===================== */
 
       if (
         selectedType === "image"
       ) {
 
         setProgress(
-          20,
+          10,
           "Loading image..."
         );
+
+        await wait(150);
+
 
         blob =
           await convertImage(
@@ -769,55 +772,38 @@ convertBtn?.addEventListener(
       }
 
 
-      /* AUDIO */
+      /* =====================
+         AUDIO
+      ===================== */
 
       else if (
         selectedType === "audio"
       ) {
 
-        if (
-          selectedFormat !== "wav"
-        ) {
-
-          throw new Error(
-            "Audio output currently supports WAV."
-          );
-
-        }
-
-        setProgress(
-          20,
-          "Reading audio..."
-        );
-
         blob =
-          await convertAudioToWav(
-            currentFile
+          await convertWithFFmpeg(
+            currentFile,
+            selectedFormat,
+            "audio"
           );
 
       }
 
 
-      /* VIDEO */
+      /* =====================
+         VIDEO
+      ===================== */
 
       else if (
         selectedType === "video"
       ) {
 
         blob =
-          await convertVideoWithFFmpeg(
+          await convertWithFFmpeg(
             currentFile,
-            selectedFormat
+            selectedFormat,
+            "video"
           );
-
-      }
-
-
-      else {
-
-        throw new Error(
-          "Unknown conversion type."
-        );
 
       }
 
@@ -831,13 +817,19 @@ convertBtn?.addEventListener(
       }
 
 
+      /* =====================
+         RESULT
+      ===================== */
+
       setProgress(
         90,
-        "Preparing download..."
+        "Creating download..."
       );
 
 
-      outputBlob = blob;
+      outputBlob =
+        blob;
+
 
       outputName =
         makeOutputName(
@@ -860,34 +852,22 @@ convertBtn?.addEventListener(
         );
 
 
-      if (downloadBtn) {
+      downloadBtn.href =
+        outputURL;
 
-        downloadBtn.href =
-          outputURL;
-
-        downloadBtn.download =
-          outputName;
-
-      }
+      downloadBtn.download =
+        outputName;
 
 
-      if (resultName) {
-
-        resultName.textContent =
-          outputName;
-
-      }
+      resultName.textContent =
+        outputName;
 
 
-      if (resultDetails) {
-
-        resultDetails.textContent =
-          formatBytes(
-            outputBlob.size
-          ) +
-          " • Ready to download";
-
-      }
+      resultDetails.textContent =
+        formatBytes(
+          outputBlob.size
+        ) +
+        " • Ready to download";
 
 
       setProgress(
@@ -899,25 +879,33 @@ convertBtn?.addEventListener(
       await wait(250);
 
 
-      resultBox?.classList.remove(
+      resultBox.classList.remove(
         "hidden"
       );
 
 
     } catch (error) {
 
-      console.error(error);
+      console.error(
+        "ConvertX:",
+        error
+      );
+
 
       progressArea?.classList.add(
         "hidden"
       );
+
 
       showError(
         error.message ||
         "Conversion failed."
       );
 
-    } finally {
+    }
+
+
+    finally {
 
       convertBtn.disabled =
         !currentFile;
@@ -929,7 +917,7 @@ convertBtn?.addEventListener(
 
 
 /* =========================
-   IMAGE CONVERSION
+   IMAGE CONVERTER
 ========================= */
 
 async function convertImage(
@@ -938,14 +926,19 @@ async function convertImage(
 ) {
 
   const url =
-    URL.createObjectURL(file);
+    URL.createObjectURL(
+      file
+    );
+
 
   try {
 
     const image =
       new Image();
 
-    image.src = url;
+
+    image.src =
+      url;
 
 
     await new Promise(
@@ -970,6 +963,7 @@ async function convertImage(
         "canvas"
       );
 
+
     canvas.width =
       image.naturalWidth;
 
@@ -992,7 +986,9 @@ async function convertImage(
     }
 
 
-    if (format === "jpg") {
+    if (
+      format === "jpg"
+    ) {
 
       ctx.fillStyle =
         "#ffffff";
@@ -1017,21 +1013,27 @@ async function convertImage(
     let mime;
 
 
-    if (format === "png") {
+    if (
+      format === "png"
+    ) {
 
       mime =
         "image/png";
 
     }
 
-    else if (format === "jpg") {
+    else if (
+      format === "jpg"
+    ) {
 
       mime =
         "image/jpeg";
 
     }
 
-    else if (format === "webp") {
+    else if (
+      format === "webp"
+    ) {
 
       mime =
         "image/webp";
@@ -1055,13 +1057,19 @@ async function convertImage(
             result => {
 
               if (result) {
-                resolve(result);
+
+                resolve(
+                  result
+                );
+
               } else {
+
                 reject(
                   new Error(
-                    "Image conversion failed."
+                    "Could not create image."
                   )
                 );
+
               }
 
             },
@@ -1075,6 +1083,7 @@ async function convertImage(
 
     return blob;
 
+
   } finally {
 
     URL.revokeObjectURL(
@@ -1087,288 +1096,19 @@ async function convertImage(
 
 
 /* =========================
-   AUDIO → WAV
+   AUDIO / VIDEO
+   FFMPEG BACKEND
 ========================= */
 
-async function convertAudioToWav(
-  file
-) {
-
-  const AudioContextClass =
-    window.AudioContext ||
-    window.webkitAudioContext;
-
-
-  if (!AudioContextClass) {
-
-    throw new Error(
-      "Audio conversion is not supported."
-    );
-
-  }
-
-
-  const context =
-    new AudioContextClass();
-
-
-  try {
-
-    const arrayBuffer =
-      await file.arrayBuffer();
-
-
-    const audioBuffer =
-      await context.decodeAudioData(
-        arrayBuffer
-      );
-
-
-    const channels =
-      audioBuffer.numberOfChannels;
-
-    const sampleRate =
-      audioBuffer.sampleRate;
-
-    const length =
-      audioBuffer.length;
-
-    const bytesPerSample =
-      2;
-
-    const blockAlign =
-      channels *
-      bytesPerSample;
-
-    const dataSize =
-      length *
-      blockAlign;
-
-
-    const buffer =
-      new ArrayBuffer(
-        44 + dataSize
-      );
-
-
-    const view =
-      new DataView(buffer);
-
-
-    function writeString(
-      offset,
-      text
-    ) {
-
-      for (
-        let i = 0;
-        i < text.length;
-        i++
-      ) {
-
-        view.setUint8(
-          offset + i,
-          text.charCodeAt(i)
-        );
-
-      }
-
-    }
-
-
-    writeString(
-      0,
-      "RIFF"
-    );
-
-
-    view.setUint32(
-      4,
-      36 + dataSize,
-      true
-    );
-
-
-    writeString(
-      8,
-      "WAVE"
-    );
-
-
-    writeString(
-      12,
-      "fmt "
-    );
-
-
-    view.setUint32(
-      16,
-      16,
-      true
-    );
-
-    view.setUint16(
-      20,
-      1,
-      true
-    );
-
-    view.setUint16(
-      22,
-      channels,
-      true
-    );
-
-    view.setUint32(
-      24,
-      sampleRate,
-      true
-    );
-
-    view.setUint32(
-      28,
-      sampleRate *
-      blockAlign,
-      true
-    );
-
-    view.setUint16(
-      32,
-      blockAlign,
-      true
-    );
-
-    view.setUint16(
-      34,
-      16,
-      true
-    );
-
-
-    writeString(
-      36,
-      "data"
-    );
-
-
-    view.setUint32(
-      40,
-      dataSize,
-      true
-    );
-
-
-    const channelData = [];
-
-
-    for (
-      let channel = 0;
-      channel < channels;
-      channel++
-    ) {
-
-      channelData.push(
-        audioBuffer.getChannelData(
-          channel
-        )
-      );
-
-    }
-
-
-    let offset = 44;
-
-
-    for (
-      let i = 0;
-      i < length;
-      i++
-    ) {
-
-      for (
-        let channel = 0;
-        channel < channels;
-        channel++
-      ) {
-
-        let sample =
-          channelData[
-            channel
-          ][i];
-
-
-        sample =
-          Math.max(
-            -1,
-            Math.min(
-              1,
-              sample
-            )
-          );
-
-
-        const value =
-          sample < 0
-            ? sample * 0x8000
-            : sample * 0x7fff;
-
-
-        view.setInt16(
-          offset,
-          value,
-          true
-        );
-
-
-        offset += 2;
-
-      }
-
-    }
-
-
-    return new Blob(
-      [buffer],
-      {
-        type: "audio/wav"
-      }
-    );
-
-
-  } finally {
-
-    await context.close();
-
-  }
-
-}
-
-
-/* =========================
-   VIDEO → TERMUX → FFMPEG
-========================= */
-
-async function convertVideoWithFFmpeg(
+async function convertWithFFmpeg(
   file,
-  format
+  format,
+  type
 ) {
-
-  if (
-    !["mp4", "webm", "mkv", "mov"].includes(
-      format
-    )
-  ) {
-
-    throw new Error(
-      "Unsupported video output format."
-    );
-
-  }
-
 
   setProgress(
     5,
-    "Connecting to Termux..."
+    "Connecting to FFmpeg..."
   );
 
 
@@ -1378,13 +1118,20 @@ async function convertVideoWithFFmpeg(
 
   formData.append(
     "file",
-    file
+    file,
+    file.name
   );
 
 
   formData.append(
     "format",
     format
+  );
+
+
+  formData.append(
+    "type",
+    type
   );
 
 
@@ -1395,13 +1142,14 @@ async function convertVideoWithFFmpeg(
 
     setProgress(
       10,
-      "Uploading video to FFmpeg..."
+      "Uploading file..."
     );
 
 
     response =
       await fetch(
-        `${BACKEND_URL}/convert`,
+        BACKEND_URL +
+        "/convert",
         {
           method: "POST",
           body: formData
@@ -1412,9 +1160,8 @@ async function convertVideoWithFFmpeg(
   } catch (error) {
 
     throw new Error(
-      "Cannot connect to Termux. " +
-      "Keep server.py running and open " +
-      "http://127.0.0.1:8080/health first."
+      "Cannot connect to Termux FFmpeg. " +
+      "Start your server.py in Termux first."
     );
 
   }
@@ -1423,7 +1170,7 @@ async function convertVideoWithFFmpeg(
   if (!response.ok) {
 
     let message =
-      `FFmpeg server error: ${response.status}`;
+      "FFmpeg conversion failed.";
 
 
     try {
@@ -1439,15 +1186,6 @@ async function convertVideoWithFFmpeg(
 
       }
 
-
-      if (data.details) {
-
-        message +=
-          "\n" +
-          data.details;
-
-      }
-
     } catch (_) {}
 
 
@@ -1459,8 +1197,8 @@ async function convertVideoWithFFmpeg(
 
 
   setProgress(
-    85,
-    "Downloading converted video..."
+    75,
+    "FFmpeg is converting..."
   );
 
 
@@ -1478,6 +1216,12 @@ async function convertVideoWithFFmpeg(
     );
 
   }
+
+
+  setProgress(
+    85,
+    "Preparing output..."
+  );
 
 
   return blob;
@@ -1522,15 +1266,20 @@ function loadTheme() {
     );
 
 
-  if (saved === "light") {
+  if (
+    saved === "light"
+  ) {
 
     document.body.classList.add(
       "light"
     );
 
+
     if (themeBtn) {
+
       themeBtn.textContent =
         "☾";
+
     }
 
   } else {
@@ -1539,9 +1288,12 @@ function loadTheme() {
       "light"
     );
 
+
     if (themeBtn) {
+
       themeBtn.textContent =
         "☀";
+
     }
 
   }
@@ -1584,15 +1336,18 @@ themeBtn?.addEventListener(
    START
 ========================= */
 
-selectType("image");
+selectType(
+  "image"
+);
 
 loadTheme();
+
 
 console.log(
   "ConvertX loaded"
 );
 
 console.log(
-  "FFmpeg backend:",
+  "FFmpeg:",
   BACKEND_URL
 );
