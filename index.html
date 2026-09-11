@@ -2,193 +2,143 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <meta name="theme-color" content="#0b0b0d">
+  <meta name="description" content="ConvertX - Fast and simple file converter">
 
-  <meta
-    name="description"
-    content="ConvertX - Fast browser and FFmpeg file converter"
-  >
+  <title>ConvertX - File Converter</title>
 
-  <title>ConvertX</title>
-
-  <link
-    rel="icon"
-    href="assets/favicon.png"
-  >
-
-  <link
-    rel="stylesheet"
-    href="style.css"
-  >
+  <link rel="icon" href="assets/favicon.png">
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <!-- =========================
-       HEADER
-  ========================== -->
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <div class="brand-icon">X</div>
 
-  <header class="header">
-
-    <div class="brand">
-      <div class="brand-logo">X</div>
-
-      <div>
-        <h1>ConvertX</h1>
+      <div class="brand-text">
+        <strong>ConvertX</strong>
         <span>File Converter</span>
       </div>
-    </div>
+    </a>
 
-
-    <button
-      id="themeBtn"
-      class="theme-btn"
-      type="button"
-      aria-label="Toggle theme"
-    >
+    <button id="themeBtn" class="theme-btn" type="button">
       ☀
     </button>
-
   </header>
 
 
-  <!-- =========================
-       MAIN
-  ========================== -->
-
-  <main class="container">
-
-
-    <!-- HERO -->
+  <main>
 
     <section class="hero">
 
-      <div class="badge">
-        PRIVATE • FAST • BROWSER BASED
+      <div class="hero-badge">
+        <span></span>
+        PRIVATE • FAST • SIMPLE
       </div>
 
-      <h2>
-        Convert your files
-        <span>easily.</span>
-      </h2>
+      <h1>
+        Convert your files<br>
+        <em>easily.</em>
+      </h1>
 
       <p>
-        Convert pictures, audio and video
-        files with ConvertX.
+        Convert pictures, audio and video files with a clean,
+        simple and powerful workflow.
       </p>
 
     </section>
 
 
-    <!-- =========================
-         TYPE SELECTOR
-    ========================== -->
+    <!-- TYPE -->
 
-    <section class="type-selector">
-
-
-      <!-- PICTURE -->
+    <section class="type-grid">
 
       <button
         class="type-card active"
         data-type="image"
         type="button"
       >
-
-        <img
-          src="assets/picture.svg"
-          alt="Picture"
-        >
-
-        <div>
-          <strong>Picture</strong>
-          <small>PNG • JPG • WEBP</small>
+        <div class="type-icon">
+          <img src="assets/picture.svg" alt="Picture">
         </div>
 
+        <div class="type-info">
+          <strong>Picture</strong>
+          <span>PNG • JPG • WEBP</span>
+        </div>
+
+        <div class="arrow">→</div>
       </button>
 
-
-      <!-- AUDIO -->
 
       <button
         class="type-card"
         data-type="audio"
         type="button"
       >
-
-        <img
-          src="assets/sound.svg"
-          alt="Audio"
-        >
-
-        <div>
-          <strong>Audio</strong>
-          <small>MP3 • WAV • OGG</small>
+        <div class="type-icon">
+          <img src="assets/sound.svg" alt="Audio">
         </div>
 
+        <div class="type-info">
+          <strong>Audio</strong>
+          <span>MP3 • WAV • OGG</span>
+        </div>
+
+        <div class="arrow">→</div>
       </button>
 
-
-      <!-- VIDEO -->
 
       <button
         class="type-card"
         data-type="video"
         type="button"
       >
-
-        <img
-          src="assets/video.svg"
-          alt="Video"
-        >
-
-        <div>
-          <strong>Video</strong>
-          <small>MP4 • WEBM • MKV</small>
+        <div class="type-icon">
+          <img src="assets/video.svg" alt="Video">
         </div>
 
+        <div class="type-info">
+          <strong>Video</strong>
+          <span>MP4 • WEBM • MKV</span>
+        </div>
+
+        <div class="arrow">→</div>
       </button>
 
     </section>
 
 
-    <!-- =========================
-         CONVERTER CARD
-    ========================== -->
+    <!-- CONVERTER -->
 
-    <section class="converter-card">
-
-
-      <!-- FILE AREA -->
+    <section class="converter">
 
       <div
-        id="fileBox"
-        class="file-box"
+        id="dropZone"
+        class="drop-zone"
       >
 
-        <div class="upload-icon">
+        <div class="upload-circle">
           ↑
         </div>
 
-        <h3 id="fileTitle">
-          Choose a file
-        </h3>
+        <h2 id="fileTitle">
+          Drop your file here
+        </h2>
 
         <p id="fileHint">
-          PNG, JPG, JPEG or WEBP
+          or choose a file from your device
         </p>
-
 
         <input
           id="fileInput"
           type="file"
           hidden
         >
-
 
         <button
           id="chooseBtn"
@@ -198,26 +148,32 @@
           Choose File
         </button>
 
-
-        <!-- FILE INFO -->
-
         <div
           id="fileInfo"
           class="file-info hidden"
         >
 
-          <div>
-            <strong id="fileName">
-              file
-            </strong>
+          <div class="file-details">
 
-            <span id="fileSize">
-              0 B
-            </span>
+            <div class="file-mini-icon">
+              ✓
+            </div>
+
+            <div>
+              <strong id="fileName">
+                file
+              </strong>
+
+              <span id="fileSize">
+                0 B
+              </span>
+            </div>
+
           </div>
 
           <button
             id="removeBtn"
+            class="remove-btn"
             type="button"
           >
             Remove
@@ -228,30 +184,23 @@
       </div>
 
 
-      <!-- =========================
-           FORMAT
-      ========================== -->
+      <!-- FORMAT -->
 
-      <div class="format-section">
+      <div class="format-area">
 
-        <div class="format-title">
-          Convert to
-
-          <span id="formatLabel">
-            Picture
-          </span>
+        <div class="format-heading">
+          <span>Convert to</span>
+          <strong id="formatLabel">Picture</strong>
         </div>
 
 
-        <!-- IMAGE FORMATS -->
-
         <div
           id="imageFormats"
-          class="format-list"
+          class="formats"
         >
 
           <button
-            class="format-btn active"
+            class="format active"
             data-format="png"
             type="button"
           >
@@ -259,7 +208,7 @@
           </button>
 
           <button
-            class="format-btn"
+            class="format"
             data-format="jpg"
             type="button"
           >
@@ -267,7 +216,7 @@
           </button>
 
           <button
-            class="format-btn"
+            class="format"
             data-format="webp"
             type="button"
           >
@@ -277,100 +226,56 @@
         </div>
 
 
-        <!-- AUDIO FORMATS -->
-
         <div
           id="audioFormats"
-          class="format-list hidden"
+          class="formats hidden"
         >
 
-          <button
-            class="format-btn"
-            data-format="mp3"
-            type="button"
-          >
+          <button class="format active" data-format="mp3" type="button">
             MP3
           </button>
 
-          <button
-            class="format-btn"
-            data-format="wav"
-            type="button"
-          >
+          <button class="format" data-format="wav" type="button">
             WAV
           </button>
 
-          <button
-            class="format-btn"
-            data-format="ogg"
-            type="button"
-          >
+          <button class="format" data-format="ogg" type="button">
             OGG
           </button>
 
-          <button
-            class="format-btn"
-            data-format="m4a"
-            type="button"
-          >
+          <button class="format" data-format="m4a" type="button">
             M4A
           </button>
 
-          <button
-            class="format-btn"
-            data-format="aac"
-            type="button"
-          >
+          <button class="format" data-format="aac" type="button">
             AAC
           </button>
 
-          <button
-            class="format-btn"
-            data-format="flac"
-            type="button"
-          >
+          <button class="format" data-format="flac" type="button">
             FLAC
           </button>
 
         </div>
 
 
-        <!-- VIDEO FORMATS -->
-
         <div
           id="videoFormats"
-          class="format-list hidden"
+          class="formats hidden"
         >
 
-          <button
-            class="format-btn"
-            data-format="mp4"
-            type="button"
-          >
+          <button class="format active" data-format="mp4" type="button">
             MP4
           </button>
 
-          <button
-            class="format-btn"
-            data-format="webm"
-            type="button"
-          >
+          <button class="format" data-format="webm" type="button">
             WEBM
           </button>
 
-          <button
-            class="format-btn"
-            data-format="mkv"
-            type="button"
-          >
+          <button class="format" data-format="mkv" type="button">
             MKV
           </button>
 
-          <button
-            class="format-btn"
-            data-format="mov"
-            type="button"
-          >
+          <button class="format" data-format="mov" type="button">
             MOV
           </button>
 
@@ -379,80 +284,64 @@
       </div>
 
 
-      <!-- =========================
-           CONVERT
-      ========================== -->
-
       <button
         id="convertBtn"
         class="convert-btn"
         type="button"
         disabled
       >
-        Convert
+        <span>Convert File</span>
+        <b>→</b>
       </button>
 
 
-      <!-- =========================
-           PROGRESS
-      ========================== -->
+      <!-- PROGRESS -->
 
       <div
         id="progressArea"
-        class="progress-area hidden"
+        class="progress hidden"
       >
 
-        <div class="progress-header">
-
+        <div class="progress-top">
           <span id="progressText">
             Preparing...
           </span>
 
-          <span id="progressPercent">
+          <strong id="progressPercent">
             0%
-          </span>
-
+          </strong>
         </div>
 
-
         <div class="progress-track">
-
           <div
             id="progressBar"
             class="progress-bar"
           ></div>
-
         </div>
 
       </div>
 
 
-      <!-- =========================
-           RESULT
-      ========================== -->
+      <!-- RESULT -->
 
       <div
         id="resultBox"
-        class="result-box hidden"
+        class="result hidden"
       >
 
-        <div class="result-icon">
+        <div class="success-icon">
           ✓
         </div>
 
-
-        <div class="result-content">
-
+        <div class="result-info">
           <strong id="resultName">
             ConvertXfile.mp4
           </strong>
 
           <span id="resultDetails">
-            0 B • Ready to download
+            Ready to download
           </span>
-
         </div>
-
 
         <a
           id="downloadBtn"
@@ -466,57 +355,36 @@
       </div>
 
 
-      <!-- =========================
-           ERROR
-      ========================== -->
+      <!-- ERROR -->
 
       <div
         id="errorBox"
-        class="error-box hidden"
+        class="error hidden"
       ></div>
 
     </section>
 
 
-    <!-- =========================
-         INFO
-    ========================== -->
+    <!-- FEATURES -->
 
-    <section class="info-section">
+    <section class="features">
 
-      <div class="info-card">
-
-        <strong>🔒 Private</strong>
-
-        <p>
-          Files are processed locally
-          when possible.
-        </p>
-
+      <div class="feature">
+        <div>🔒</div>
+        <strong>Private</strong>
+        <p>Your files stay on your device when possible.</p>
       </div>
 
-
-      <div class="info-card">
-
-        <strong>⚡ Fast</strong>
-
-        <p>
-          Browser conversion and
-          FFmpeg processing.
-        </p>
-
+      <div class="feature">
+        <div>⚡</div>
+        <strong>Fast</strong>
+        <p>Browser conversion plus powerful FFmpeg support.</p>
       </div>
 
-
-      <div class="info-card">
-
-        <strong>📱 Mobile</strong>
-
-        <p>
-          Designed to work on phones
-          and desktop.
-        </p>
-
+      <div class="feature">
+        <div>📱</div>
+        <strong>Everywhere</strong>
+        <p>Designed for phones, tablets and desktop.</p>
       </div>
 
     </section>
@@ -524,44 +392,22 @@
   </main>
 
 
-  <!-- =========================
-       FOOTER
-  ========================== -->
+  <footer>
 
-  <footer class="footer">
-
-    <p>
-      Made by
-      <strong>Vathana Gaming</strong>
-    </p>
-
+    <div>
+      Made by <strong>Vathana Gaming</strong>
+    </div>
 
     <nav>
-
-      <a href="pages/about.html">
-        About
-      </a>
-
-      <a href="pages/help.html">
-        Help
-      </a>
-
-      <a href="pages/privacy.html">
-        Privacy
-      </a>
-
+      <a href="pages/about.html">About</a>
+      <a href="pages/help.html">Help</a>
+      <a href="pages/privacy.html">Privacy</a>
     </nav>
 
   </footer>
 
 
-  <!-- =========================
-       JAVASCRIPT
-  ========================== -->
-
-  <script
-    src="script.js"
-  ></script>
+  <script src="script.js"></script>
 
 </body>
 </html>
