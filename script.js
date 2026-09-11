@@ -1,5 +1,11 @@
 "use strict";
 
+/* =========================
+   CONFIG
+========================= */
+
+const BACKEND_URL = "http://127.0.0.1:8080";
+
 
 /* =========================
    ELEMENTS
@@ -43,6 +49,9 @@ const imageFormats =
 
 const audioFormats =
   document.getElementById("audioFormats");
+
+const videoFormats =
+  document.getElementById("videoFormats");
 
 const convertBtn =
   document.getElementById("convertBtn");
@@ -88,7 +97,6 @@ let currentFile = null;
 
 let outputBlob = null;
 let outputName = "";
-
 let outputURL = null;
 
 
@@ -110,7 +118,9 @@ function formatBytes(bytes) {
   ];
 
   const index = Math.min(
-    Math.floor(Math.log(bytes) / Math.log(1024)),
+    Math.floor(
+      Math.log(bytes) / Math.log(1024)
+    ),
     units.length - 1
   );
 
@@ -124,9 +134,11 @@ function formatBytes(bytes) {
 
 
 function wait(ms) {
+
   return new Promise(resolve => {
     setTimeout(resolve, ms);
   });
+
 }
 
 
@@ -135,6 +147,7 @@ function randomNumber() {
   return Math.floor(
     1000 + Math.random() * 9000
   );
+
 }
 
 
@@ -147,23 +160,42 @@ function makeOutputName(format) {
     "." +
     format
   );
+
 }
 
 
 function showError(message) {
 
+  if (!errorBox) {
+    alert(message);
+    return;
+  }
+
   errorBox.textContent = message;
 
-  errorBox.classList.remove("hidden");
+  errorBox.classList.remove(
+    "hidden"
+  );
 
   setTimeout(() => {
-    errorBox.classList.add("hidden");
-  }, 4500);
+
+    errorBox.classList.add(
+      "hidden"
+    );
+
+  }, 6000);
+
 }
 
 
 function hideError() {
-  errorBox.classList.add("hidden");
+
+  if (errorBox) {
+    errorBox.classList.add(
+      "hidden"
+    );
+  }
+
 }
 
 
@@ -174,14 +206,27 @@ function setProgress(value, text) {
     Math.min(100, value)
   );
 
-  progressBar.style.width =
-    value + "%";
+  if (progressBar) {
 
-  progressPercent.textContent =
-    Math.round(value) + "%";
+    progressBar.style.width =
+      value + "%";
 
-  progressText.textContent =
-    text;
+  }
+
+  if (progressPercent) {
+
+    progressPercent.textContent =
+      Math.round(value) + "%";
+
+  }
+
+  if (progressText) {
+
+    progressText.textContent =
+      text;
+
+  }
+
 }
 
 
@@ -191,13 +236,35 @@ function clearOutput() {
   outputName = "";
 
   if (outputURL) {
-    URL.revokeObjectURL(outputURL);
+
+    URL.revokeObjectURL(
+      outputURL
+    );
+
     outputURL = null;
+
   }
 
-  downloadBtn.removeAttribute("href");
+  if (downloadBtn) {
 
-  resultBox.classList.add("hidden");
+    downloadBtn.removeAttribute(
+      "href"
+    );
+
+    downloadBtn.removeAttribute(
+      "download"
+    );
+
+  }
+
+  if (resultBox) {
+
+    resultBox.classList.add(
+      "hidden"
+    );
+
+  }
+
 }
 
 
@@ -221,20 +288,30 @@ function selectType(type) {
 
   if (type === "image") {
 
-    formatLabel.textContent =
-      "Picture";
+    if (formatLabel) {
+      formatLabel.textContent =
+        "Picture";
+    }
 
-    fileHint.textContent =
-      "PNG, JPG, JPEG or WEBP";
+    if (fileHint) {
+      fileHint.textContent =
+        "PNG, JPG, JPEG or WEBP";
+    }
 
-    fileInput.accept =
-      "image/png,image/jpeg,image/webp";
+    if (fileInput) {
+      fileInput.accept =
+        "image/png,image/jpeg,image/webp";
+    }
 
-    imageFormats.classList.remove(
+    imageFormats?.classList.remove(
       "hidden"
     );
 
-    audioFormats.classList.add(
+    audioFormats?.classList.add(
+      "hidden"
+    );
+
+    videoFormats?.classList.add(
       "hidden"
     );
 
@@ -245,24 +322,69 @@ function selectType(type) {
 
   if (type === "audio") {
 
-    formatLabel.textContent =
-      "Audio";
+    if (formatLabel) {
+      formatLabel.textContent =
+        "Audio";
+    }
 
-    fileHint.textContent =
-      "Browser-supported audio files";
+    if (fileHint) {
+      fileHint.textContent =
+        "Browser-supported audio files";
+    }
 
-    fileInput.accept =
-      "audio/*";
+    if (fileInput) {
+      fileInput.accept =
+        "audio/*";
+    }
 
-    imageFormats.classList.add(
+    imageFormats?.classList.add(
       "hidden"
     );
 
-    audioFormats.classList.remove(
+    audioFormats?.classList.remove(
+      "hidden"
+    );
+
+    videoFormats?.classList.add(
       "hidden"
     );
 
     selectedFormat = "wav";
+
+  }
+
+
+  if (type === "video") {
+
+    if (formatLabel) {
+      formatLabel.textContent =
+        "Video";
+    }
+
+    if (fileHint) {
+      fileHint.textContent =
+        "MP4, WebM, MKV, MOV, AVI and more";
+    }
+
+    if (fileInput) {
+      fileInput.accept =
+        "video/*";
+    }
+
+    imageFormats?.classList.add(
+      "hidden"
+    );
+
+    audioFormats?.classList.add(
+      "hidden"
+    );
+
+    videoFormats?.classList.remove(
+      "hidden"
+    );
+
+    selectedFormat = "mp4";
+
   }
 
 
@@ -278,9 +400,11 @@ typeCards.forEach(card => {
   card.addEventListener(
     "click",
     () => {
+
       selectType(
         card.dataset.type
       );
+
     }
   );
 
@@ -312,6 +436,8 @@ formatButtons.forEach(button => {
 
       updateConvertButton();
 
+      hideError();
+
     }
   );
 
@@ -337,20 +463,20 @@ function updateFormatButtons() {
    FILE PICKER
 ========================= */
 
-chooseBtn.addEventListener(
+chooseBtn?.addEventListener(
   "click",
   event => {
 
     event.preventDefault();
     event.stopPropagation();
 
-    fileInput.click();
+    fileInput?.click();
 
   }
 );
 
 
-fileBox.addEventListener(
+fileBox?.addEventListener(
   "click",
   event => {
 
@@ -366,13 +492,13 @@ fileBox.addEventListener(
       return;
     }
 
-    fileInput.click();
+    fileInput?.click();
 
   }
 );
 
 
-fileInput.addEventListener(
+fileInput?.addEventListener(
   "change",
   () => {
 
@@ -391,7 +517,7 @@ fileInput.addEventListener(
 
 
 /* =========================
-   FILE VALIDATION
+   VALIDATION
 ========================= */
 
 function validImage(file) {
@@ -400,10 +526,8 @@ function validImage(file) {
     file.type === "image/png" ||
     file.type === "image/jpeg" ||
     file.type === "image/webp" ||
-    file.name.toLowerCase().endsWith(".png") ||
-    file.name.toLowerCase().endsWith(".jpg") ||
-    file.name.toLowerCase().endsWith(".jpeg") ||
-    file.name.toLowerCase().endsWith(".webp")
+    /\.(png|jpg|jpeg|webp)$/i
+      .test(file.name)
   );
 
 }
@@ -420,38 +544,65 @@ function validAudio(file) {
 }
 
 
+function validVideo(file) {
+
+  return (
+    file.type.startsWith("video/") ||
+    /\.(mp4|webm|mkv|mov|avi|m4v|3gp|mpeg|mpg|ts)$/i
+      .test(file.name)
+  );
+
+}
+
+
 function handleFile(file) {
 
   hideError();
 
-  if (selectedType === "image") {
+  if (
+    selectedType === "image" &&
+    !validImage(file)
+  ) {
 
-    if (!validImage(file)) {
+    fileInput.value = "";
 
-      fileInput.value = "";
+    showError(
+      "Please choose a PNG, JPG, JPEG or WEBP image."
+    );
 
-      showError(
-        "Please choose a PNG, JPG, JPEG or WEBP image."
-      );
-
-      return;
-    }
+    return;
 
   }
 
 
-  if (selectedType === "audio") {
+  if (
+    selectedType === "audio" &&
+    !validAudio(file)
+  ) {
 
-    if (!validAudio(file)) {
+    fileInput.value = "";
 
-      fileInput.value = "";
+    showError(
+      "Please choose a supported audio file."
+    );
 
-      showError(
-        "Please choose a supported audio file."
-      );
+    return;
 
-      return;
-    }
+  }
+
+
+  if (
+    selectedType === "video" &&
+    !validVideo(file)
+  ) {
+
+    fileInput.value = "";
+
+    showError(
+      "Please choose a supported video file."
+    );
+
+    return;
 
   }
 
@@ -460,22 +611,30 @@ function handleFile(file) {
 
   clearOutput();
 
-  fileName.textContent =
-    file.name;
+  if (fileName) {
+    fileName.textContent =
+      file.name;
+  }
 
-  fileSize.textContent =
-    formatBytes(file.size);
+  if (fileSize) {
+    fileSize.textContent =
+      formatBytes(file.size);
+  }
 
-  fileTitle.textContent =
-    "File selected";
+  if (fileTitle) {
+    fileTitle.textContent =
+      "File selected";
+  }
 
-  fileInfo.classList.remove(
+  fileInfo?.classList.remove(
     "hidden"
   );
 
-  convertBtn.disabled = false;
+  if (convertBtn) {
+    convertBtn.disabled = false;
+  }
 
-  progressArea.classList.add(
+  progressArea?.classList.add(
     "hidden"
   );
 
@@ -490,22 +649,28 @@ function resetFile() {
 
   currentFile = null;
 
-  fileInput.value = "";
+  if (fileInput) {
+    fileInput.value = "";
+  }
 
   clearOutput();
 
-  fileTitle.textContent =
-    "Choose a file";
+  if (fileTitle) {
+    fileTitle.textContent =
+      "Choose a file";
+  }
 
-  fileInfo.classList.add(
+  fileInfo?.classList.add(
     "hidden"
   );
 
-  progressArea.classList.add(
+  progressArea?.classList.add(
     "hidden"
   );
 
-  convertBtn.disabled = true;
+  if (convertBtn) {
+    convertBtn.disabled = true;
+  }
 
   setProgress(
     0,
@@ -515,7 +680,7 @@ function resetFile() {
 }
 
 
-removeBtn.addEventListener(
+removeBtn?.addEventListener(
   "click",
   event => {
 
@@ -534,6 +699,10 @@ removeBtn.addEventListener(
 
 function updateConvertButton() {
 
+  if (!convertBtn) {
+    return;
+  }
+
   convertBtn.disabled =
     !currentFile ||
     !selectedFormat;
@@ -541,7 +710,7 @@ function updateConvertButton() {
 }
 
 
-convertBtn.addEventListener(
+convertBtn?.addEventListener(
   "click",
   async event => {
 
@@ -558,13 +727,14 @@ convertBtn.addEventListener(
 
     convertBtn.disabled = true;
 
-    progressArea.classList.remove(
+    progressArea?.classList.remove(
       "hidden"
     );
 
-    resultBox.classList.add(
+    resultBox?.classList.add(
       "hidden"
     );
+
 
     try {
 
@@ -573,11 +743,13 @@ convertBtn.addEventListener(
         "Reading file..."
       );
 
-      await wait(150);
+      await wait(100);
 
 
       let blob;
 
+
+      /* IMAGE */
 
       if (
         selectedType === "image"
@@ -588,8 +760,6 @@ convertBtn.addEventListener(
           "Loading image..."
         );
 
-        await wait(150);
-
         blob =
           await convertImage(
             currentFile,
@@ -599,16 +769,26 @@ convertBtn.addEventListener(
       }
 
 
-      if (
+      /* AUDIO */
+
+      else if (
         selectedType === "audio"
       ) {
+
+        if (
+          selectedFormat !== "wav"
+        ) {
+
+          throw new Error(
+            "Audio output currently supports WAV."
+          );
+
+        }
 
         setProgress(
           20,
           "Reading audio..."
         );
-
-        await wait(150);
 
         blob =
           await convertAudioToWav(
@@ -618,19 +798,43 @@ convertBtn.addEventListener(
       }
 
 
+      /* VIDEO */
+
+      else if (
+        selectedType === "video"
+      ) {
+
+        blob =
+          await convertVideoWithFFmpeg(
+            currentFile,
+            selectedFormat
+          );
+
+      }
+
+
+      else {
+
+        throw new Error(
+          "Unknown conversion type."
+        );
+
+      }
+
+
       if (!blob) {
+
         throw new Error(
           "Conversion failed."
         );
+
       }
 
 
       setProgress(
-        75,
-        "Creating file..."
+        90,
+        "Preparing download..."
       );
-
-      await wait(150);
 
 
       outputBlob = blob;
@@ -641,12 +845,13 @@ convertBtn.addEventListener(
         );
 
 
-      setProgress(
-        90,
-        "Finishing..."
-      );
+      if (outputURL) {
 
-      await wait(200);
+        URL.revokeObjectURL(
+          outputURL
+        );
+
+      }
 
 
       outputURL =
@@ -654,20 +859,35 @@ convertBtn.addEventListener(
           outputBlob
         );
 
-      downloadBtn.href =
-        outputURL;
 
-      downloadBtn.download =
-        outputName;
+      if (downloadBtn) {
 
-      resultName.textContent =
-        outputName;
+        downloadBtn.href =
+          outputURL;
 
-      resultDetails.textContent =
-        formatBytes(
-          outputBlob.size
-        ) +
-        " • Ready to download";
+        downloadBtn.download =
+          outputName;
+
+      }
+
+
+      if (resultName) {
+
+        resultName.textContent =
+          outputName;
+
+      }
+
+
+      if (resultDetails) {
+
+        resultDetails.textContent =
+          formatBytes(
+            outputBlob.size
+          ) +
+          " • Ready to download";
+
+      }
 
 
       setProgress(
@@ -675,17 +895,20 @@ convertBtn.addEventListener(
         "Complete"
       );
 
+
       await wait(250);
 
-      resultBox.classList.remove(
+
+      resultBox?.classList.remove(
         "hidden"
       );
+
 
     } catch (error) {
 
       console.error(error);
 
-      progressArea.classList.add(
+      progressArea?.classList.add(
         "hidden"
       );
 
@@ -760,6 +983,15 @@ async function convertImage(
       );
 
 
+    if (!ctx) {
+
+      throw new Error(
+        "Canvas is not supported."
+      );
+
+    }
+
+
     if (format === "jpg") {
 
       ctx.fillStyle =
@@ -786,30 +1018,53 @@ async function convertImage(
 
 
     if (format === "png") {
-      mime = "image/png";
+
+      mime =
+        "image/png";
+
     }
 
     else if (format === "jpg") {
-      mime = "image/jpeg";
+
+      mime =
+        "image/jpeg";
+
     }
 
     else if (format === "webp") {
-      mime = "image/webp";
+
+      mime =
+        "image/webp";
+
     }
 
     else {
+
       throw new Error(
         "Unsupported image format."
       );
+
     }
 
 
     const blob =
       await new Promise(
-        resolve => {
+        (resolve, reject) => {
 
           canvas.toBlob(
-            resolve,
+            result => {
+
+              if (result) {
+                resolve(result);
+              } else {
+                reject(
+                  new Error(
+                    "Image conversion failed."
+                  )
+                );
+              }
+
+            },
             mime,
             0.92
           );
@@ -818,20 +1073,13 @@ async function convertImage(
       );
 
 
-    if (!blob) {
-
-      throw new Error(
-        "Your browser could not create this image format."
-      );
-
-    }
-
-
     return blob;
 
   } finally {
 
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(
+      url
+    );
 
   }
 
@@ -846,22 +1094,22 @@ async function convertAudioToWav(
   file
 ) {
 
-  const AudioContext =
+  const AudioContextClass =
     window.AudioContext ||
     window.webkitAudioContext;
 
 
-  if (!AudioContext) {
+  if (!AudioContextClass) {
 
     throw new Error(
-      "Audio conversion is not supported by this browser."
+      "Audio conversion is not supported."
     );
 
   }
 
 
   const context =
-    new AudioContext();
+    new AudioContextClass();
 
 
   try {
@@ -885,12 +1133,16 @@ async function convertAudioToWav(
     const length =
       audioBuffer.length;
 
-    const bytesPerSample = 2;
+    const bytesPerSample =
+      2;
+
+    const blockAlign =
+      channels *
+      bytesPerSample;
 
     const dataSize =
       length *
-      channels *
-      bytesPerSample;
+      blockAlign;
 
 
     const buffer =
@@ -976,15 +1228,13 @@ async function convertAudioToWav(
     view.setUint32(
       28,
       sampleRate *
-      channels *
-      bytesPerSample,
+      blockAlign,
       true
     );
 
     view.setUint16(
       32,
-      channels *
-      bytesPerSample,
+      blockAlign,
       true
     );
 
@@ -1084,6 +1334,7 @@ async function convertAudioToWav(
       }
     );
 
+
   } finally {
 
     await context.close();
@@ -1094,10 +1345,151 @@ async function convertAudioToWav(
 
 
 /* =========================
+   VIDEO → TERMUX → FFMPEG
+========================= */
+
+async function convertVideoWithFFmpeg(
+  file,
+  format
+) {
+
+  if (
+    !["mp4", "webm", "mkv", "mov"].includes(
+      format
+    )
+  ) {
+
+    throw new Error(
+      "Unsupported video output format."
+    );
+
+  }
+
+
+  setProgress(
+    5,
+    "Connecting to Termux..."
+  );
+
+
+  const formData =
+    new FormData();
+
+
+  formData.append(
+    "file",
+    file
+  );
+
+
+  formData.append(
+    "format",
+    format
+  );
+
+
+  let response;
+
+
+  try {
+
+    setProgress(
+      10,
+      "Uploading video to FFmpeg..."
+    );
+
+
+    response =
+      await fetch(
+        `${BACKEND_URL}/convert`,
+        {
+          method: "POST",
+          body: formData
+        }
+      );
+
+
+  } catch (error) {
+
+    throw new Error(
+      "Cannot connect to Termux. " +
+      "Keep server.py running and open " +
+      "http://127.0.0.1:8080/health first."
+    );
+
+  }
+
+
+  if (!response.ok) {
+
+    let message =
+      `FFmpeg server error: ${response.status}`;
+
+
+    try {
+
+      const data =
+        await response.json();
+
+
+      if (data.error) {
+
+        message =
+          data.error;
+
+      }
+
+
+      if (data.details) {
+
+        message +=
+          "\n" +
+          data.details;
+
+      }
+
+    } catch (_) {}
+
+
+    throw new Error(
+      message
+    );
+
+  }
+
+
+  setProgress(
+    85,
+    "Downloading converted video..."
+  );
+
+
+  const blob =
+    await response.blob();
+
+
+  if (
+    !blob ||
+    blob.size === 0
+  ) {
+
+    throw new Error(
+      "FFmpeg returned an empty file."
+    );
+
+  }
+
+
+  return blob;
+
+}
+
+
+/* =========================
    DOWNLOAD
 ========================= */
 
-downloadBtn.addEventListener(
+downloadBtn?.addEventListener(
   "click",
   event => {
 
@@ -1136,8 +1528,10 @@ function loadTheme() {
       "light"
     );
 
-    themeBtn.textContent =
-      "☾";
+    if (themeBtn) {
+      themeBtn.textContent =
+        "☾";
+    }
 
   } else {
 
@@ -1145,15 +1539,17 @@ function loadTheme() {
       "light"
     );
 
-    themeBtn.textContent =
-      "☀";
+    if (themeBtn) {
+      themeBtn.textContent =
+        "☀";
+    }
 
   }
 
 }
 
 
-themeBtn.addEventListener(
+themeBtn?.addEventListener(
   "click",
   () => {
 
@@ -1171,10 +1567,14 @@ themeBtn.addEventListener(
     );
 
 
-    themeBtn.textContent =
-      isLight
-        ? "☾"
-        : "☀";
+    if (themeBtn) {
+
+      themeBtn.textContent =
+        isLight
+          ? "☾"
+          : "☀";
+
+    }
 
   }
 );
@@ -1187,3 +1587,12 @@ themeBtn.addEventListener(
 selectType("image");
 
 loadTheme();
+
+console.log(
+  "ConvertX loaded"
+);
+
+console.log(
+  "FFmpeg backend:",
+  BACKEND_URL
+);
